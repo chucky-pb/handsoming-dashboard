@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ハンサミング Intelligence Pipeline — 入口（役割と責務図）</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--bg:#f4f6f8;--brand:#2563eb;--navy:#0f2c5c;--raw:#16a34a;--anon:#7c3aed;--agg:#2563eb;--meta:#6b7280}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans CJK JP','Yu Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.topnav{background:var(--navy);color:#fff;padding:0 22px;display:flex;align-items:center;gap:6px;height:52px;position:sticky;top:0;z-index:10}
+.topnav .brand{font-weight:700;font-size:15px;margin-right:18px;letter-spacing:.5px}
+.topnav a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;padding:7px 13px;border-radius:7px}
+.topnav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.topnav a.active{background:rgba(255,255,255,.22);color:#fff;font-weight:600}
+.topnav .me{margin-left:auto;font-size:12px;opacity:.9}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 22px 70px}
+.hero{margin:6px 0 18px}
+.hero h1{font-size:22px;font-weight:700;color:var(--navy)}
+.hero p{font-size:13px;color:var(--mute);margin-top:4px}
+.mehighlight{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin:14px 0;font-size:14px;color:#065f46;display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mehighlight.show{display:flex}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{filter:brightness(1.08)}
+.layer-label{font-size:11px;letter-spacing:1px;color:var(--mute);font-weight:700;margin:22px 0 8px;text-transform:uppercase}
+.grid{display:grid;gap:12px}
+.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+.persona{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:block;transition:.12s;border-top:4px solid #cbd5e1}
+.persona:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-2px)}
+.persona.me{border-color:#34d399;border-top-color:#34d399;box-shadow:0 0 0 2px #a7f3d0}
+.persona .pid{font-size:10px;color:var(--mute);letter-spacing:1px;font-weight:700}
+.persona .nm{font-size:16px;font-weight:700;margin:3px 0 6px}
+.persona .desc{font-size:12px;color:#475569;min-height:34px}
+.persona .out{font-size:11px;color:var(--mute);margin-top:8px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;margin-top:8px}
+.badge.RAW{background:#dcfce7;color:#166534}.badge.ANON{background:#ede9fe;color:#5b21b6}.badge.AGG{background:#dbeafe;color:#1e40af}.badge.META{background:#f1f5f9;color:#475569}
+.pipeline{background:linear-gradient(135deg,#0f2c5c,#1e3a8a);color:#fff;border-radius:14px;padding:20px 22px;margin:8px 0}
+.pipeline .pt{font-size:13px;font-weight:700;letter-spacing:.5px;opacity:.9}
+.players{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+@media(max-width:760px){.players{grid-template-columns:1fr 1fr}}
+.layer{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:11px 12px}
+.layer .ln{font-size:10px;opacity:.7;letter-spacing:1px}
+.layer .lt{font-size:14px;font-weight:700;margin:2px 0 4px}
+.layer .ld{font-size:11px;opacity:.85;line-height:1.5}
+.qcbar{background:rgba(255,255,255,.13);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:12px;display:flex;align-items:center;gap:8px}
+.legend{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;margin-top:18px;font-size:12px;color:#475569;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.footer{text-align:center;color:var(--mute);font-size:12px;padding:24px 0 0}
+</style></head><body>
+
+<div class="topnav">
+  <div class="brand">▽ HANSAMING</div>
+  <a href="index.html" class="active">入口（役割地図）</a>
+  <a href="role_mockup.html">運用（役割別UI）</a>
+  <a href="dashboard.html">分析（管理・QC）</a>
+  <a href="reports.html">資料・レポート</a>
+  <a href="mobile.html">📱 モバイル(LINE)</a>
+  <span class="me" id="me">—</span>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>ハンサミング Intelligence Pipeline — 役割と責務図（入口）</h1>
+    <p>「誰が・どの層を・どの解像度で見るか」。あなたの役割をクリックすると、その粒度のビューへ移動します。<span style="color:#94a3b8">DOC: HSM-ORG-001 REV1.1（統括コーチ追記）</span></p>
+  </div>
+
+  <div class="mehighlight" id="mehl">
+    <div id="mehl-text"></div>
+    <a class="btn" id="mehl-btn" href="#">▶ 自分のホームを開く</a>
+  </div>
+
+  <!-- 中央パイプライン -->
+  <div class="pipeline">
+    <div class="pt">ハンサミング Intelligence Pipeline ｜ ACQUISITION · NOTES · EXTRACTION · INTELLIGENCE</div>
+    <div class="players">
+      <div class="layer"><div class="ln">L01</div><div class="lt">標準化された取得</div><div class="ld">面談・LINE・健診を同じ様式で取得</div></div>
+      <div class="layer"><div class="ln">L02</div><div class="lt">一次対応者の所見</div><div class="ld">栄養士の所見・カルテ・行動兆候</div></div>
+      <div class="layer"><div class="ln">L03</div><div class="lt">統計・AI抽出</div><div class="ld">6軸スコア・言語シグナル・群間比較</div></div>
+      <div class="layer"><div class="ln">L04</div><div class="lt">Intelligence</div><div class="ld">経営アジェンダ別の意思決定出力</div></div>
+    </div>
+    <div class="qcbar">🟦🟦🟦🟦 <b>QC Layer（横串）</b>：全4層をサンプリング監査 — 取得品質／所見の一貫性／出力検証</div>
+  </div>
+
+  <!-- 現場レイヤー -->
+  <div class="layer-label">現場レイヤー（取得・所見 L01/L02）</div>
+  <div class="grid g3">
+    <a class="persona" data-role="面談担当" href="role_mockup.html#iv1" style="border-top-color:#16a34a">
+      <div class="pid">P-04 · DIETITIAN INTAKE</div><div class="nm">面談担当 栄養士</div>
+      <div class="desc">Phase4 初回面談を実施。生活背景を聴取し初版カルテを起こす。</div>
+      <div class="out">出力：対象者タイプ／6軸スコア／カルテ初版</div>
+      <span class="badge RAW">RAW 担当範囲</span>
+    </a>
+    <a class="persona" data-role="LINE担当" href="role_mockup.html#lc1" style="border-top-color:#16a34a">
+      <div class="pid">P-05 · DIETITIAN LINE COACH</div><div class="nm">LINE担当 栄養士</div>
+      <div class="desc">Phase5-6 の伴走。メッセージで行動変容を支援する。</div>
+      <div class="out">出力：コーチングログ／介入記録</div>
+      <span class="badge RAW">RAW 担当範囲</span>
+    </a>
+    <a class="persona" data-role="統括コーチ" href="role_mockup.html#sup" style="border-top-color:#0891b2">
+      <div class="pid">NEW · SUPERVISING COACH</div><div class="nm">統括コーチ</div>
+      <div class="desc">本部⇔各コーチのサポート役。相談受付・知見の公式化・現場の声を本部へ（評価者ではない）。</div>
+      <div class="out">出力：公式化対応例／相談トリアージ</div>
+      <span class="badge META">META コーチ単位</span> <span class="badge ANON">ANON 対象者</span>
+    </a>
+  </div>
+
+  <!-- 品質・分析・経営レイヤー -->
+  <div class="layer-label">品質・分析・経営レイヤー（抽出 L03 ／ QC ／ Intelligence L04）</div>
+  <div class="grid g3">
+    <a class="persona" data-role="QC" href="interview.html" style="border-top-color:#d97706">
+      <div class="pid">P-02 · QUALITY CONTROL</div><div class="nm">QC 担当</div>
+      <div class="desc">全フェーズをサンプリングでRAW閲覧し、品質保証と是正勧告。面談6軸の妥当性を監査。</div>
+      <div class="out">出力：監査ログ／経営幹部への集約報告</div>
+      <span class="badge RAW">RAW サンプリング</span>
+    </a>
+    <a class="persona" data-role="AI分析" href="action_analysis.html" style="border-top-color:#7c3aed">
+      <div class="pid">P-03 · AI ANALYTICS</div><div class="nm">AI 分析担当</div>
+      <div class="desc">モデル開発・ドリフト検知。面談×LINE×結果の横断分析でLayer3精度を担保。</div>
+      <div class="out">出力：分類モデル／評価指標</div>
+      <span class="badge ANON">ANON k-匿名化</span>
+    </a>
+    <a class="persona" data-role="管理者" href="dashboard.html" style="border-top-color:#2563eb">
+      <div class="pid">P-01 · HANSAMING EXECUTIVE</div><div class="nm">経営幹部 ／ 本部</div>
+      <div class="desc">全社の事業・品質・リスクを俯瞰し経営判断。要注意ユーザー・KPIを把握。</div>
+      <div class="out">出力：全社KPI／取締役会レポート</div>
+      <span class="badge AGG">AGG 集約値</span>
+    </a>
+  </div>
+
+  <!-- 受益者レイヤー -->
+  <div class="layer-label">受益者レイヤー</div>
+  <div class="grid g2">
+    <a class="persona" data-role="クライアント企業" href="reports.html" style="border-top-color:#0f766e">
+      <div class="pid">P-07 · CLIENT EXECUTIVE</div><div class="nm">クライアント企業 経営幹部</div>
+      <div class="desc">自社の人的資本・健康経営・ROIを把握。個人特定不可な集約値で意思決定。</div>
+      <div class="out">出力：健康経営レポート／ROI試算</div>
+      <span class="badge ANON">ANON k-匿名化集約</span>
+    </a>
+    <a class="persona" data-role="ユーザー" href="#" onclick="alert('対象者本人ポータルは将来実装（自分のデータと振り返り）');return false;" style="border-top-color:#6b7280">
+      <div class="pid">P-06 · END USER</div><div class="nm">ユーザー（お客様）</div>
+      <div class="desc">健康改善のためにサービスを利用。食事記録の入力とLINE対話に参加。</div>
+      <div class="out">参照：自分自身のデータと振り返り（将来）</div>
+      <span class="badge RAW">RAW 自分のデータ</span>
+    </a>
+  </div>
+
+  <div class="legend">
+    <b style="color:#1e3a8a">データ粒度バッジ</b>
+    <span><span class="badge RAW">RAW</span> 生データ／個人を識別可能</span>
+    <span><span class="badge ANON">ANON</span> 匿名化／k-匿名性</span>
+    <span><span class="badge AGG">AGG</span> 集約値／群単位</span>
+    <span><span class="badge META">META</span> 件数・経路のみ</span>
+  </div>
+
+  <div class="footer">© Hansaming inc. ／ 社内限 ｜ 役割と責務図を入口に、運用・分析・資料の3レイヤーへ</div>
+</div>
+
+<script>
+const SB_URL='https://shmsyuohusfjjbopqokr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+const sb = window.supabase.createClient(SB_URL, SB_KEY);
+const HOME={'統括コーチ':'role_mockup.html#sup','LINE担当':'role_mockup.html#lc1','面談担当':'role_mockup.html#iv1','管理者':'dashboard.html','メール担当':'dashboard.html'};
+const ROLE2CARD={'面談担当':'面談担当','LINE担当':'LINE担当','統括コーチ':'統括コーチ','管理者':'管理者','メール担当':'管理者'};
+(async()=>{
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ document.getElementById('me').textContent='未ログイン（プロト：地図から各ビューへ）'; return; }
+    const email=session.user.email;
+    const {data:st}=await sb.from('staff').select('*').eq('email',email).maybeSingle();
+    const role=st?.role||'管理者';
+    document.getElementById('me').textContent=`${st?.name||email}（${role}）`;
+    // ハイライト
+    const cardRole=ROLE2CARD[role]||'管理者';
+    document.querySelectorAll('.persona').forEach(p=>{ if(p.dataset.role===cardRole) p.classList.add('me'); });
+    const hl=document.getElementById('mehl'), home=HOME[role]||'dashboard.html';
+    document.getElementById('mehl-text').innerHTML=`あなたは <b>${role}</b> としてログイン中です。あなたのホームへ移動できます。`;
+    document.getElementById('mehl-btn').href=home;
+    hl.classList.add('show');
+  }catch(e){ document.getElementById('me').textContent='—'; }
+})();
+</script>
+</body></html>

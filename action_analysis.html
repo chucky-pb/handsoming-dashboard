@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>行動連携分析 | ハンサミング</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script>
+  // Fallback: if jsdelivr fails, try unpkg
+  window.addEventListener('error', function(ev) {
+    if (ev.target && ev.target.tagName === 'SCRIPT' && /supabase-js/.test(ev.target.src) && !ev.target.dataset.fb) {
+      const fb = document.createElement('script');
+      fb.src = 'https://unpkg.com/@supabase/supabase-js@2.45.0/dist/umd/supabase.js';
+      fb.dataset.fb = '1';
+      document.head.appendChild(fb);
+    }
+  }, true);
+</script>
+<style>
+  :root {
+    --color-bg:        #f5f7fa;
+    --color-card:      #ffffff;
+    --color-text:      #1f2937;
+    --color-muted:     #6b7280;
+    --color-border:    #e5e7eb;
+    --color-primary:   #4f8cff;
+    --color-success:   #10b981;
+    --color-warning:   #f59e0b;
+    --color-danger:    #ef4444;
+    --color-purple:    #8b5cf6;
+    --color-ai:        #6366f1;
+    --color-human:     #ec4899;
+    --shadow-card:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+  header {
+    background: var(--color-card);
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header .nav a {
+    margin-left: 16px;
+    color: var(--color-muted);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  header .nav a.active { color: var(--color-primary); font-weight: 600; }
+  header .nav a.new {
+    color: var(--color-danger); font-weight: 600;
+    background: #fef2f2; padding: 4px 10px; border-radius: 6px;
+    position: relative;
+  }
+  header .user-info { font-size: 13px; color: var(--color-muted); margin-left: 16px;}
+  header .user-info button {
+    margin-left: 12px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { margin: 0 0 4px 0; font-size: 22px; }
+  .page-header p { margin: 0; color: var(--color-muted); font-size: 14px; }
+
+  .alert-box {
+    background: #fef3c7; border-left: 4px solid var(--color-warning);
+    padding: 12px 16px; border-radius: 6px; margin: 16px 0; font-size: 13px;
+  }
+  .alert-box.danger { background: #fee2e2; border-left-color: var(--color-danger); }
+  .alert-box.info { background: #e0e7ff; border-left-color: var(--color-primary); }
+  .alert-box.success { background: #d1fae5; border-left-color: var(--color-success); }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+  .card {
+    background: var(--color-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .card h3 { margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--color-muted); }
+  .card .desc { font-size: 12px; color: var(--color-muted); margin-bottom: 12px; }
+
+  .kpi-card .value { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .kpi-card .sub { font-size: 11px; color: var(--color-muted); margin-top: 4px; }
+  .kpi-card.warn .value { color: var(--color-danger); }
+  .kpi-card.good .value { color: var(--color-success); }
+  .kpi-card.info .value { color: var(--color-primary); }
+  .kpi-card.purple .value { color: var(--color-purple); }
+  .kpi-card.orange .value { color: var(--color-warning); }
+
+  .section-title {
+    font-size: 18px; font-weight: 600;
+    margin: 28px 0 12px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-good { background: #d1fae5; color: #065f46; }
+  .badge-mid  { background: #fef3c7; color: #92400e; }
+  .badge-low  { background: #fee2e2; color: #991b1b; }
+  .badge-info { background: #dbeafe; color: #1e40af; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+  }
+  th { color: var(--color-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  tr:hover { background: #fafafa; }
+
+  .progress-bar {
+    width: 100%; height: 8px; background: #f3f4f6;
+    border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; transition: width .3s; }
+  .progress-fill.high { background: var(--color-success); }
+  .progress-fill.mid  { background: var(--color-warning); }
+  .progress-fill.low  { background: var(--color-danger); }
+
+  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap.tall { height: 360px; }
+
+  .timeline-bar { display: flex; gap: 3px; }
+  .timeline-block {
+    flex: 1; height: 32px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: white;
+  }
+  .tb-high { background: var(--color-success); }
+  .tb-mid  { background: var(--color-warning); }
+  .tb-low  { background: #fda4af; }
+  .tb-none { background: #e5e7eb; color: #9ca3af; }
+
+  .intervention-card {
+    background: var(--color-card); border-radius: 12px;
+    padding: 18px; box-shadow: var(--shadow-card);
+  }
+  .intervention-card.green { border-left: 4px solid var(--color-success); }
+  .intervention-card.orange { border-left: 4px solid var(--color-warning); }
+  .intervention-card.red { border-left: 4px solid var(--color-danger); }
+  .intervention-card h4 { margin: 0 0 8px; font-size: 14px; }
+  .intervention-card .big-num { font-size: 28px; font-weight: 700; margin: 8px 0; }
+
+  .note {
+    font-size: 12px; color: var(--color-muted);
+    background: #f9fafb; padding: 10px 12px; border-radius: 6px;
+    margin-top: 8px;
+  }
+
+  footer {
+    background: #1f2937; color: #d1d5db;
+    padding: 24px 32px; margin-top: 48px;
+    font-size: 13px;
+  }
+  footer a { color: #93c5fd; }
+
+  .heatmap-table th, .heatmap-table td { text-align: center; padding: 6px 8px; font-size: 12px; }
+  .hm-val { display: inline-block; padding: 4px 8px; border-radius: 4px; min-width: 50px; font-weight: 600; }
+
+  /* コーチ × スタイル指標 ヒートマップ */
+  .style-heatmap { width: 100%; border-collapse: separate; border-spacing: 2px; font-size: 12px; }
+  .style-heatmap th { background: #f9fafb; color: var(--color-muted);
+                      font-weight: 600; padding: 8px 6px; text-align: center; font-size: 11px; }
+  .style-heatmap th.coach-col { text-align: left; min-width: 160px; padding-left: 10px; }
+  .style-heatmap td.coach-name { text-align: left; padding-left: 10px; font-weight: 600;
+                                 background: #f9fafb; color: var(--color-text); }
+  .style-heatmap td.hm-cell {
+    text-align: center; padding: 8px 6px; font-weight: 600; color: white;
+    border-radius: 3px; font-variant-numeric: tabular-nums; min-width: 56px;
+  }
+  .hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px;
+               color: var(--color-muted); }
+  .hm-legend-bar { width: 200px; height: 12px; border-radius: 3px;
+                   background: linear-gradient(90deg, #f7fbff 0%, #c6dbef 25%, #6baed6 50%, #2171b5 75%, #08306b 100%); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ハンサミング 管理ダッシュボード</h1>
+  <nav class="nav">
+    <a href="dashboard.html">管理ダッシュボード</a>
+    <a href="coach.html">栄養士ダッシュボード</a>
+    <a href="process.html">顧客プロセス</a>
+    <a href="interview.html">面談分析</a>
+    <a href="action_analysis.html" class="active new">行動連携分析</a>
+  </nav>
+  <div class="user-info">
+    admin@handsoming.jp
+    <button>ログアウト</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="page-header">
+    <h2>📊 行動連携分析 — 面談 × LINE × 結果</h2>
+    <p>初回面談ヒアリング・LINE 行動・最終結果を統合した分析ビュー。<strong>「点が線」</strong>になった発見を社内で共有できる場所。</p>
+  </div>
+
+  <div class="alert-box danger">
+    <strong>⚠️ 重要な前提:</strong> 本ページの「完走」は分析者定義（体重評価あり=340名/47%）です。ハンサミング社の正式定義により全数値は再計算が必要となる場合があります。
+  </div>
+
+  <!-- ====== ① 統合KPI ====== -->
+  <div class="section-title">① 統合KPI — mys258 730名母集団</div>
+  <div class="grid grid-6">
+    <div class="card kpi-card">
+      <h3>📋 母集団</h3>
+      <div class="value">730</div>
+      <div class="sub">明治安田生命社員</div>
+    </div>
+    <div class="card kpi-card good">
+      <h3>✅ 完走</h3>
+      <div class="value">340 <span style="font-size:14px">/47%</span></div>
+      <div class="sub">体重評価あり</div>
+    </div>
+    <div class="card kpi-card orange">
+      <h3>⚠️ 部分完走</h3>
+      <div class="value">303 <span style="font-size:14px">/41%</span></div>
+      <div class="sub">最終面談あり/体重なし</div>
+    </div>
+    <div class="card kpi-card warn">
+      <h3>❌ 真の離脱</h3>
+      <div class="value">54 <span style="font-size:14px">/7.4%</span></div>
+      <div class="sub">LINE 90日超沈黙</div>
+    </div>
+    <div class="card kpi-card info">
+      <h3>🎯 H1 予測力</h3>
+      <div class="value">0.72</div>
+      <div class="sub">初期28日LINE発話量 AUC</div>
+    </div>
+    <div class="card kpi-card purple">
+      <h3>💡 救済候補</h3>
+      <div class="value">8</div>
+      <div class="sub">LINEに体重数値あり</div>
+    </div>
+  </div>
+
+  <!-- ====== ② 4ステージの物語 ====== -->
+  <div class="section-title">② 4ステージの物語の連鎖</div>
+  <div class="card">
+    <div class="desc">初回面談 → 初期28日LINE → プログラム中盤 → 最終結果 が 3つの物語に分かれる</div>
+    <div class="chart-wrap tall">
+      <canvas id="narrativeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ====== ③ 面談6軸 × LINE実績 ====== -->
+  <div class="section-title">③ 面談6軸スコア × LINE実績 突き合わせ（n=20確定マッピング）</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>完走 vs 未完走 6軸スコア比較</h3>
+      <div class="chart-wrap">
+        <canvas id="radarChart"></canvas>
+      </div>
+      <div class="note">最大差: listening +4.8 / reproducibility -6.4 / 統計的有意ではない（n=20で検出力不足）が方向性として参考</div>
+    </div>
+    <div class="card">
+      <h3>6軸 × LINE実績 Pearson相関</h3>
+      <table class="heatmap-table">
+        <thead>
+          <tr><th>6軸</th><th>×ユーザー発話</th><th>×完走</th><th>×減量(kg)</th></tr>
+        </thead>
+        <tbody id="corrTbody"></tbody>
+      </table>
+      <div class="note" style="color:var(--color-danger);">
+        🚨 rebound × 減量 r=-0.37 はコーチの目利き能力を示唆（難しい人を識別している）
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== ④ 反映率ランキング ====== -->
+  <div class="section-title">④ 初回面談 → 初期28日LINE 反映率ランキング</div>
+  <div class="card">
+    <div class="desc">面談で本人が話した食品・行動キーワードのうち、初期28日LINEに何%が登場したか</div>
+    <table>
+      <thead>
+        <tr>
+          <th>順位</th><th>受講者</th><th>反映率</th><th></th><th>LINE発話</th><th>完走</th><th>減量</th>
+        </tr>
+      </thead>
+      <tbody id="rankingTbody"></tbody>
+    </table>
+    <div class="alert-box success" style="margin-top:14px;">
+      📌 <strong>完走中央値 36% vs 未完走中央値 0%</strong> — 「面談で話した言葉が初期LINEに登場するか」は完走の最強シグナル
+    </div>
+  </div>
+
+  <!-- ====== ⑤ コーチ別パフォーマンス ====== -->
+  <div class="section-title">⑤ コーチ別 担当ユーザー完走率と発話スタイル</div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px;">
+      <label style="color:var(--color-muted);">👤 種別:</label>
+      <select id="coachKind" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="normal" selected>通常コーチのみ（74名）</option>
+        <option value="all">全送信者（79名・管理者/保留中含む）</option>
+      </select>
+      <label style="color:var(--color-muted);margin-left:14px;">📊 担当数:</label>
+      <select id="coachFilter" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="0">すべて</option>
+        <option value="3">3名以上</option>
+        <option value="5">5名以上</option>
+        <option value="10" selected>10名以上（推奨）</option>
+        <option value="20">20名以上</option>
+      </select>
+      <label style="color:var(--color-muted);margin-left:14px;">🎯 並び順:</label>
+      <select id="coachSort" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="finish_desc" selected>完走率 高い順</option>
+        <option value="finish_asc">完走率 低い順</option>
+        <option value="n_desc">担当数 多い順</option>
+        <option value="n_asc">担当数 少ない順</option>
+      </select>
+      <span style="margin-left:auto;color:var(--color-muted);font-size:12px;" id="coachCountLabel"></span>
+    </div>
+    <div class="note" style="margin-top:10px;">
+      ⚠️ 担当数が少ないコーチ（5名未満）の完走率は標本誤差が大きく、参考値として扱ってください。
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>コーチ別 担当ユーザー完走率</h3>
+      <div class="chart-wrap tall" id="coachFinishWrap">
+        <canvas id="coachFinishChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>食品具体性 × 完走率 (r=+0.55, 担当10名以上)</h3>
+      <div class="chart-wrap">
+        <canvas id="foodSpecChart"></canvas>
+      </div>
+      <div class="note">食品名・栄養素を具体的に話すコーチほど担当ユーザーの完走率が高い</div>
+    </div>
+  </div>
+
+  <!-- ====== ⑤-2 コーチ×スタイル指標 ヒートマップ ====== -->
+  <div class="card" style="margin-top:16px;">
+    <h3>コーチ × 言語スタイル指標 ヒートマップ</h3>
+    <div class="desc">各コーチの発話に含まれる9つの言語スタイル指標の出現率（0.0〜1.0）。色が濃い=出現率が高い。</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px;margin:12px 0 14px;padding:10px;background:#f9fafb;border-radius:6px;">
+      <label style="color:var(--color-muted);">👤 種別:</label>
+      <select id="hmKind" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="normal" selected>通常コーチのみ（74名）</option>
+        <option value="all">全送信者（79名）</option>
+      </select>
+      <label style="color:var(--color-muted);margin-left:8px;">📊 担当数:</label>
+      <select id="hmFilter" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="0" selected>すべて</option>
+        <option value="3">3名以上</option>
+        <option value="5">5名以上</option>
+        <option value="10">10名以上</option>
+        <option value="20">20名以上</option>
+      </select>
+      <label style="color:var(--color-muted);margin-left:8px;">🎯 並び順:</label>
+      <select id="hmSort" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;background:#fff;">
+        <option value="finish_desc" selected>完走率 高い順</option>
+        <option value="finish_asc">完走率 低い順</option>
+        <option value="n_users_desc">担当数 多い順</option>
+        <option value="n_msgs_desc">発話数 多い順</option>
+      </select>
+      <span style="margin-left:auto;color:var(--color-muted);font-size:12px;" id="hmCountLabel"></span>
+    </div>
+    <div style="overflow-x:auto;max-height:600px;overflow-y:auto;">
+      <table class="style-heatmap">
+        <thead>
+          <tr>
+            <th class="coach-col">コーチ</th>
+            <th>絵文字率</th>
+            <th>感嘆符率</th>
+            <th>名前呼び率</th>
+            <th>褒め率</th>
+            <th>共感率</th>
+            <th>ハンサム言語率</th>
+            <th>食品具体率</th>
+            <th>カロリー具体率</th>
+            <th>提案率</th>
+          </tr>
+        </thead>
+        <tbody id="styleHeatmapBody"></tbody>
+      </table>
+    </div>
+    <div class="hm-legend">
+      <span>低 0.0</span>
+      <div class="hm-legend-bar"></div>
+      <span>高 1.0</span>
+    </div>
+    <div class="note" style="margin-top:12px;">
+      💡 <strong>読み方:</strong> 完走率の高いコーチを上から並べると「成果につながる発話スタイルの傾向」が見える。
+      永冨さん（完走67%）は<strong>褒め率72%・ハンサム言語率66%</strong>で「栄養知識×褒め」型、
+      川端さん（完走60%）は<strong>名前呼び率90%・絵文字率100%</strong>で「親しみテンション」型など、
+      コーチごとに異なるスタイルがある。<br><br>
+      <strong>注:</strong> デフォルトは通常コーチ74名（管理者1・稼働保留中2・削除済み1・テスト1を除外）。
+      担当数が少ないコーチ（n&lt;5）は標本誤差が大きいため、参考程度に扱ってください。
+    </div>
+  </div>
+
+  <!-- ====== ⑥ 顧客詳細ドリルダウン例 ====== -->
+  <div class="section-title">⑥ 顧客詳細ドリルダウン — 入口 佐和子さんの例（反映率83%・完走 -1.6kg）</div>
+  <div class="card">
+    <div class="grid grid-3">
+      <div>
+        <h3>面談スコア（6軸）</h3>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="iguchiRadar"></canvas>
+        </div>
+      </div>
+      <div>
+        <h3>LINE発話タイムライン</h3>
+        <div class="timeline-bar" style="margin-top:24px;">
+          <div class="timeline-block tb-high" title="W1: 12件">12</div>
+          <div class="timeline-block tb-high" title="W2: 8件">8</div>
+          <div class="timeline-block tb-mid" title="W3: 5件">5</div>
+          <div class="timeline-block tb-mid" title="W4: 4件">4</div>
+          <div class="timeline-block tb-mid" title="W5: 3件">3</div>
+          <div class="timeline-block tb-low" title="W6: 1件">1</div>
+        </div>
+        <div class="note" style="margin-top:8px;">全期間 35件、後半は減少</div>
+      </div>
+      <div>
+        <h3>課題反映度（83%）</h3>
+        <div class="progress-bar" style="height:18px; margin-top:24px;">
+          <div class="progress-fill high" style="width:83%;"></div>
+        </div>
+        <div style="font-size:12px; margin-top:10px; line-height:1.7;">
+          <strong style="color:var(--color-success);">✓ 反映 (15):</strong><br>
+          水、ポテト、焼き鳥、おにぎり、チョコレート、ご飯、お菓子、コンビニ、アイス、うどん、カロリー、ジュース、弁当、納豆、パン<br><br>
+          <strong style="color:var(--color-danger);">✗ 未反映 (3):</strong> 紅茶、ポテトチップス、夜食
+        </div>
+      </div>
+    </div>
+    <div class="alert-box success" style="margin-top:16px;">
+      🎯 <strong>このユーザーが完走した3つの要因:</strong> ① 面談で本人が具体的食習慣を18個言語化 ② 初期2週で12件・3週目以降も継続発話 ③ 課題キーワードの83%をLINEで再言及
+    </div>
+  </div>
+
+  <!-- ====== ⑦ 介入余地マップ ====== -->
+  <div class="section-title">⑦ 介入余地マップ — 730名を3群に分類</div>
+  <div class="grid grid-3">
+    <div class="intervention-card green">
+      <h4 style="color:#065f46;">🟢 完走想定（72%超）</h4>
+      <div class="desc">初期28日発話＞中央値 ∩ 反映率≧30%</div>
+      <div class="big-num" style="color:var(--color-success);">126<span style="font-size:14px;">名</span></div>
+      <div class="note">モチベ維持に専念 / 通常コーチング継続</div>
+    </div>
+    <div class="intervention-card orange">
+      <h4 style="color:#92400e;">🟠 介入必要（中間）</h4>
+      <div class="desc">発話あり ∩ 反映率低 or 中盤発話低下</div>
+      <div class="big-num" style="color:var(--color-warning);">350<span style="font-size:14px;">名</span></div>
+      <div class="note">proactive メッセージ送付対象 / 課題を再度想起させる</div>
+    </div>
+    <div class="intervention-card red">
+      <h4 style="color:#991b1b;">🔴 離脱予兆</h4>
+      <div class="desc">初期発話＜5件 or 21日沈黙</div>
+      <div class="big-num" style="color:var(--color-danger);">254<span style="font-size:14px;">名</span></div>
+      <div class="note">緊急介入対象 / コーチからの個別メッセージ必須</div>
+    </div>
+  </div>
+
+  <div class="alert-box info" style="margin-top:24px;">
+    <strong>💼 PORTBACK からの提言：</strong>
+    本ページで可視化された「3群分類」を運用フローに組み込み、各群に応じたコーチ介入のSLAを定めることで、完走率を 47% → 60%+ に引き上げる余地があります。
+  </div>
+
+</main>
+
+<footer>
+  <strong>本ページについて</strong><br>
+  PORTBACK株式会社 × Anthropic Claude による mys258プログラム データ分析結果を統合したビューです。<br>
+  詳細レポートは別添「ハンサミング mys258 詳細レポート (PDF)」をご参照ください。<br>
+  本分析の数値はすべて「体重評価あり=完走（340名/47%）」というClaude（分析者）が置いた定義に基づきます。<br>
+  正式定義のご確認をお願いいたします。
+</footer>
+
+<script>
+  // -------------------------
+  // Supabase設定（既存と同じ）
+  // -------------------------
+  const SUPABASE_URL  = 'https://shmsyuohusfjjbopqokr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+
+  // -------------------------
+  // データ（事前計算済み・将来的にSupabaseから読む）
+  // -------------------------
+
+  // 6軸 × LINE実績 相関データ
+  const CORR_DATA = [
+    {axis:'empathy',         user:'+0.24', finish:'+0.19', loss:'-0.02', hl:false},
+    {axis:'listening',       user:'+0.23', finish:'+0.24', loss:'-0.11', hl:true },
+    {axis:'specificity',     user:'-0.01', finish:'-0.13', loss:'+0.08', hl:false},
+    {axis:'elicitation',     user:'+0.17', finish:'+0.15', loss:'+0.14', hl:false},
+    {axis:'reproducibility', user:'-0.07', finish:'-0.24', loss:'+0.03', hl:false},
+    {axis:'rebound',         user:'+0.08', finish:'-0.03', loss:'-0.37', hl:true, danger:true},
+  ];
+
+  // 反映率ランキング
+  const RANKING = [
+    {rank:'🥇 1', name:'入口 佐和子', rate:83, msgs:35, finish:'完走 -1.6kg', finishGood:true},
+    {rank:'🥈 2', name:'早瀬 理恵子', rate:55, msgs:17, finish:'完走',         finishGood:true},
+    {rank:'🥉 3', name:'白石 美紀',   rate:57, msgs:20, finish:'完走 -0.6kg', finishGood:true},
+    {rank:'4',    name:'森 睦代',     rate:38, msgs:23, finish:'完走 -1.2kg', finishGood:true},
+    {rank:'5',    name:'出口 沙織',   rate:39, msgs:17, finish:'完走 +3.3kg', finishGood:true},
+    {rank:'6',    name:'吉川 ひろみ', rate:34, msgs:19, finish:'完走 -2.2kg', finishGood:true},
+    {rank:'7',    name:'工藤 和子',   rate:29, msgs:24, finish:'完走 -1.0kg', finishGood:true},
+    {rank:'8',    name:'井上 正代',   rate:22, msgs:23, finish:'完走 -1.4kg', finishGood:true},
+    {rank:'9',    name:'上田 祥子',   rate:22, msgs:19, finish:'完走 -3.0kg', finishGood:true},
+    {rank:'10',   name:'林田 由美子', rate:20, msgs:6,  finish:'未完走',      finishGood:false},
+    {rank:'11',   name:'矢澤 咲恵',   rate:11, msgs:7,  finish:'未完走',      finishGood:false},
+    {rank:'12',   name:'岩谷 千聖',   rate:10, msgs:3,  finish:'未完走',      finishGood:false},
+    {rank:'18',   name:'岡本 彩乃',   rate: 4, msgs:2,  finish:'未完走',      finishGood:false},
+    {rank:'19',   name:'星野 八恵子', rate: 0, msgs:1,  finish:'未完走',      finishGood:false},
+    {rank:'20',   name:'中島 絵里',   rate: 0, msgs:0,  finish:'未完走',      finishGood:false},
+  ];
+
+  // -------------------------
+  // 相関表 描画
+  // -------------------------
+  function renderCorrTable() {
+    const tbody = document.getElementById('corrTbody');
+    tbody.innerHTML = CORR_DATA.map(d => `
+      <tr ${d.hl ? 'style="background:#fef9c3;"' : ''}>
+        <td><strong${d.danger ? ' style="color:var(--color-danger)"' : ''}>${d.axis}</strong></td>
+        <td>${d.user}</td>
+        <td>${d.finish}</td>
+        <td${d.danger ? ' style="color:var(--color-danger);font-weight:600"' : ''}>${d.loss}</td>
+      </tr>
+    `).join('');
+  }
+
+  // -------------------------
+  // ランキング表 描画
+  // -------------------------
+  function renderRanking() {
+    const tbody = document.getElementById('rankingTbody');
+    tbody.innerHTML = RANKING.map(r => {
+      const cls = r.rate >= 50 ? 'high' : (r.rate >= 20 ? 'mid' : 'low');
+      const fb = r.finishGood ? 'badge-good' : 'badge-low';
+      return `
+        <tr>
+          <td>${r.rank}</td>
+          <td><strong>${r.name}</strong></td>
+          <td><strong>${r.rate}%</strong></td>
+          <td><div class="progress-bar"><div class="progress-fill ${cls}" style="width:${Math.max(r.rate,2)}%;"></div></div></td>
+          <td>${r.msgs}件</td>
+          <td><span class="badge ${fb}">${r.finish}</span></td>
+          <td>${r.finish.includes('完走') ? r.finish.replace('完走','').trim() || '-' : '-'}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // -------------------------
+  // ④ストーリーチャート (chart44 のWeb版)
+  // -------------------------
+  function drawNarrativeChart() {
+    const ctx = document.getElementById('narrativeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['面談で具体発言', '初期28日LINE発話', 'プログラム中盤', '最終結果'],
+        datasets: [
+          { label: '完走 340名',
+            data: [80, 78, 75, 100],
+            backgroundColor: 'rgba(16,185,129,0.7)' },
+          { label: '部分完走 303名',
+            data: [70, 50, 30, 50],
+            backgroundColor: 'rgba(245,158,11,0.7)' },
+          { label: '真の離脱 54名',
+            data: [40, 10, 5, 0],
+            backgroundColor: 'rgba(239,68,68,0.7)' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' }, title: { display: false } },
+        scales: { y: { beginAtZero: true, max: 100,
+          title: { display: true, text: '各ステージへの到達度 (%)' } } }
+      }
+    });
+  }
+
+  // -------------------------
+  // 6軸レーダー (完走 vs 未完走)
+  // -------------------------
+  function drawRadarChart() {
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['共感', '具体性', '深掘り', '傾聴', '再現性', 'リバ配慮'],
+        datasets: [
+          { label: '完走 n=10',
+            data: [33.3, 52.2, 25.4, 46.1, 50.7, 45.6],
+            borderColor: 'rgb(16,185,129)',
+            backgroundColor: 'rgba(16,185,129,0.2)' },
+          { label: '未完走 n=10',
+            data: [30.3, 55.0, 23.5, 41.3, 57.1, 46.3],
+            borderColor: 'rgb(239,68,68)',
+            backgroundColor: 'rgba(239,68,68,0.2)' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: { r: { suggestedMin: 0, suggestedMax: 70 } }
+      }
+    });
+  }
+
+  // -------------------------
+  // 全コーチ統合データ (n=79, kind: normal/admin/inactive/deleted/test)
+  // 通常コーチ=74名、それ以外=5名
+  // -------------------------
+  const ALL_COACH_STYLE = [
+    {name:"伊礼 ひかり",kind:"normal",n_msgs:1034,n_users:42,finish:47.6,emoji:0.82,excl:0.71,name_call:0.72,praise:0.61,empathy:0.26,hansom:0.41,food:0.28,kcal:0.21,suggest:0.19},
+    {name:"大熊 理絵",kind:"normal",n_msgs:863,n_users:65,finish:35.4,emoji:0.63,excl:0.55,name_call:0.57,praise:0.5,empathy:0.08,hansom:0.3,food:0.18,kcal:0.02,suggest:0.02},
+    {name:"廣中 エラン",kind:"normal",n_msgs:593,n_users:27,finish:59.3,emoji:0.98,excl:0.36,name_call:0.72,praise:0.52,empathy:0.15,hansom:0.34,food:0.46,kcal:0.38,suggest:0.16},
+    {name:"永冨 由紀子",kind:"normal",n_msgs:469,n_users:21,finish:66.7,emoji:0.86,excl:0.78,name_call:0.49,praise:0.72,empathy:0.06,hansom:0.66,food:0.46,kcal:0.26,suggest:0.04},
+    {name:"松浦 かほる",kind:"normal",n_msgs:433,n_users:24,finish:33.3,emoji:0.97,excl:0.97,name_call:0.95,praise:0.51,empathy:0.05,hansom:0.45,food:0.18,kcal:0.14,suggest:0.3},
+    {name:"榊 玲里",kind:"normal",n_msgs:410,n_users:20,finish:50.0,emoji:0.8,excl:0.27,name_call:0.8,praise:0.39,empathy:0.02,hansom:0.12,food:0.24,kcal:0.17,suggest:0.25},
+    {name:"高良 冴香",kind:"normal",n_msgs:386,n_users:21,finish:52.4,emoji:0.94,excl:0.6,name_call:0.26,praise:0.68,empathy:0.09,hansom:0.66,food:0.22,kcal:0.27,suggest:0.13},
+    {name:"荒木 早希",kind:"normal",n_msgs:353,n_users:16,finish:62.5,emoji:0.91,excl:0.88,name_call:0.44,praise:0.63,empathy:0.04,hansom:0.58,food:0.22,kcal:0.03,suggest:0.07},
+    {name:"織田島 知世",kind:"normal",n_msgs:340,n_users:15,finish:73.3,emoji:0.84,excl:0.58,name_call:0.4,praise:0.48,empathy:0.02,hansom:0.31,food:0.24,kcal:0.15,suggest:0.15},
+    {name:"稲本 さつき",kind:"normal",n_msgs:337,n_users:26,finish:34.6,emoji:0.85,excl:0.59,name_call:0.09,praise:0.7,empathy:0.07,hansom:0.63,food:0.17,kcal:0.17,suggest:0.12},
+    {name:"赤松 藍子",kind:"normal",n_msgs:316,n_users:10,finish:60.0,emoji:0.85,excl:0.61,name_call:0.52,praise:0.66,empathy:0.08,hansom:0.58,food:0.36,kcal:0.24,suggest:0.11},
+    {name:"越田 祐子",kind:"normal",n_msgs:273,n_users:13,finish:61.5,emoji:0.7,excl:0.78,name_call:0.24,praise:0.68,empathy:0.09,hansom:0.61,food:0.4,kcal:0.05,suggest:0.03},
+    {name:"川端 彩",kind:"normal",n_msgs:240,n_users:10,finish:60.0,emoji:1.0,excl:0.8,name_call:0.9,praise:0.38,empathy:0.05,hansom:0.19,food:0.17,kcal:0.07,suggest:0.16},
+    {name:"E A",kind:"test",n_msgs:229,n_users:6,finish:33.3,emoji:0.9,excl:0.43,name_call:0.25,praise:0.62,empathy:0.08,hansom:0.59,food:0.42,kcal:0.17,suggest:0.04},
+    {name:"金山 美冴",kind:"normal",n_msgs:220,n_users:9,finish:44.4,emoji:0.84,excl:0.74,name_call:0.23,praise:0.58,empathy:0.04,hansom:0.26,food:0.61,kcal:0.04,suggest:0.08},
+    {name:"柴田 安莉",kind:"normal",n_msgs:215,n_users:11,finish:18.2,emoji:0.85,excl:0.73,name_call:0.07,praise:0.54,empathy:0.03,hansom:0.04,food:0.23,kcal:0.14,suggest:0.19},
+    {name:"森 美知子",kind:"normal",n_msgs:211,n_users:10,finish:50.0,emoji:0.93,excl:0.84,name_call:0.29,praise:0.57,empathy:0.1,hansom:0.45,food:0.27,kcal:0.04,suggest:0.15},
+    {name:"田中 彩香",kind:"normal",n_msgs:204,n_users:9,finish:11.1,emoji:0.92,excl:0.5,name_call:0.88,praise:0.65,empathy:0.03,hansom:0.62,food:0.32,kcal:0.12,suggest:0.2},
+    {name:"久保 恵美",kind:"normal",n_msgs:197,n_users:9,finish:44.4,emoji:0.97,excl:0.58,name_call:0.38,praise:0.64,empathy:0.17,hansom:0.55,food:0.31,kcal:0.07,suggest:0.16},
+    {name:"佐藤 樹里",kind:"normal",n_msgs:194,n_users:9,finish:55.6,emoji:0.92,excl:0.88,name_call:0.88,praise:0.74,empathy:0.06,hansom:0.46,food:0.43,kcal:0.11,suggest:0.05},
+    {name:"木村 優希",kind:"normal",n_msgs:193,n_users:7,finish:28.6,emoji:0.92,excl:0.9,name_call:0.25,praise:0.94,empathy:0.07,hansom:0.92,food:0.25,kcal:0.04,suggest:0.06},
+    {name:"河西 智美",kind:"normal",n_msgs:191,n_users:14,finish:21.4,emoji:0.89,excl:0.61,name_call:0.52,praise:0.62,empathy:0.01,hansom:0.6,food:0.37,kcal:0.1,suggest:0.13},
+    {name:"佐藤 美有",kind:"normal",n_msgs:180,n_users:12,finish:75.0,emoji:0.98,excl:0.71,name_call:0.12,praise:0.62,empathy:0.04,hansom:0.01,food:0.48,kcal:0.17,suggest:0.04},
+    {name:"千田 加代子",kind:"normal",n_msgs:172,n_users:8,finish:37.5,emoji:0.84,excl:0.11,name_call:0.3,praise:0.57,empathy:0.02,hansom:0.54,food:0.4,kcal:0.0,suggest:0.01},
+    {name:"坂田 正恵",kind:"normal",n_msgs:171,n_users:5,finish:60.0,emoji:0.63,excl:0.84,name_call:0.36,praise:0.63,empathy:0.05,hansom:0.45,food:0.22,kcal:0.29,suggest:0.13},
+    {name:"岩渕 知英",kind:"normal",n_msgs:170,n_users:7,finish:85.7,emoji:0.95,excl:0.42,name_call:0.11,praise:0.55,empathy:0.06,hansom:0.35,food:0.31,kcal:0.02,suggest:0.07},
+    {name:"小林 裕子",kind:"normal",n_msgs:159,n_users:8,finish:75.0,emoji:0.9,excl:0.58,name_call:0.73,praise:0.5,empathy:0.16,hansom:0.29,food:0.42,kcal:0.1,suggest:0.18},
+    {name:"西迫 祐希",kind:"normal",n_msgs:152,n_users:10,finish:40.0,emoji:0.86,excl:0.68,name_call:0.22,praise:0.61,empathy:0.07,hansom:0.49,food:0.2,kcal:0.16,suggest:0.12},
+    {name:"柳田 優衣",kind:"normal",n_msgs:149,n_users:9,finish:44.4,emoji:0.89,excl:0.46,name_call:0.26,praise:0.74,empathy:0.08,hansom:0.5,food:0.37,kcal:0.1,suggest:0.11},
+    {name:"磯田 夏実",kind:"normal",n_msgs:148,n_users:8,finish:75.0,emoji:0.89,excl:0.35,name_call:0.65,praise:0.57,empathy:0.19,hansom:0.25,food:0.47,kcal:0.03,suggest:0.17},
+    {name:"ジャン 春香",kind:"normal",n_msgs:138,n_users:8,finish:50.0,emoji:0.94,excl:0.89,name_call:0.79,praise:0.76,empathy:0.13,hansom:0.7,food:0.23,kcal:0.04,suggest:0.09},
+    {name:"諸橋 ふよ子",kind:"normal",n_msgs:132,n_users:5,finish:60.0,emoji:0.79,excl:0.4,name_call:0.08,praise:0.68,empathy:0.02,hansom:0.61,food:0.39,kcal:0.17,suggest:0.17},
+    {name:"山﨑 智恵子",kind:"normal",n_msgs:130,n_users:7,finish:57.1,emoji:0.98,excl:0.69,name_call:0.13,praise:0.57,empathy:0.05,hansom:0.3,food:0.35,kcal:0.13,suggest:0.17},
+    {name:"小川 友理",kind:"normal",n_msgs:126,n_users:8,finish:50.0,emoji:0.83,excl:0.91,name_call:0.19,praise:0.82,empathy:0.17,hansom:0.8,food:0.16,kcal:0.1,suggest:0.09},
+    {name:"町田 千枝",kind:"normal",n_msgs:124,n_users:10,finish:30.0,emoji:0.91,excl:0.94,name_call:0.24,praise:0.59,empathy:0.02,hansom:0.46,food:0.44,kcal:0.16,suggest:0.15},
+    {name:"削除されたパートナー",kind:"deleted",n_msgs:124,n_users:8,finish:25.0,emoji:0.49,excl:0.77,name_call:0.36,praise:0.78,empathy:0.13,hansom:0.71,food:0.17,kcal:0.06,suggest:0.01},
+    {name:"星 英恵",kind:"normal",n_msgs:120,n_users:6,finish:33.3,emoji:0.93,excl:0.63,name_call:0.26,praise:0.62,empathy:0.07,hansom:0.57,food:0.41,kcal:0.2,suggest:0.11},
+    {name:"【稼働保留中】井上 紗代美",kind:"inactive",n_msgs:114,n_users:10,finish:90.0,emoji:0.98,excl:0.54,name_call:0.21,praise:0.77,empathy:0.07,hansom:0.74,food:0.22,kcal:0.09,suggest:0.07},
+    {name:"田中 美帆",kind:"normal",n_msgs:111,n_users:8,finish:25.0,emoji:0.87,excl:0.55,name_call:0.37,praise:0.82,empathy:0.08,hansom:0.81,food:0.5,kcal:0.0,suggest:0.08},
+    {name:"木戸 あすみ",kind:"normal",n_msgs:111,n_users:11,finish:81.8,emoji:0.9,excl:0.86,name_call:0.64,praise:0.74,empathy:0.02,hansom:0.66,food:0.53,kcal:0.36,suggest:0.01},
+    {name:"小林 香穂",kind:"normal",n_msgs:109,n_users:6,finish:50.0,emoji:0.75,excl:0.79,name_call:0.29,praise:0.59,empathy:0.01,hansom:0.54,food:0.39,kcal:0.16,suggest:0.18},
+    {name:"後藤 愛",kind:"normal",n_msgs:108,n_users:6,finish:66.7,emoji:0.73,excl:0.79,name_call:0.23,praise:0.84,empathy:0.12,hansom:0.74,food:0.44,kcal:0.11,suggest:0.13},
+    {name:"蝦草 裕美",kind:"normal",n_msgs:104,n_users:5,finish:60.0,emoji:0.49,excl:0.68,name_call:0.27,praise:0.56,empathy:0.08,hansom:0.06,food:0.28,kcal:0.15,suggest:0.09},
+    {name:"柳原 八起",kind:"normal",n_msgs:102,n_users:3,finish:100.0,emoji:0.71,excl:0.85,name_call:0.2,praise:0.68,empathy:0.09,hansom:0.6,food:0.23,kcal:0.02,suggest:0.08},
+    {name:"日達 礼佳",kind:"normal",n_msgs:93,n_users:3,finish:33.3,emoji:0.88,excl:0.81,name_call:0.49,praise:0.65,empathy:0.27,hansom:0.51,food:0.44,kcal:0.33,suggest:0.14},
+    {name:"遠藤 菜桜",kind:"normal",n_msgs:92,n_users:9,finish:44.4,emoji:0.88,excl:0.9,name_call:0.14,praise:0.59,empathy:0.05,hansom:0.46,food:0.29,kcal:0.14,suggest:0.08},
+    {name:"【稼働保留中】森岡 真衣",kind:"inactive",n_msgs:88,n_users:5,finish:60.0,emoji:0.88,excl:0.95,name_call:0.09,praise:0.76,empathy:0.03,hansom:0.62,food:0.67,kcal:0.25,suggest:0.09},
+    {name:"小川 舞",kind:"normal",n_msgs:84,n_users:4,finish:75.0,emoji:0.9,excl:0.56,name_call:0.24,praise:0.63,empathy:0.26,hansom:0.5,food:0.1,kcal:0.05,suggest:0.11},
+    {name:"梶 史絵",kind:"normal",n_msgs:80,n_users:6,finish:0.0,emoji:0.56,excl:0.42,name_call:0.34,praise:0.7,empathy:0.05,hansom:0.61,food:0.51,kcal:0.06,suggest:0.26},
+    {name:"猪川 聡美",kind:"normal",n_msgs:80,n_users:9,finish:22.2,emoji:0.72,excl:0.61,name_call:0.07,praise:0.75,empathy:0.07,hansom:0.7,food:0.35,kcal:0.57,suggest:0.28},
+    {name:"柿田 江梨子",kind:"normal",n_msgs:79,n_users:5,finish:20.0,emoji:0.3,excl:0.81,name_call:0.33,praise:0.81,empathy:0.14,hansom:0.73,food:0.42,kcal:0.16,suggest:0.08},
+    {name:"飯生 そら",kind:"normal",n_msgs:79,n_users:4,finish:75.0,emoji:0.89,excl:0.84,name_call:0.49,praise:0.7,empathy:0.18,hansom:0.49,food:0.22,kcal:0.16,suggest:0.11},
+    {name:"尾崎 真紀",kind:"normal",n_msgs:78,n_users:8,finish:50.0,emoji:0.58,excl:0.63,name_call:0.06,praise:0.46,empathy:0.05,hansom:0.35,food:0.15,kcal:0.06,suggest:0.09},
+    {name:"若尾 愛加",kind:"normal",n_msgs:77,n_users:7,finish:14.3,emoji:0.91,excl:0.55,name_call:0.36,praise:0.4,empathy:0.04,hansom:0.0,food:0.51,kcal:0.04,suggest:0.14},
+    {name:"野原 菜々子",kind:"normal",n_msgs:75,n_users:4,finish:50.0,emoji:0.89,excl:0.89,name_call:0.6,praise:0.76,empathy:0.05,hansom:0.71,food:0.53,kcal:0.33,suggest:0.24},
+    {name:"征矢 ひろみ",kind:"normal",n_msgs:74,n_users:4,finish:50.0,emoji:0.76,excl:0.58,name_call:0.62,praise:0.73,empathy:0.55,hansom:0.7,food:0.32,kcal:0.32,suggest:0.04},
+    {name:"前原 由貴",kind:"normal",n_msgs:73,n_users:6,finish:33.3,emoji:0.82,excl:0.92,name_call:0.15,praise:0.82,empathy:0.05,hansom:0.82,food:0.25,kcal:0.11,suggest:0.16},
+    {name:"橋本 沙織",kind:"normal",n_msgs:73,n_users:5,finish:40.0,emoji:1.0,excl:0.93,name_call:0.79,praise:0.99,empathy:0.18,hansom:0.89,food:0.44,kcal:0.14,suggest:0.03},
+    {name:"朝倉 かおる",kind:"normal",n_msgs:69,n_users:4,finish:50.0,emoji:0.97,excl:0.64,name_call:0.88,praise:0.58,empathy:0.13,hansom:0.3,food:0.22,kcal:0.07,suggest:0.12},
+    {name:"三井 眞理子",kind:"normal",n_msgs:67,n_users:2,finish:100.0,emoji:0.91,excl:0.57,name_call:0.43,praise:0.55,empathy:0.03,hansom:0.19,food:0.63,kcal:0.31,suggest:0.06},
+    {name:"関屋 理沙",kind:"normal",n_msgs:61,n_users:3,finish:66.7,emoji:0.92,excl:0.87,name_call:0.1,praise:0.56,empathy:0.05,hansom:0.49,food:0.44,kcal:0.1,suggest:0.03},
+    {name:"木村 安希",kind:"normal",n_msgs:58,n_users:5,finish:80.0,emoji:0.83,excl:0.34,name_call:0.67,praise:0.57,empathy:0.03,hansom:0.43,food:0.26,kcal:0.07,suggest:0.19},
+    {name:"須藤 帆南",kind:"normal",n_msgs:52,n_users:4,finish:50.0,emoji:0.73,excl:0.88,name_call:0.15,praise:0.71,empathy:0.02,hansom:0.54,food:0.37,kcal:0.13,suggest:0.25},
+    {name:"渡邊 勢子",kind:"normal",n_msgs:52,n_users:4,finish:25.0,emoji:0.92,excl:0.6,name_call:0.71,praise:0.71,empathy:0.0,hansom:0.6,food:0.37,kcal:0.08,suggest:0.12},
+    {name:"進野 祐子",kind:"normal",n_msgs:52,n_users:2,finish:100.0,emoji:0.85,excl:0.42,name_call:0.1,praise:0.75,empathy:0.12,hansom:0.65,food:0.27,kcal:0.21,suggest:0.08},
+    {name:"上野 靖子",kind:"normal",n_msgs:48,n_users:8,finish:25.0,emoji:0.58,excl:0.85,name_call:0.29,praise:0.85,empathy:0.12,hansom:0.69,food:0.29,kcal:0.08,suggest:0.1},
+    {name:"塚越 香菜",kind:"normal",n_msgs:46,n_users:2,finish:100.0,emoji:0.89,excl:0.85,name_call:0.41,praise:0.65,empathy:0.15,hansom:0.61,food:0.22,kcal:0.02,suggest:0.09},
+    {name:"澤 菜月",kind:"normal",n_msgs:41,n_users:3,finish:33.3,emoji:0.76,excl:0.93,name_call:0.12,praise:0.73,empathy:0.17,hansom:0.56,food:0.24,kcal:0.51,suggest:0.15},
+    {name:"臼井 彩",kind:"normal",n_msgs:41,n_users:3,finish:66.7,emoji:0.61,excl:0.76,name_call:0.12,praise:0.61,empathy:0.0,hansom:0.46,food:0.32,kcal:0.1,suggest:0.2},
+    {name:"水戸 宏美",kind:"normal",n_msgs:36,n_users:5,finish:40.0,emoji:0.97,excl:0.58,name_call:0.58,praise:0.47,empathy:0.17,hansom:0.47,food:0.28,kcal:0.22,suggest:0.19},
+    {name:"笹川 未緒",kind:"normal",n_msgs:35,n_users:2,finish:50.0,emoji:0.86,excl:0.86,name_call:0.14,praise:0.63,empathy:0.06,hansom:0.63,food:0.09,kcal:0.06,suggest:0.06},
+    {name:"佐々木 夏那",kind:"normal",n_msgs:34,n_users:3,finish:66.7,emoji:0.91,excl:0.76,name_call:0.24,praise:0.74,empathy:0.21,hansom:0.62,food:0.15,kcal:0.12,suggest:0.09},
+    {name:"大平 雅美",kind:"normal",n_msgs:33,n_users:4,finish:25.0,emoji:0.94,excl:0.7,name_call:0.03,praise:0.36,empathy:0.03,hansom:0.0,food:0.45,kcal:0.03,suggest:0.15},
+    {name:"上野 友子",kind:"normal",n_msgs:32,n_users:2,finish:50.0,emoji:0.97,excl:0.66,name_call:0.03,praise:0.84,empathy:0.09,hansom:0.78,food:0.28,kcal:0.03,suggest:0.06},
+    {name:"加藤 萌",kind:"normal",n_msgs:30,n_users:4,finish:0.0,emoji:0.53,excl:0.93,name_call:0.07,praise:0.73,empathy:0.07,hansom:0.4,food:0.2,kcal:0.2,suggest:0.13},
+    {name:"★★正村 百合",kind:"admin",n_msgs:18,n_users:3,finish:66.7,emoji:0.56,excl:0.5,name_call:0.06,praise:0.39,empathy:0.0,hansom:0.22,food:0.0,kcal:0.0,suggest:0.06},
+    {name:"浅田 美成",kind:"normal",n_msgs:16,n_users:1,finish:0.0,emoji:0.94,excl:0.62,name_call:0.12,praise:0.75,empathy:0.0,hansom:0.75,food:0.25,kcal:0.38,suggest:0.31},
+    {name:"中川 啓子",kind:"normal",n_msgs:16,n_users:2,finish:50.0,emoji:0.44,excl:0.38,name_call:0.12,praise:0.31,empathy:0.0,hansom:0.31,food:0.12,kcal:0.0,suggest:0.31},
+    {name:"小寺 美江",kind:"normal",n_msgs:4,n_users:2,finish:0.0,emoji:0.25,excl:0.25,name_call:0.25,praise:0.5,empathy:0.0,hansom:0.25,food:0.0,kcal:0.0,suggest:0.25}
+  ];
+
+  // 値 0-1 を青のグラデーション色に変換（matplotlib 'Blues' colormap 近似）
+  function valToColor(v) {
+    // 0=ほぼ白、1=濃紺
+    if (v <= 0) v = 0; if (v >= 1) v = 1;
+    // 段階的にRGBを補間
+    const stops = [
+      [0.00, [247,251,255]],  // #f7fbff
+      [0.25, [198,219,239]],  // #c6dbef
+      [0.50, [107,174,214]],  // #6baed6
+      [0.75, [33,113,181]],   // #2171b5
+      [1.00, [8,48,107]],     // #08306b
+    ];
+    let lo = stops[0], hi = stops[stops.length-1];
+    for (let i = 0; i < stops.length-1; i++) {
+      if (v >= stops[i][0] && v <= stops[i+1][0]) { lo = stops[i]; hi = stops[i+1]; break; }
+    }
+    const t = (v - lo[0]) / (hi[0] - lo[0] || 1);
+    const r = Math.round(lo[1][0] + (hi[1][0]-lo[1][0])*t);
+    const g = Math.round(lo[1][1] + (hi[1][1]-lo[1][1])*t);
+    const b = Math.round(lo[1][2] + (hi[1][2]-lo[1][2])*t);
+    return `rgb(${r},${g},${b})`;
+  }
+  // テキスト色（背景の明度に応じて白or黒）
+  function textColorForBg(v) {
+    return v >= 0.45 ? '#ffffff' : '#1f2937';
+  }
+
+  function renderStyleHeatmap() {
+    const minN  = parseInt(document.getElementById('hmFilter').value);
+    const kinds = document.getElementById('hmKind').value;  // 'normal' | 'all'
+    const sort  = document.getElementById('hmSort').value;
+    let list = ALL_COACH_STYLE.filter(c => c.n_users >= minN);
+    if (kinds === 'normal') list = list.filter(c => c.kind === 'normal');
+    if (sort === 'finish_desc') list.sort((a,b) => b.finish - a.finish);
+    else if (sort === 'finish_asc') list.sort((a,b) => a.finish - b.finish);
+    else if (sort === 'n_users_desc') list.sort((a,b) => b.n_users - a.n_users);
+    else if (sort === 'n_msgs_desc')  list.sort((a,b) => b.n_msgs - a.n_msgs);
+
+    document.getElementById('hmCountLabel').innerHTML =
+      `表示: <strong>${list.length}</strong> / 79 コーチ`;
+
+    const tbody = document.getElementById('styleHeatmapBody');
+    const cols  = ['emoji','excl','name_call','praise','empathy','hansom','food','kcal','suggest'];
+    tbody.innerHTML = list.map(c => {
+      const cells = cols.map(col => {
+        const v = c[col];
+        const bg = valToColor(v);
+        const fg = textColorForBg(v);
+        return `<td class="hm-cell" style="background:${bg};color:${fg};">${v.toFixed(2)}</td>`;
+      }).join('');
+      const kindBadge = c.kind !== 'normal'
+        ? `<span style="background:#fee2e2;color:#991b1b;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px;">${c.kind}</span>`
+        : '';
+      return `<tr>
+        <td class="coach-name">${c.name}${kindBadge}<br><span style="font-size:10px;color:var(--color-muted);font-weight:400;">担当${c.n_users}名・完走${c.finish}%</span></td>
+        ${cells}
+      </tr>`;
+    }).join('');
+  }
+
+  let coachChartInstance = null;
+  function drawCoachFinishChart() {
+    const minN = parseInt(document.getElementById('coachFilter').value);
+    const sortMode = document.getElementById('coachSort').value;
+    const kinds = document.getElementById('coachKind').value;  // 'normal' | 'all'
+    let filtered = ALL_COACH_STYLE.filter(c => c.n_users >= minN);
+    if (kinds === 'normal') filtered = filtered.filter(c => c.kind === 'normal');
+    if (sortMode === 'finish_desc') filtered.sort((a,b) => b.finish - a.finish);
+    else if (sortMode === 'finish_asc') filtered.sort((a,b) => a.finish - b.finish);
+    else if (sortMode === 'n_desc') filtered.sort((a,b) => b.n_users - a.n_users);
+    else if (sortMode === 'n_asc') filtered.sort((a,b) => a.n_users - b.n_users);
+
+    // ラベル数に応じて高さ調整
+    const wrap = document.getElementById('coachFinishWrap');
+    wrap.style.height = Math.max(280, filtered.length * 18 + 60) + 'px';
+    document.getElementById('coachCountLabel').innerHTML =
+      `表示: <strong>${filtered.length}</strong> / 79 コーチ`;
+
+    if (coachChartInstance) coachChartInstance.destroy();
+    const ctx = document.getElementById('coachFinishChart').getContext('2d');
+    coachChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: filtered.map(c => `${c.name} (n=${c.n_users})`),
+        datasets: [{
+          label: '完走率 (%)',
+          data: filtered.map(c => c.finish),
+          backgroundColor: filtered.map(c => {
+            if (c.kind !== 'normal') return 'rgba(139,92,246,0.6)';  // 紫: 管理者/保留中等
+            if (c.n_users < 5) return 'rgba(156,163,175,0.5)';        // 灰: 標本小
+            return c.finish >= 55 ? 'rgba(16,185,129,0.7)' :
+                   c.finish >= 40 ? 'rgba(245,158,11,0.7)' :
+                                     'rgba(239,68,68,0.7)';
+          })
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: {
+            afterLabel: (c) => {
+              const k = filtered[c.dataIndex].kind;
+              if (k !== 'normal') return `⚠️ ${k} (通常コーチではない)`;
+              if (filtered[c.dataIndex].n_users < 5) return '⚠️ 標本数が少なく参考値';
+              return '';
+            }
+          }}
+        },
+        scales: {
+          x: { beginAtZero: true, max: 100, title: { display: true, text: '完走率 (%)' } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  }
+
+  // -------------------------
+  // 食品具体性 × 完走率 (散布図)
+  // -------------------------
+  function drawFoodSpecChart() {
+    const ctx = document.getElementById('foodSpecChart').getContext('2d');
+    const data = [
+      {x:46, y:67, label:'永冨'},  {x:46, y:59, label:'廣中'},
+      {x:40, y:62, label:'越田'},  {x:36, y:60, label:'赤松'},
+      {x:24, y:73, label:'織田島'},{x:22, y:62, label:'荒木'},
+      {x:28, y:48, label:'伊礼'},  {x:24, y:50, label:'榊'},
+      {x:22, y:52, label:'高良'},  {x:17, y:35, label:'稲本'},
+      {x:18, y:35, label:'大熊'},  {x:18, y:33, label:'松浦'},
+      {x:17, y:60, label:'川端'},
+    ];
+    new Chart(ctx, {
+      type: 'scatter',
+      data: { datasets: [{
+        label: 'コーチ別',
+        data: data,
+        backgroundColor: 'rgba(99,102,241,0.7)',
+        pointRadius: 8, pointHoverRadius: 10
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: {
+            label: (c) => `${data[c.dataIndex].label}: 食品具体性${c.parsed.x}% / 完走率${c.parsed.y}%`
+          }}
+        },
+        scales: {
+          x: { title: { display: true, text: '食品具体性（コーチ発話の％）' }, min: 10, max: 50 },
+          y: { title: { display: true, text: '担当ユーザー完走率 (%)' }, min: 0, max: 80 }
+        }
+      }
+    });
+  }
+
+  // -------------------------
+  // 入口さんレーダー
+  // -------------------------
+  function drawIguchiRadar() {
+    const ctx = document.getElementById('iguchiRadar').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['共感', '具体性', '深掘り', '傾聴', '再現性', 'リバ配慮'],
+        datasets: [{
+          label: '入口佐和子',
+          data: [28, 55, 22, 38, 65, 58],
+          borderColor: 'rgb(99,102,241)',
+          backgroundColor: 'rgba(99,102,241,0.25)'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { r: { suggestedMin: 0, suggestedMax: 80 } }
+      }
+    });
+  }
+
+  // -------------------------
+  // 初期化
+  // -------------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    renderCorrTable();
+    renderRanking();
+    drawNarrativeChart();
+    drawRadarChart();
+    drawCoachFinishChart();
+    drawFoodSpecChart();
+    renderStyleHeatmap();
+    drawIguchiRadar();
+    // フィルタ・ソート変更イベント
+    document.getElementById('coachKind').addEventListener('change', drawCoachFinishChart);
+    document.getElementById('coachFilter').addEventListener('change', drawCoachFinishChart);
+    document.getElementById('coachSort').addEventListener('change', drawCoachFinishChart);
+    document.getElementById('hmKind').addEventListener('change', renderStyleHeatmap);
+    document.getElementById('hmFilter').addEventListener('change', renderStyleHeatmap);
+    document.getElementById('hmSort').addEventListener('change', renderStyleHeatmap);
+  });
+</script>
+
+</body>
+</html>

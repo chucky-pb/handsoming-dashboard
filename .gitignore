@@ -1,0 +1,11 @@
+# 秘密情報・環境（コミット禁止）
+.env.local
+.env*.local
+.vercel
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+
+# 依存・ビルド
+node_modules/

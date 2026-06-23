@@ -1,0 +1,562 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ハンサミング 栄養士ヒアリング 第二報レポート（2026-06-08）</title>
+<style>
+:root{--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--card:#ffffff;--bg:#f8f9fa;--brand:#2563eb;--brand2:#3b82f6;--brand-soft:#eff6ff;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--soft-warn:#fef3c7;--soft-bad:#fee2e2;--soft-ok:#dcfce7;--soft-blue:#dbeafe;--font-jp:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans CJK JP','Yu Gothic',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-jp);background:var(--bg);color:var(--ink);line-height:1.7;font-size:15px}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 28px 80px}
+header.hero{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;padding:36px 32px;border-radius:14px;margin-bottom:28px}
+header.hero .tag{display:inline-block;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:14px;font-size:12px;margin-bottom:10px}
+header.hero h1{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px}
+header.hero .sub{font-size:14px;opacity:.95;line-height:1.7}
+header.hero .meta{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.25);font-size:12px;opacity:.85;display:flex;gap:18px;flex-wrap:wrap}
+section{background:#fff;border-radius:12px;padding:28px 30px;margin-bottom:18px;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+section h2{font-size:20px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f1f5f9;color:#1e3a8a;display:flex;align-items:center;gap:8px}
+section h2 .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--brand);color:#fff;border-radius:8px;font-size:14px;font-weight:700}
+section h3{font-size:16px;font-weight:600;margin:18px 0 8px;color:#374151}
+section h4{font-size:14px;font-weight:600;margin:12px 0 6px;color:#475569}
+section p{margin-bottom:10px}
+.callout{background:#eff6ff;border-left:4px solid var(--brand);padding:12px 16px;border-radius:6px;margin:14px 0;font-size:14px}
+.callout.warn{background:#fefce8;border-left-color:var(--warn)}
+.callout.green{background:#f0fdf4;border-left-color:var(--ok)}
+.callout.bad{background:#fef2f2;border-left-color:var(--bad)}
+.callout b{color:#1e3a8a}
+.callout.warn b{color:#854d0e}
+.callout.green b{color:#166534}
+.callout.bad b{color:#991b1b}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600;color:#475569;border-bottom:1px solid #cbd5e1}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+tr:hover{background:#fafafa}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.kpi .label{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi .value{font-size:24px;font-weight:700;line-height:1.2;color:var(--brand)}
+.kpi .sub{font-size:11px;color:var(--mute);margin-top:3px}
+.kpi.green .value{color:var(--ok)} .kpi.warn .value{color:var(--warn)} .kpi.bad .value{color:var(--bad)}
+.score-bar{background:#e5e7eb;height:8px;border-radius:4px;overflow:hidden;display:inline-block;width:80px;vertical-align:middle;margin:0 5px}
+.score-bar>div{height:100%;background:var(--brand);border-radius:4px}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;line-height:1.3}
+.badge.red{background:var(--soft-bad);color:#991b1b}.badge.yellow{background:var(--soft-warn);color:#92400e}.badge.green{background:var(--soft-ok);color:#166534}.badge.blue{background:var(--soft-blue);color:#1e40af}.badge.gray{background:#f3f4f6;color:#4b5563}
+.jtbd-card{background:#f8fafc;border:1px solid #cbd5e1;border-left:5px solid var(--brand);border-radius:8px;padding:16px 18px;margin:12px 0}
+.jtbd-card.priority1{border-left-color:var(--bad);background:#fef2f2}
+.jtbd-card.priority2{border-left-color:var(--warn);background:#fefce8}
+.jtbd-card.priority3{border-left-color:var(--brand);background:#eff6ff}
+.jtbd-card .label{font-size:11px;font-weight:700;color:var(--bad);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.jtbd-card.priority2 .label{color:var(--warn)}
+.jtbd-card.priority3 .label{color:var(--brand)}
+.jtbd-card .title{font-size:16px;font-weight:700;margin-bottom:8px;color:#1f2937}
+.jtbd-card .statement{font-size:13px;line-height:1.7;margin-bottom:10px;color:#374151;background:#fff;padding:10px 12px;border-radius:6px;border:1px solid rgba(0,0,0,.06)}
+.jtbd-card .meta{font-size:12px;color:var(--mute);line-height:1.6}
+.jtbd-card .meta b{color:#374151}
+.tag{display:inline-block;padding:2px 8px;background:#f3f4f6;color:#475569;border-radius:11px;font-size:11px;margin:2px 3px 2px 0}
+.quote{background:#fafafa;border-left:3px solid #cbd5e1;padding:10px 14px;font-style:italic;color:#475569;margin:8px 0;font-size:13px;line-height:1.7}
+.quote .who{display:block;font-style:normal;color:var(--mute);font-size:11px;margin-top:4px;font-weight:600}
+.warning-banner{background:linear-gradient(135deg,#fef3c7,#fefce8);border:1px solid #fde047;border-radius:10px;padding:14px 18px;margin:16px 0;font-size:13px;line-height:1.7;color:#854d0e}
+.warning-banner b{color:#713f12}
+.scroll-x{overflow-x:auto;max-width:100%}
+ul.clean{list-style:none;padding-left:0;margin:6px 0}
+ul.clean li{padding:6px 0 6px 22px;position:relative;font-size:13px;line-height:1.6}
+ul.clean li::before{content:"●";color:var(--brand);position:absolute;left:0;top:6px;font-size:9px}
+ul.clean li b{color:#1f2937}
+.cross-check{display:inline-block;width:18px;height:18px;text-align:center;font-weight:700;border-radius:4px;font-size:11px;line-height:18px}
+.cross-check.yes{background:var(--soft-ok);color:#166534}
+.cross-check.partial{background:var(--soft-warn);color:#92400e}
+.cross-check.no{background:#f1f5f9;color:var(--mute)}
+.toc{background:#fafafa;border:1px solid var(--line);border-radius:10px;padding:14px 20px;margin-bottom:22px}
+.toc h3{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+.toc ol{padding-left:22px;font-size:13px;line-height:1.85}
+.toc a{color:var(--brand);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.footer{text-align:center;color:var(--mute);font-size:12px;padding:24px 0;margin-top:20px;border-top:1px solid var(--line)}
+.footer a{color:var(--brand);text-decoration:none}
+@media(max-width:700px){.wrap{padding:18px 14px 60px}header.hero{padding:24px 18px}section{padding:20px 18px}}
+</style></head><body>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="tag">RESEARCH REPORT · 2nd Edition</div>
+  <h1>栄養士ヒアリング 第二報レポート</h1>
+  <div class="sub">両ロール経験者 3 名へのインタビュー分析<br>＋ 6軸スコアリングシステムによる「ドッグフーディング」検証結果</div>
+  <div class="meta">
+    <div>📅 実施日：2026年6月3日</div>
+    <div>👥 対象：松浦さん／廣中さん／荒木さん（敬称略・順不同）</div>
+    <div>🎤 ファシリテーター：PORTBACK 樗木</div>
+    <div>📝 報告：2026年6月8日 第二報</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#summary">エグゼクティブサマリー</a></li>
+    <li><a href="#caveat">第二報での重要な補足（一報からの修正）</a></li>
+    <li><a href="#cross">クロス集計：3 名一致のペインポイント</a></li>
+    <li><a href="#jtbd">Phase 1 着手候補：JTBD ステートメント Top 3</a></li>
+    <li><a href="#dogfood">ドッグフーディング検証：6 軸スコアリングを Chucky 自身に適用</a></li>
+    <li><a href="#action">推奨アクション</a></li>
+    <li><a href="#open">オープン論点・継続協議事項</a></li>
+    <li><a href="#refs">参考資料</a></li>
+    <li><a href="#exec-review" style="color:var(--bad);font-weight:600">[2026-06-15 追記] 本部レビュー結果 + Phase 1 修正案</a></li>
+  </ol>
+</div>
+
+<section id="summary">
+  <h2><span class="num">1</span>エグゼクティブサマリー</h2>
+  <div class="callout">
+    <b>3 名のヒアリングから「Phase 1 で取り組むべきこと」が 3 つ、明確に見えました。</b>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">★★★ 一致ペイン</div><div class="value">4 個</div><div class="sub">3 名全員が言及</div></div>
+    <div class="kpi"><div class="label">JTBD 候補</div><div class="value">3 件</div><div class="sub">Phase 1 着手提案</div></div>
+    <div class="kpi green"><div class="label">プロト直結要望</div><div class="value">5 件</div><div class="sub">設計通り</div></div>
+    <div class="kpi warn"><div class="label">未着手の課題</div><div class="value">2 件</div><div class="sub">設計外の論点</div></div>
+  </div>
+
+  <h3>Phase 1 で取り組むべき 3 つ（一報からの更新版）</h3>
+  <ol style="padding-left:22px;line-height:1.9">
+    <li><b>「私の対応、これで合ってる？」を即座に返す</b> — 過去の成功例・類似ケースを 1-2 行で。<span class="badge red">3 名一致</span></li>
+    <li><b>「痩せない／弱音」ユーザーへのフォロー文を AI が補助する</b> — 励まし以上の具体提案。<span class="badge red">3 名一致</span></li>
+    <li><b>マニュアルの AI 検索</b> — 「探すのが大変／緻密すぎて萎える」への対応。<span class="badge red">3 名一致</span></li>
+  </ol>
+
+  <h3>追加で見えた構造的課題</h3>
+  <ul class="clean">
+    <li><b>会社別の対応戦略</b>が個人スキルに依存している（明治安田／AGC のキャラ差）— 引継ぎ仕組み化の機会</li>
+    <li><b>「励ましは頑張り論」</b>という思想的疑問が廣中さんから出ている — Phase 6 LINE のコメントトーン設計の根幹に関わる重要発言</li>
+    <li><b>30 人担当時代の機会損失</b>が荒木さんから語られた — 担当人数の上限と質の関係を制度として再検討する論点</li>
+  </ul>
+</section>
+
+<section id="caveat">
+  <h2><span class="num">2</span>第二報での重要な補足（一報からの修正）</h2>
+
+  <div class="warning-banner">
+    <b>⚠ 重要な前提補足：</b> 一報では 3 名のヒアリング内容を並列で取り上げましたが、本第二報ではヒアリングの「実施順」と「データ取得形式の差」を踏まえ、各セッションの分析を文脈化し直しました。
+  </div>
+
+  <h3>2-1. ヒアリングの実施順</h3>
+  <p>ヒアリングは <b>廣中さん → 松浦さん → 荒木さん</b> の順で実施しました。</p>
+  <p>第 1 セッション（廣中さん）の段階では、ファシリテーターである樗木自身が「栄養士の業務観・仕事への向き合い方」への解像度がまだ十分でなく、第 2・第 3 セッションを経るにつれて質問の質が体系的に改善していった、という<b>学習曲線がはっきり存在</b>します。</p>
+
+  <h3>2-2. データ取得形式の差</h3>
+  <table>
+    <thead><tr><th>セッション</th><th>動画/音声</th><th>メモ形式</th><th>情報密度</th></tr></thead>
+    <tbody>
+      <tr><td>廣中さん（第 1 回）</td><td>なし</td><td>音声前提の走り書き</td><td><span class="badge yellow">低</span></td></tr>
+      <tr><td>松浦さん（第 2 回）</td><td>あり（SharePoint）</td><td>メモ＋動画補完</td><td><span class="badge blue">中</span></td></tr>
+      <tr><td>荒木さん（第 3 回）</td><td>あり（SharePoint）</td><td>メモ＋動画補完</td><td><span class="badge green">高</span></td></tr>
+    </tbody>
+  </table>
+
+  <p>廣中さんセッションのメモは「動画があることを前提にした走り書き」だったため、本レポート時点では文章としての密度が他 2 名より低い状態です。</p>
+
+  <h3>2-3. この補足が分析結果に与える影響</h3>
+  <div class="callout green">
+    <b>廣中さんの 6 軸スコア（後述）が低めに出ているのは、廣中さんご自身の発信力の問題ではなく、上記 2 つの要因の合成です。</b> したがって、廣中さんの発言は「サンプルの 1/3」としてフラットに取り扱うのではなく、<b>追加ヒアリング or 動画文字起こしによる補完</b>が望ましいと判断します。
+  </div>
+
+  <h3>2-4. 一報からの主要な追加</h3>
+  <ul class="clean">
+    <li>3 名一致ペインの<b>クロス集計マトリクス</b>を追加（一報では各人を並列に紹介）</li>
+    <li><b>JTBD（Jobs-To-Be-Done）形式</b>での Phase 1 候補化</li>
+    <li>ハンサミングの<b>面談分析 6 軸スコアリングシステムを Chucky 自身に適用</b>（ドッグフーディング検証）</li>
+    <li>会社別カラー差・思想的疑問など、一報で取り上げが浅かった「構造的課題」を明示</li>
+  </ul>
+</section>
+
+<section id="cross">
+  <h2><span class="num">3</span>クロス集計：3 名一致のペインポイント</h2>
+
+  <p>3 名の発言を <b>テーマごとに集計</b> し、「全員一致」「2 名一致」「1 名のみ」を可視化しました。多数決ではなく、<b>言及の有無 × 強度</b> の合成で重みづけしています。</p>
+
+  <div class="scroll-x">
+  <table>
+    <thead><tr><th>ペインポイント</th><th>松浦</th><th>廣中</th><th>荒木</th><th>一致度</th><th>Phase 1 候補</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>「自分の対応、これで合ってる？」</b><br><span style="font-size:11px;color:var(--mute)">フィードバック・成功例・正解マニュアル</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="badge red">★★★ 全員</span></td>
+        <td><span class="badge blue">JTBD #1</span></td>
+      </tr>
+      <tr>
+        <td><b>「LINE 弱音／痩せない」への対応難</b><br><span style="font-size:11px;color:var(--mute)">かける言葉が枯れる、励まし限界</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="badge red">★★★ 全員</span></td>
+        <td><span class="badge blue">JTBD #2</span></td>
+      </tr>
+      <tr>
+        <td><b>マニュアルの探しづらさ</b><br><span style="font-size:11px;color:var(--mute)">緻密／改善継続中だが見づらい</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="badge red">★★★ 全員</span></td>
+        <td><span class="badge blue">JTBD #3</span></td>
+      </tr>
+      <tr>
+        <td><b>30 分は短い／時間圧迫</b></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="badge yellow">★★ 2/3</span></td>
+        <td><span class="badge gray">運用論点</span></td>
+      </tr>
+      <tr>
+        <td><b>栄養士間の知見共有・スタイル共有</b></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check partial">△</span></td>
+        <td><span class="badge yellow">★★ 1.5/3</span></td>
+        <td><span class="badge gray">Phase 2 候補</span></td>
+      </tr>
+      <tr>
+        <td><b>ユーザー側の事前情報不足</b><br><span style="font-size:11px;color:var(--mute)">体重・契約形態など</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="badge yellow">★★ 2/3</span></td>
+        <td><span class="badge gray">設計連携</span></td>
+      </tr>
+      <tr>
+        <td><b>担当人数のキャパオーバー</b><br><span style="font-size:11px;color:var(--mute)">30 人時代の機会損失</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="badge gray">★ 個別</span></td>
+        <td><span class="badge gray">運用論点</span></td>
+      </tr>
+      <tr>
+        <td><b>強制参加ユーザーのこだわり</b></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="badge gray">★ 個別</span></td>
+        <td><span class="badge gray">深掘り要</span></td>
+      </tr>
+      <tr>
+        <td><b>SNS/YouTube 情報への対処</b><br><span style="font-size:11px;color:var(--mute)">オリーブオイル舐める派など</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="badge gray">★ 個別</span></td>
+        <td><span class="badge gray">エビデンス DB</span></td>
+      </tr>
+      <tr>
+        <td><b>過少申告の疑念</b><br><span style="font-size:11px;color:var(--mute)">会社の仕組みだから</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="cross-check yes">○</span></td>
+        <td><span class="cross-check no">—</span></td>
+        <td><span class="badge gray">★ 個別</span></td>
+        <td><span class="badge gray">深掘り要</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <b>注：</b> 「個別」「2/3」だからといって優先度が低いわけではありません。特に「励ましは頑張り論では？」「過少申告では？」など、廣中さんから 1 度だけ出た発言は、<b>追加深掘りで全員一致に格上げされる可能性</b>があります。
+  </div>
+</section>
+
+<section id="jtbd">
+  <h2><span class="num">4</span>Phase 1 着手候補：JTBD ステートメント Top 3</h2>
+
+  <p>「3 名全員一致」かつ「現行プロトとの接続度が高い」3 つを JTBD（Jobs-To-Be-Done）形式で言語化しました。</p>
+
+  <div class="jtbd-card priority1">
+    <div class="label">JTBD #1 — 最頻出</div>
+    <div class="title">「私の対応、これで合ってる？」を即座に確認したい</div>
+    <div class="statement">
+      担当ユーザーへの対応に迷ったとき、過去の自分や他の栄養士が<b>似たケースでどう声をかけてどう変わったか</b>を 1〜2 行で確認したい。詳細な学習教材ではなく、<b>判断材料としての具体例</b>が欲しい。
+    </div>
+    <div class="meta">
+      <b>3 名の発言根拠：</b><br>
+      • 松浦：「正解マニュアルが欲しい・うまくいっている人のマニュアル・成功例が欲しい」「1 行 2 行程度のフィードバック」<br>
+      • 廣中：「樗木さんの方でもマニュアル」（既存資料に頼っているが補完を求めている）<br>
+      • 荒木：「フォロー仕方、傾向を伝える術があれば」
+      <br><br>
+      <b>プロト接続：</b> <span class="tag">S-IV-2 類似ケース欄</span> <span class="tag">S-IV-5 マイパフォーマンス・成功事例</span> <span class="tag">新規：類似ケース AI 検索</span>
+    </div>
+  </div>
+
+  <div class="jtbd-card priority2">
+    <div class="label">JTBD #2 — 最深い痛み</div>
+    <div class="title">「痩せない／弱音ユーザー」へのフォロー文を AI が補助してほしい</div>
+    <div class="statement">
+      週 1 の体重報告後に減らない方、LINE で「減りません」と弱音を吐く方に対して、励まし以上の何か——具体的な傾向の言語化や次の打ち手——を 1〜2 行で返したい。「励ましは頑張り論」では本人に響かない感覚がある。
+    </div>
+    <div class="meta">
+      <b>3 名の発言根拠：</b><br>
+      • 松浦：「2 ヶ月目からモチベ下がりやすい」<br>
+      • 廣中：「LINE だと『減りません』などの弱音が頻発、かける言葉に困る」「<b>励ましはがんばりでは？</b>」<br>
+      • 荒木：「週 1 の体重報告後に減らない方へのフォロー手厚く」「3 つの典型ケース類型（平日意識／栄養不足／期待値高い）」
+      <br><br>
+      <b>プロト接続：</b> <span class="tag">S-LC-2 AI 提案コメント（3 トーン：共感／質問／具体提案）</span> <span class="tag">S-LC-3 警戒アラート対応</span>
+    </div>
+  </div>
+
+  <div class="jtbd-card priority3">
+    <div class="label">JTBD #3 — 最具体的</div>
+    <div class="title">マニュアル探しのストレスをなくしたい</div>
+    <div class="statement">
+      マニュアルは緻密で、改善も日々入っている。ただ、目の前のケースに合った箇所を探すのに時間がかかる。<b>自然文で AI に聞けば該当箇所と類似事例が一緒に返ってくる</b>状態が欲しい。
+    </div>
+    <div class="meta">
+      <b>3 名の発言根拠：</b><br>
+      • 松浦：「業務マニュアルは見づらさはある。が、日々改善されているので受け止めている」<br>
+      • 廣中：「マニュアルが細かすぎる → 緻密すぎて、萎える」<br>
+      • 荒木：「マニュアルがあるのは助かるが、探すのが大変。<b>AI 検索があると嬉しい</b>」
+      <br><br>
+      <b>プロト接続：</b> <span class="tag">新規：マニュアル AI 検索（RAG）</span> <span class="tag">S-IV-3a 面談中 Co-Pilot に統合</span>
+    </div>
+  </div>
+</section>
+
+<section id="dogfood">
+  <h2><span class="num">5</span>ドッグフーディング検証：6 軸スコアリングを Chucky 自身に適用</h2>
+
+  <div class="callout">
+    <b>「自社のシステムを、まず自分達のヒアリングに使ってみる」</b> という発想で、ハンサミングの面談分析パイプライン（6 軸スコアリング＋ AI 所見）に、Chucky のヒアリング 3 件をそのまま流し込みました。
+  </div>
+
+  <h3>5-1. スコア結果</h3>
+  <table>
+    <thead><tr><th>軸</th><th>松浦さん回</th><th>廣中さん回</th><th>荒木さん回</th><th>栄養士平均（参考）</th></tr></thead>
+    <tbody>
+      <tr><td><b>総合スコア</b></td><td><b>58</b><span class="score-bar"><div style="width:58%"></div></span></td><td><b>48</b><span class="score-bar"><div style="width:48%"></div></span></td><td><b style="color:var(--ok)">66</b><span class="score-bar"><div style="width:66%;background:var(--ok)"></div></span></td><td>42（栄養士サンプル 2 件）</td></tr>
+      <tr><td>共感</td><td>50</td><td>40</td><td>60</td><td>35</td></tr>
+      <tr><td>具体性</td><td>75</td><td>60</td><td><b>80</b></td><td>55</td></tr>
+      <tr><td>深掘り</td><td>65</td><td>50</td><td><b>75</b></td><td>25</td></tr>
+      <tr><td>傾聴</td><td>60</td><td>55</td><td>65</td><td>40</td></tr>
+      <tr><td>再現性</td><td>55</td><td>45</td><td>60</td><td>50</td></tr>
+      <tr><td>リバウンド配慮 *</td><td>45</td><td>40</td><td>55</td><td>60</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--mute);margin-top:6px">* 「リバウンド配慮」軸は本来「被験者の継続性配慮」を測る軸ですが、Chucky のヒアリングでは「相手栄養士が今後も協力したいと思える締め方」と再解釈してスコアリングしました。</p>
+
+  <h3>5-2. スコアが「右肩上がり」になった理由</h3>
+  <div class="callout green">
+    <b>廣中（48）→ 松浦（58）→ 荒木（66）の上昇は、想定どおりの「インタビュアー側の学習曲線」です。</b>
+  </div>
+  <ul class="clean">
+    <li><b>順序効果：</b> 廣中さんが第 1 セッション。Chucky 自身が栄養士の業務観に対する理解が当時最も薄く、質問の組み立てが手探りだった</li>
+    <li><b>データ形式：</b> 廣中さんは動画なし＋走り書きメモのみ。文字起こしによる補完がされていないため、スコアリング時の発話量が他 2 名の 60-75%</li>
+    <li><b>事前準備：</b> ヒアリングガイドは 3 名ヒアリング<b>後</b>に作成。事前にフレームワーク化された質問セットがなかった（次回からは改善見込み）</li>
+  </ul>
+
+  <h3>5-3. ドッグフーディングからの示唆</h3>
+  <div class="callout">
+    この検証で 2 つの重要な気づきが得られました。
+  </div>
+
+  <h4>気づき① 6 軸システムは「個人能力」ではなく「セッション固有のスコア」を測っている</h4>
+  <p>同じ Chucky が、相手と状況によって 48〜66 点まで 18 点もぶれます。これは現在ハンサミングが栄養士に提供している 6 軸スコアの<b>本来の使い方を裏付けます</b>——栄養士個人を評価する道具ではなく、<b>各面談セッションの状況把握ツール</b>として正しく機能する。</p>
+
+  <h4>気づき② 「動画/音声がない」は致命的にスコアを下げる</h4>
+  <p>廣中さんの低スコアは、廣中さん自身の発信力ではなく「データ取得失敗」の結果です。<b>面談録画の有無は、後段の分析・改善ループの質を決定づける</b>ことが、自分達のヒアリングで実証されました。これは「動画記録の必須化」がなぜ重要かのデータ的裏付けにもなります。</p>
+
+  <h3>5-4. 改善ポイント（Chucky 自身への 3 名横断フィードバック）</h3>
+  <ul class="clean">
+    <li><b>共感言語化のミラーリングが手薄</b>（全 3 件で指摘）— 感情を言葉で返す技術を強化</li>
+    <li><b>強力な単発発言を一文で残してしまう</b>機会損失（特に廣中さん「励ましは頑張り論」「過少申告では？」）</li>
+    <li><b>クロージング質問の徹底</b>（「明日からこれを使うとしたら、一番はじめに豊かにしたいのは？」のような直接質問が記録に見えない）</li>
+  </ul>
+
+  <p style="font-size:13px;color:var(--mute);margin-top:14px">→ 本所見は Supabase の <code>interview_analyses</code> テーブルに、栄養士の面談と同じスキーマで永続化されています。社内ダッシュボード（<code>role_mockup.html#iv1</code> Chucky としてログイン）から閲覧可能。</p>
+</section>
+
+<section id="action">
+  <h2><span class="num">6</span>推奨アクション</h2>
+
+  <h3>6-1. 短期（今月中）</h3>
+  <ol style="padding-left:22px;line-height:1.9">
+    <li><b>廣中さんへの補完ヒアリング</b>を実施 — 「励ましは頑張り論」「過少申告」「マニュアル萎える」の 3 発言を深掘り（30 分でも価値十分）</li>
+    <li>本レポートと一報を踏まえた <b>ハンサミング社経営層との 1 時間レビュー</b> — Phase 1 着手 3 件の合意取り</li>
+    <li>Phase 1 着手前に <b>追加 2-3 名の栄養士ヒアリング</b>（今回は両ロール経験者中心、次は LINE 専任 / 面談専任もカバー）</li>
+  </ol>
+
+  <h3>6-2. Phase 1 着手（次の 2-3 スプリント）</h3>
+  <ol style="padding-left:22px;line-height:1.9">
+    <li><b>類似ケース AI 検索</b>（JTBD #1）— 過去面談カルテと AI 提案コメントを Embedding で関連付け、栄養士が「似たケース」を即座に呼び出せる</li>
+    <li><b>AI コメント提案の本実装</b>（JTBD #2）— S-LC-2 のモック機能を Claude API 連携で稼働化。「励ましでない」3 トーンを設計</li>
+    <li><b>マニュアル AI 検索（RAG）</b>（JTBD #3）— 既存マニュアルを Embedding 化、自然文質問に該当箇所＋類似事例で回答</li>
+  </ol>
+
+  <h3>6-3. 中期構造論点（Phase 2 以降）</h3>
+  <ul class="clean">
+    <li><b>担当人数の上限と質の関係</b>を制度的に再検討（荒木さんの「30→5 人」体験から）</li>
+    <li><b>会社別キャラ差</b>を引継ぎノートにメタ情報として組み込み（廣中さんの「AGC おっとり／明治安田硬い」）</li>
+    <li><b>「励ましは頑張り論」</b>に向き合う思想的整理 — ハンサミング理念の「頑張らない」と現場の声かけの整合</li>
+  </ul>
+</section>
+
+<section id="open">
+  <h2><span class="num">7</span>オープン論点・継続協議事項</h2>
+
+  <table>
+    <thead><tr><th>論点</th><th>確認したいこと</th><th>担当</th></tr></thead>
+    <tbody>
+      <tr><td>動画録画の必須化</td><td>SharePoint 録画を全面談で必須化できるか／既存運用との折り合い</td><td>ハンサミング社</td></tr>
+      <tr><td>マニュアル AI 検索のデータソース</td><td>現マニュアルの構造化 OK 元データ／Embedding 化への許諾</td><td>合議</td></tr>
+      <tr><td>AI 提案コメントの言語モデル</td><td>Claude／GPT／自社 fine-tune、コスト試算とプライバシー要件</td><td>PORTBACK</td></tr>
+      <tr><td>「励ましは頑張り論」への思想的整理</td><td>ハンサミングの「頑張らない」理念と現場の声かけ実態の擦り合わせ</td><td>合議</td></tr>
+      <tr><td>追加ヒアリング対象</td><td>LINE 専任 / 面談専任 / 経営側など、対象拡張の優先度</td><td>合議</td></tr>
+      <tr><td>過少申告問題の取り扱い</td><td>会社の仕組み起因なら制度設計、被験者起因なら対話設計、両論</td><td>合議</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="refs">
+  <h2><span class="num">8</span>参考資料</h2>
+
+  <h3>Notion 設計書・関連資料</h3>
+  <ul class="clean">
+    <li><b>役割別 機能設計 v0.9（HSM-FN-001）</b> — Phase 1 設計仕様<br><a href="https://www.notion.so/36e40e0263d88154ac6ed4e76ff1e6be" style="font-size:12px;color:var(--brand)">https://www.notion.so/36e40e0263d88154ac6ed4e76ff1e6be</a></li>
+    <li><b>栄養士ヒアリングガイド（2026-06-03）</b> — 当日使用したガイド<br><a href="https://www.notion.so/37940e0263d881af9d7fdbb45bcda3b0" style="font-size:12px;color:var(--brand)">https://www.notion.so/37940e0263d881af9d7fdbb45bcda3b0</a></li>
+    <li><b>Intelligence Pipeline 設計書（HSM-ORG-001）</b><br><a href="https://www.notion.so/35540e0263d881d09407f10af5561fa8" style="font-size:12px;color:var(--brand)">https://www.notion.so/35540e0263d881d09407f10af5561fa8</a></li>
+  </ul>
+
+  <h3>プロトタイプ（Phase 0 動作版）</h3>
+  <ul class="clean">
+    <li><b>役割別 UI プロトタイプ</b><br><a href="https://handsoming-dashboard.vercel.app/role_mockup.html" style="font-size:12px;color:var(--brand)">https://handsoming-dashboard.vercel.app/role_mockup.html</a></li>
+    <li>本ヒアリング 3 件は Chucky でログインすれば S-IV-3 で 6 軸スコア＋所見が閲覧可能</li>
+  </ul>
+
+  <h3>原データ</h3>
+  <ul class="clean">
+    <li>松浦さんメモ PDF・廣中さんメモ PDF・荒木さんメモ PDF（共有済み）</li>
+    <li>松浦さん／荒木さんの動画録画（SharePoint）</li>
+    <li>Supabase <code>interviews</code> + <code>interview_transcripts</code> + <code>interview_analyses</code> + <code>customer_speech_analyses</code> に永続化済み</li>
+  </ul>
+</section>
+
+<section id="exec-review" style="border:2px solid var(--bad);background:linear-gradient(180deg,#fef2f2 0%,#ffffff 30%)">
+  <div style="background:var(--bad);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:14px">📍 2026-06-15 追記 — 本部レビュー会後の更新</div>
+  <h2 style="border-bottom-color:#fecaca"><span class="num" style="background:var(--bad)">9</span>本部レビュー結果 + Phase 1 修正案</h2>
+
+  <p>2026年6月15日、三舩様・佐井様 (ハンサミング本部メンバー) との 50 分のレビュー会を実施しました。Zoom 録画＋自動文字起こしを取得し、栄養士 3 名と同じ 6 軸スコアリングパイプラインで分析しました。</p>
+
+  <h3>9-1. ドッグフーディング 4 セッション目スコア</h3>
+  <table>
+    <thead><tr><th>軸</th><th>廣中さん</th><th>松浦さん</th><th>荒木さん</th><th><b>本部レビュー</b></th><th>4 セッション推移</th></tr></thead>
+    <tbody>
+      <tr><td><b>総合</b></td><td>48</td><td>58</td><td>66</td><td><b style="color:var(--bad)">68</b></td><td><span class="badge green">学習曲線継続</span></td></tr>
+      <tr><td>共感</td><td>40</td><td>50</td><td>60</td><td>60</td><td>横這い</td></tr>
+      <tr><td>具体性</td><td>60</td><td>75</td><td><b>80</b></td><td><b>80</b></td><td>最高維持</td></tr>
+      <tr><td>深掘り</td><td>50</td><td>65</td><td><b>75</b></td><td>70</td><td>やや低下</td></tr>
+      <tr><td>傾聴</td><td>55</td><td>60</td><td>65</td><td><b style="color:var(--bad)">55</b></td><td><span class="badge red">⚠ 再低下</span></td></tr>
+      <tr><td>再現性</td><td>45</td><td>55</td><td>60</td><td><b>70</b></td><td>最高更新</td></tr>
+      <tr><td>関係構築</td><td>40</td><td>45</td><td>55</td><td><b>75</b></td><td>最高更新</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn">
+    <b>傾聴スコアが 55 に再低下</b> しました。プロトタイプを画面で説明したい欲が強く、特に 13-23 分にかけて 10 分連続の説明モードに入ったため。「3 名一致ペイン」を踏まえて事前準備していたものの、相手の発話を待つよりも自分の構想を語る時間が多くなりました。
+  </div>
+
+  <h3>9-2. 本部から引き出した 3 大助言</h3>
+
+  <div class="jtbd-card priority1">
+    <div class="label">🔥 助言 1 — 三舩様</div>
+    <div class="title">段階的パイロット推奨</div>
+    <div class="statement">
+      「最初から完成形で大きいものを時間をかけて作るより、本当に <b>1-2 人コーチを選んでフィードバックの仕組みを与えてみて</b>、観測してプロトタイプ。半年間かけて出してから調整するよりいい」
+    </div>
+    <div class="meta">
+      <b>影響：</b> Phase 1 スコープを「全 60 名向け本実装」 → <b>「1-2 名 + 統括コーチ + 本部の小規模パイロット」</b>に修正。
+    </div>
+  </div>
+
+  <div class="jtbd-card priority2">
+    <div class="label">🔥 助言 2 — 三舩様</div>
+    <div class="title">コーチ層は 2 分割で設計</div>
+    <div class="statement">
+      「コーチ 60 名少々いて、<b>4 割ぐらいは心ここにあらず</b>。やる気あるコーチはフィードバック欲しい言うてるからそこを喜ぶ仕組みに。心ここにあらず層には簡単に共有できる形で <b>餌を与えながら引き上げるような仕組み</b> がいい」
+    </div>
+    <div class="meta">
+      <b>影響：</b> JTBD #1/#2/#3 のメッセージを <b>A 層（やる気）と B 層（心ここにあらず）の 2 段</b> で設計。同じ機能でも見せ方を変える。
+    </div>
+  </div>
+
+  <div class="jtbd-card priority3">
+    <div class="label">🔥 助言 3 — 三舩様</div>
+    <div class="title">個人情報のライフサイクル管理</div>
+    <div class="statement">
+      「指導期間中はこの情報を持ってます、なぜなら必要だから。<b>終わった後はアクセスできないように、抽象化されたサマリーのデータだけになる</b>」
+    </div>
+    <div class="meta">
+      <b>影響：</b> カルテ画面のデータ表示を「期間中 = フル」「期間後 = 抽象化サマリのみ」で時間軸切替。Supabase RLS を <code>customer_processes.completed_at</code> ベースで動的化。
+    </div>
+  </div>
+
+  <h3>9-3. 佐井様からの副次的に重要な発言</h3>
+  <ul class="clean">
+    <li><b>過去にコーチング希望アンケートを実施したがマッチングまでいかなかった</b> → JTBD #1 は「過去の失敗を踏まえた再挑戦」として位置付けられる</li>
+    <li><b>コーチ評価につなげるのはハンサミングが大きくなれば絶対出てくる</b> → Phase 2 の必須要件として記録</li>
+    <li><b>コーチが使うものがいろんなものに出てくると大変</b> → 新規ダッシュボード分離より <b>既存 Teams 内に Bot 統合</b>を優先</li>
+  </ul>
+
+  <h3>9-4. Phase 1 修正案サマリ（5 つの原則）</h3>
+  <table>
+    <thead><tr><th>原則</th><th>修正前</th><th>修正後</th></tr></thead>
+    <tbody>
+      <tr><td>① スコープ</td><td>全 60 名向け本実装</td><td><b>A 層 1 名 + B 層 1 名のパイロット運用</b></td></tr>
+      <tr><td>② メッセージ</td><td>1 種類</td><td><b>A 層・B 層で別設計</b></td></tr>
+      <tr><td>③ 個人情報</td><td>常時表示</td><td><b>期間中フル / 期間後抽象化サマリのみ</b></td></tr>
+      <tr><td>④ UI</td><td>新ダッシュボード</td><td><b>既存 Teams 内に Bot 統合</b></td></tr>
+      <tr><td>⑤ 評価</td><td>機能ロードマップで判定</td><td><b>パイロット成功メトリクスを事前合意して判定</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>9-5. 修正されたスプリント計画（4 スプリント / 8 週間）</h3>
+  <ul class="clean">
+    <li><b>スプリント 1（2 週）：</b> 参加者選定合意 + RAG エンジン構築 + Teams Bot スケルトン + 事前アンケート</li>
+    <li><b>スプリント 2（2 週）：</b> A 層・B 層 1 名ずつへの提供開始 + 週次利用ログ + アンケート</li>
+    <li><b>スプリント 3（2 週）：</b> A 層に「類似ケース AI 検索」追加 + 配信頻度の微修正</li>
+    <li><b>スプリント 4（2 週）：</b> 評価判定 + 全 60 名拡張 GO/NO-GO + JTBD #2 Phase 2 着手判断</li>
+  </ul>
+
+  <h3>9-6. パイロット成功判定基準（本部と要合意）</h3>
+  <p>下記 4 項目で <b>3 つ以上達成</b> なら「拡張 GO」、3 つ未満なら「設計見直し」、ゼロなら「中止 + ヒアリング再実施」。</p>
+  <ul class="clean">
+    <li>A 層：マニュアル AI 検索 <b>週 5 回以上</b>利用</li>
+    <li>A 層：満足度 5 段階で <b>4 以上</b></li>
+    <li>A 層：「自分の対応合ってる？」感が事前比 <b>+1 以上</b>（5 段階アンケート）</li>
+    <li>A・B 両層：担当ユーザーのチェックイン率 <b>±5pt 以内維持</b>（悪化していない）</li>
+  </ul>
+
+  <h3>9-7. オープン論点（本部に確認したい点）</h3>
+  <ol style="padding-left:22px;line-height:1.9">
+    <li>パイロット参加者 3-4 名の具体選定（A 層 1 / B 層 1 / 統括コーチ 1 / 本部観察 1）</li>
+    <li>RAG マニュアルデータソースの構造化版を共有可能か</li>
+    <li>30 日切替の個人情報ライフサイクル設定は法務的に問題ないか</li>
+    <li>Teams テナントへの Bot 登録権限</li>
+    <li>パイロット成功判定数値の合意</li>
+    <li>パイロット失敗時の撤退ライン（現場が「使いづらい」と言ったら即停止）</li>
+    <li>PORTBACK 側の報酬調整（パイロット期間中の工数増 / 月額継続でカバーするか）</li>
+  </ol>
+
+  <h3>9-8. 詳細設計</h3>
+  <p>本章のフル版（参加者選定・メトリクス測定方法・実装ポイント・撤退ライン）は別 Notion ドキュメント「📐 Phase 1 スコープ修正案 v2」にまとめました。</p>
+  <p>→ <a href="https://www.notion.so/38040e0263d8819fb9def24e29a81820" style="color:var(--brand)">https://www.notion.so/38040e0263d8819fb9def24e29a81820</a></p>
+
+  <div class="callout green" style="margin-top:18px">
+    <b>📌 結論：</b> Phase 1 着手は <b>2026-06-22 週</b> を目標。それまでに本部から本修正案へのフィードバックをいただき、参加者選定の合意取りを進めます。
+  </div>
+</section>
+
+<div class="footer">
+  本レポートは PORTBACK 株式会社 樗木勇人が作成<br>
+  2026-06-08 第二報 ／ 2026-06-15 本部レビュー後追記<br>
+  ご質問・修正提案は Slack #handsoming-portback まで<br>
+  <a href="mailto:h.chishaki@portback.com">h.chishaki@portback.com</a>
+</div>
+
+</div>
+</body></html>

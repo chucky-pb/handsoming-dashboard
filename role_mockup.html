@@ -1,0 +1,2567 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ハンサミング 役割別UI プロトタイプ Phase 0</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+:root{--bg:#f8f9fa;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--card:#ffffff;--brand:#2563eb;--brand2:#3b82f6;--brand-soft:#eff6ff;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--soft-warn:#fef3c7;--soft-bad:#fee2e2;--soft-ok:#dcfce7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+.header{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.header h1{font-size:18px;font-weight:600}
+.header .meta{font-size:12px;opacity:.9}
+.header .nav-link{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:6px;margin-left:8px}
+.header .nav-link:hover{background:rgba(255,255,255,.12);color:#fff}
+.header .nav-link.active{background:rgba(255,255,255,.22);color:#fff;font-weight:600}
+.shell{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 56px)}
+.side{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px}
+.role-tab{padding:8px 6px;text-align:center;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mute);border-radius:8px;cursor:pointer}
+.role-tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.side h3{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px}
+.side .item{padding:9px 11px;border-radius:7px;cursor:pointer;font-size:13px;color:#374151;margin-bottom:2px;line-height:1.35;border:1px solid transparent}
+.side .item:hover{background:#f3f4f6}
+.side .item.active{background:var(--brand-soft);color:var(--brand);font-weight:600;border-color:#bfdbfe}
+.side .item small{display:block;color:var(--mute);font-size:10px;font-weight:400;margin-top:1px}
+.side .item.active small{color:#60a5fa}
+.side .note{font-size:11px;color:var(--mute);padding:8px 11px;background:#fafafa;border-radius:6px;line-height:1.5;margin-top:14px}
+.main{padding:20px 26px}
+.crumb{font-size:12px;color:var(--mute);margin-bottom:6px}
+.screen-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.screen-desc{font-size:13px;color:var(--mute);margin-bottom:16px}
+.card{background:var(--card);border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px;border:1px solid #f1f5f9}
+.card h3{font-size:14px;font-weight:600;margin-bottom:12px;color:#374151;display:flex;align-items:center;gap:6px}
+.card h3 .pill{font-size:11px;padding:2px 8px;background:#f3f4f6;border-radius:10px;color:var(--mute);font-weight:500}
+.row{display:grid;gap:14px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:1fr 1fr 1fr}
+.row.c4{grid-template-columns:repeat(4,1fr)}
+.row.c5{grid-template-columns:repeat(5,1fr)}
+.kpi{background:#fff;border:1px solid #f1f5f9;border-radius:10px;padding:14px}
+.kpi .label{font-size:12px;color:var(--mute);margin-bottom:4px}
+.kpi .value{font-size:24px;font-weight:700;line-height:1.1}
+.kpi .sub{font-size:11px;margin-top:3px;color:var(--mute)}
+.kpi .sub.green{color:var(--ok)}.kpi .sub.red{color:var(--bad)}.kpi .sub.yellow{color:var(--warn)}
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.kanban .col{background:#f8fafc;border-radius:8px;padding:10px;border:1px solid #f1f5f9}
+.kanban .col h4{font-size:12px;font-weight:600;margin-bottom:8px;color:#475569;display:flex;justify-content:space-between;align-items:center}
+.kanban .col h4 .count{font-size:11px;font-weight:600;padding:1px 7px;background:#fff;border-radius:10px;color:var(--brand)}
+.kanban .col .item{background:#fff;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px;cursor:pointer;border:1px solid #e2e8f0;line-height:1.4}
+.kanban .col .item:hover{border-color:var(--brand)}
+.kanban .col .item .name{font-weight:600;color:#1f2937}
+.kanban .col .item .sub{font-size:10px;color:var(--mute);margin-top:2px}
+.kanban .col .item .alert{font-size:10px;color:var(--bad);margin-top:2px;font-weight:600}
+.kanban .col .item .alert.y{color:var(--warn)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge.red{background:var(--soft-bad);color:var(--bad)}.badge.yellow{background:var(--soft-warn);color:#92400e}.badge.green{background:var(--soft-ok);color:#166534}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f3f4f6;color:#4b5563}
+.btn{padding:8px 14px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500}
+.btn.primary{background:var(--brand);color:#fff}.btn.primary:hover{background:#1d4ed8}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:#374151}
+.btn.ghost:hover{background:#f9fafb}
+.btn.sm{padding:5px 10px;font-size:12px}
+.user-list{background:#fff;border:1px solid #f1f5f9;border-radius:8px;overflow:hidden}
+.user-list .row-u{display:grid;grid-template-columns:1fr 110px 160px 140px 60px;gap:12px;padding:10px 14px;border-bottom:1px solid #f1f5f9;align-items:center;font-size:13px;cursor:pointer}
+.user-list .row-u:last-child{border-bottom:none}
+.user-list .row-u:hover{background:#f9fafb}
+.user-list .row-u.head{background:#f1f5f9;font-weight:600;color:#475569;font-size:12px;cursor:default}
+.user-list .row-u.head:hover{background:#f1f5f9}
+.user-list .row-u .name{font-weight:600;color:#1f2937;font-size:13px}
+.user-list .row-u .name small{display:block;font-weight:400;color:var(--mute);font-size:11px;margin-top:1px}
+.user-list .row-u .arrow{text-align:right;color:var(--mute)}
+.score-row{display:grid;grid-template-columns:130px 90px 60px 90px 60px 40px;gap:6px;padding:7px 10px;border-bottom:1px solid #f1f5f9;align-items:center;font-size:13px}
+.score-row.head{background:#f1f5f9;font-weight:600;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.score-row .bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.score-row .bar>div{height:100%;background:var(--brand);border-radius:3px}
+.score-row .ai{color:var(--mute);font-variant-numeric:tabular-nums}
+.score-row .human{font-weight:600;font-variant-numeric:tabular-nums}
+.score-row .diff{font-size:11px;color:var(--bad);font-weight:600}.score-row .diff.ok{color:var(--ok)}
+.input{display:block;width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff}
+.input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 2px rgba(37,99,235,.1)}
+textarea.input{resize:vertical;min-height:60px;line-height:1.5}
+.chk-grid{display:flex;flex-wrap:wrap;gap:6px}
+.chk{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--line);border-radius:18px;font-size:12px;cursor:pointer;background:#fff;color:#374151}
+.chk.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600}
+.alert-card{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin-bottom:10px}
+.alert-card.y{background:#fefce8;border-color:#fde68a}
+.alert-card.g{background:#f0fdf4;border-color:#bbf7d0}
+.alert-card .title{font-size:13px;font-weight:600;color:#991b1b;margin-bottom:4px}
+.alert-card.y .title{color:#854d0e}
+.alert-card.g .title{color:#166534}
+.alert-card .meta{font-size:11px;color:var(--mute);margin-bottom:6px}
+.alert-card .actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.three-col{display:grid;grid-template-columns:240px 1fr 280px;gap:14px;align-items:start}
+.three-col .pane{background:#fff;border:1px solid #f1f5f9;border-radius:10px;padding:14px;min-height:480px}
+.three-col h4{font-size:13px;font-weight:600;margin-bottom:10px;color:#374151;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.three-col .sub-section{margin-bottom:14px}
+.three-col .sub-section .label{font-size:11px;color:var(--mute);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+.three-col .sub-section .value{font-size:13px;color:#1f2937}
+.three-col .sub-section ul{list-style:none;padding-left:0}
+.three-col .sub-section ul li{padding:3px 0;font-size:12px;color:#374151}
+.three-col .sub-section ul li::before{content:"・";color:var(--brand)}
+.line-history{font-size:12px}
+.line-history .post{padding:8px 10px;background:#f8fafc;border-radius:6px;margin-bottom:6px;border-left:3px solid #e2e8f0}
+.line-history .post.warn{border-left-color:var(--warn);background:#fefce8}
+.line-history .post.bad{border-left-color:var(--bad);background:#fef2f2}
+.line-history .post .date{color:var(--mute);font-size:10px;margin-bottom:2px}
+.line-history .post .body{color:#1f2937;line-height:1.5}
+.spark{display:inline-flex;gap:1px;align-items:flex-end;height:14px;margin-left:4px}
+.spark span{width:4px;background:var(--brand);border-radius:1px;opacity:.7}
+.spark.warn span{background:var(--warn)}
+.spark.bad span{background:var(--bad)}
+.ai-suggest{background:var(--brand-soft);border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e3a8a;line-height:1.55;margin-bottom:8px}
+.ai-suggest .lab{font-size:10px;font-weight:600;color:var(--brand);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.tone-grid{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+.tone-grid label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}
+.tone-grid input[type=radio]{accent-color:var(--brand)}
+.heatmap{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;font-size:10px}
+.heatmap .cell{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;cursor:pointer}
+.heatmap-leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mute);margin-top:8px}
+.heatmap-leg .swatch{width:14px;height:14px;border-radius:3px}
+.tab-row{display:flex;gap:2px;margin-bottom:14px;border-bottom:2px solid #f1f5f9}
+.tab-row .tab{padding:8px 16px;cursor:pointer;font-size:13px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500}
+.tab-row .tab.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--mute);margin-top:6px}
+.legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.tag{display:inline-block;padding:2px 9px;font-size:11px;background:#f3f4f6;color:#475569;border-radius:11px;margin-right:4px;margin-bottom:3px}
+.mock-note{font-size:11px;color:var(--mute);background:#fefce8;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin-top:14px}
+.mock-note b{color:#854d0e}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>ハンサミング 役割別UI <span style="opacity:.7;font-size:13px;font-weight:400;margin-left:8px">プロトタイプ Phase 0 ／ HSM-FN-001</span></h1>
+    <div class="meta" id="hdr-staff">読み込み中...</div>
+  </div>
+  <div>
+    <a href="index.html" class="nav-link">入口</a>
+    <a href="dashboard.html" class="nav-link">管理</a>
+    <a href="coach.html" class="nav-link">栄養士</a>
+    <a href="interview.html" class="nav-link">面談</a>
+    <a href="action_analysis.html" class="nav-link">行動連携</a>
+    <a href="role_mockup.html" class="nav-link active">役割別UI</a>
+    <a href="reports.html" class="nav-link">資料</a>
+    <button class="logout-btn" onclick="doLogout()" style="margin-left:8px;padding:6px 12px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;cursor:pointer;font-size:12px">ログアウト</button>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="role-tabs">
+      <div class="role-tab active" data-role="iv">面談担当</div>
+      <div class="role-tab" data-role="lc">LINE栄養士</div>
+    </div>
+
+    <div id="menu-iv">
+      <h3>主要画面</h3>
+      <div class="item" data-screen="iv0" style="background:#fef3c7;border-color:#fde047;color:#854d0e">＋ S-IV-0 カルテ新規作成<small style="color:#a16207">面談担当による代理起票</small></div>
+      <div class="item active" data-screen="iv1">S-IV-1 マイ面談ダッシュボード<small>担当面談のカンバン</small></div>
+      <div class="item" data-screen="iv2">S-IV-2 面談前ブリーフ<small>事前アンケート + 動画分析</small></div>
+      <div class="item" data-screen="iv3">S-IV-3 面談カルテ<small>AI下書き + 栄養士レビュー</small></div>
+      <div class="item" data-screen="iv4">S-IV-4 引継ぎノート起票<small>Phase 5 への引継ぎ</small></div>
+      <div class="item" data-screen="iv5">S-IV-5 マイパフォーマンス<small>担当者の "今" + 振り返り</small></div>
+      <h3 style="margin-top:14px">共通ツール</h3>
+      <div class="item" data-screen="sup">🛡 統括コーチ ホーム<small>公式化・相談・稼働</small></div>
+      <div class="item" data-screen="manual">🔎 マニュアル検索<small>AI検索 (RAG)</small></div>
+      <div class="item" data-screen="knowledge">💡 知見フィード<small>栄養士の形式知ループ</small></div>
+      <div class="item" data-screen="tips">📩 おすすめ対応例<small>受け取るだけ（B層向け）</small></div>
+    </div>
+
+    <div id="menu-lc" style="display:none">
+      <h3>主要画面</h3>
+      <div class="item" data-screen="lc1">S-LC-1 朝のチェックイン<small>緊急/重要/通常/静観 4セグ</small></div>
+      <div class="item" data-screen="lc2">S-LC-2 個別ユーザー伴走<small>3カラム 個別カルテ</small></div>
+      <div class="item" data-screen="lc3">S-LC-3 警戒アラート対応<small>シグナル別 介入リスト</small></div>
+      <div class="item" data-screen="lc4">S-LC-4 週次レビュー<small>担当全員ヒートマップ</small></div>
+      <div class="item" data-screen="lc5">S-LC-5 月次セルフレポート<small>自分のスタイル × 全体</small></div>
+      <h3 style="margin-top:14px">共通ツール</h3>
+      <div class="item" data-screen="sup">🛡 統括コーチ ホーム<small>公式化・相談・稼働</small></div>
+      <div class="item" data-screen="manual">🔎 マニュアル検索<small>AI検索 (RAG)</small></div>
+      <div class="item" data-screen="knowledge">💡 知見フィード<small>栄養士の形式知ループ</small></div>
+      <div class="item" data-screen="tips">📩 おすすめ対応例<small>受け取るだけ（B層向け）</small></div>
+    </div>
+
+    <div class="note">
+      <b>このページはモックアップです。</b><br>
+      ボタン・入力は表示確認用で、実データの保存はされません。
+    </div>
+  </aside>
+
+  <main class="main" id="screen"></main>
+</div>
+
+<script>
+
+// ============================================================
+// SCREEN: S-IV-0  カルテ新規作成（単一登録 / CSV一括インポート）
+// ============================================================
+async function S_IV_0(){
+  const sub = window._iv0sub || 'single';
+  const body = sub === 'import' ? S_IV_0_import() : S_IV_0_single();
+  return `
+<div class="crumb">栄養士ホーム / 面談担当 / カルテ新規作成</div>
+<div class="screen-title">S-IV-0 ／ カルテ新規作成 <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">面談担当による代理起票</span></div>
+<div class="screen-desc">メール担当未対応 ／ 緊急対応 ／ 既存顧客の追加面談など、面談担当自身で顧客カルテを起こすための画面。</div>
+
+<div class="tab-row">
+  <div class="tab ${sub==='single'?'on':''}" onclick="iv0Sub('single')">単一登録 <span style="font-size:10px;color:var(--mute);margin-left:4px">1名ずつ手入力</span></div>
+  <div class="tab ${sub==='import'?'on':''}" onclick="iv0Sub('import')">CSV 一括インポート <span style="font-size:10px;color:var(--mute);margin-left:4px">クライアント企業データ</span></div>
+</div>
+
+${body}
+`;
+}
+function iv0Sub(s){ window._iv0sub=s; show('iv0'); }
+
+function S_IV_0_single(){
+  return `
+
+<div class="card">
+  <h3>① 顧客基本情報 <span class="pill" style="background:var(--soft-bad);color:var(--bad)">必須</span></h3>
+  <div class="row c2" style="margin-bottom:10px">
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">氏名 *</div><input id="k-name" class="input" placeholder="例: 田中 太郎"></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">所属企業 / 支社</div><input id="k-company" class="input" placeholder="例: 明治安田柏支社"></div>
+  </div>
+  <div class="row c3" style="margin-bottom:10px">
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">年齢</div><input id="k-age" class="input" type="number" min="18" max="80" placeholder="42"></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">性別</div><select id="k-gender" class="input"><option value="">未選択</option><option>男性</option><option>女性</option><option>その他</option></select></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">職種</div><input id="k-job" class="input" placeholder="例: 営業"></div>
+  </div>
+  <div class="row c3" style="margin-bottom:10px">
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">メール</div><input id="k-email" class="input" type="email" placeholder="taro@example.com"></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">電話</div><input id="k-phone" class="input" placeholder="090-..."></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">LINE ID（任意）</div><input id="k-line" class="input" placeholder="U_xxxx"></div>
+  </div>
+  <div>
+    <div style="font-size:11px;color:var(--mute);margin-bottom:3px">起点 source</div>
+    <select id="k-source" class="input" style="max-width:340px">
+      <option value="interviewer_direct">面談担当起票（メール担当不在 / 代理）</option>
+      <option value="referral">紹介</option>
+      <option value="kenpo_direct">健保からの直接案内</option>
+      <option value="web">Web 申込</option>
+      <option value="re_engagement">既存顧客の追加面談</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <h3>② 事前情報 <span class="pill">任意 ／ 面談中に聞き取りでもOK</span></h3>
+  <div style="font-size:12px;color:var(--mute);margin-bottom:10px">Phase 3（事前アンケート）の代替として、わかっている範囲だけ入力。Phase 1 で <code>pre_interview_surveys</code> テーブルに正規化予定（今は customers.notes に JSON 保存）。</div>
+  <div class="row c2">
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">動機（なぜ参加したか）</div>
+      <textarea id="k-motivation" class="input" rows="2" placeholder="健診で指摘 / 会社推奨 / 自発的 ..."></textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">目標</div>
+      <textarea id="k-goal" class="input" rows="2" placeholder="体重 -5kg / 食生活改善 ..."></textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">支援基盤</div>
+      <textarea id="k-support" class="input" rows="2" placeholder="配偶者 / 親 / 同僚 / 孤立 ..."></textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">本人の不安</div>
+      <textarea id="k-concern" class="input" rows="2" placeholder="続けられるか / 数字に縛られたくない ..."></textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">食習慣</div>
+      <textarea id="k-food" class="input" rows="2" placeholder="外食 N回/週 / 朝食抜き / 飲酒 ..."></textarea>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">運動・睡眠</div>
+      <textarea id="k-lifestyle" class="input" rows="2" placeholder="運動0 / 週末ゴルフ / 睡眠平均6h ..."></textarea>
+    </div>
+  </div>
+  <div style="margin-top:10px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:3px">自由メモ（その他気になること）</div>
+    <textarea id="k-memo" class="input" rows="2"></textarea>
+  </div>
+</div>
+
+<div class="card">
+  <h3>③ 面談スケジュール <span class="pill">任意（決まっていれば）</span></h3>
+  <div class="row c2">
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">面談予定日時</div><input id="k-iv-datetime" class="input" type="datetime-local"></div>
+    <div><div style="font-size:11px;color:var(--mute);margin-bottom:3px">面談タイトル（空なら自動生成）</div><input id="k-iv-title" class="input" placeholder="例: 田中 太郎さん 初回面談"></div>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:var(--mute)">日時を入れると <code>interviews</code> に <code>status=pending</code> として行が作成され、S-IV-1 カンバンの「準備中」列に出ます。</div>
+</div>
+
+<div id="k-msg" style="margin-bottom:12px"></div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="show('iv1')">キャンセル</button>
+  <button class="btn ghost" onclick="submitNewKarte(false)">保存だけする</button>
+  <button class="btn primary" onclick="submitNewKarte(true)">保存して面談前ブリーフへ ▶</button>
+</div>
+
+<div style="margin-top:14px;font-size:11px;color:var(--mute);text-align:right">
+  保存先: customers + customer_processes ${'(+ interviews 日時入力時)'}
+</div>
+`;
+}
+
+// ---------- S-IV-0 CSV インポート ----------
+function S_IV_0_import(){
+  const rows = window._iv0csv?.rows || [];
+  const mapping = window._iv0csv?.mapping || {};
+  const errors = window._iv0csv?.errors || [];
+  const fileName = window._iv0csv?.fileName || '';
+
+  const FIELD_DEFS = [
+    {key:'name', label:'氏名 *', alias:['氏名','名前','フルネーム','name','full_name','姓名']},
+    {key:'company', label:'所属企業/支社', alias:['企業','会社','所属','支社','部署','company','organization','支店']},
+    {key:'email', label:'メール', alias:['メール','メールアドレス','email','mail','e-mail']},
+    {key:'phone', label:'電話', alias:['電話','電話番号','tel','phone','mobile']},
+    {key:'line_id', label:'LINE ID', alias:['line','line_id','lineid','line id','ライン']},
+    {key:'age', label:'年齢', alias:['年齢','age','歳']},
+    {key:'gender', label:'性別', alias:['性別','gender','sex']},
+    {key:'job', label:'職種', alias:['職種','職業','業務','job','occupation','role']},
+    {key:'motivation', label:'動機', alias:['動機','参加理由','motivation','reason']},
+    {key:'goal', label:'目標', alias:['目標','goal','target']},
+    {key:'support', label:'支援基盤', alias:['支援基盤','家族','支援者','support']},
+    {key:'concern', label:'不安/懸念', alias:['不安','懸念','心配','concern']},
+    {key:'food', label:'食習慣', alias:['食習慣','食生活','food','diet']},
+    {key:'lifestyle', label:'運動・睡眠', alias:['運動','睡眠','生活習慣','lifestyle','exercise']},
+    {key:'memo', label:'備考', alias:['備考','メモ','note','memo','remarks']}
+  ];
+
+  const previewTable = rows.length === 0 ? '' : `
+    <div class="card">
+      <h3>プレビュー <span class="pill">${rows.length}行 ／ 先頭10件表示</span></h3>
+      <div style="overflow-x:auto;max-width:100%">
+        <table style="width:100%;font-size:11px;border-collapse:collapse">
+          <thead>
+            <tr style="background:#f1f5f9">
+              <th style="padding:6px 8px;text-align:left;border:1px solid #e2e8f0">#</th>
+              ${FIELD_DEFS.map(f => `<th style="padding:6px 8px;text-align:left;border:1px solid #e2e8f0;min-width:80px">
+                <div>${f.label}</div>
+                <select onchange="iv0SetMap('${f.key}', this.value)" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;font-weight:400">
+                  <option value="">— 未マップ —</option>
+                  ${(window._iv0csv?.headers || []).map(h => `<option value="${escapeHtml(h)}" ${mapping[f.key]===h?'selected':''}>${escapeHtml(h)}</option>`).join('')}
+                </select>
+              </th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.slice(0, 10).map((r, i) => `<tr>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;color:var(--mute)">${i+1}</td>
+              ${FIELD_DEFS.map(f => {
+                const v = mapping[f.key] ? (r[mapping[f.key]] || '') : '';
+                const isError = f.key==='name' && !v;
+                return `<td style="padding:5px 8px;border:1px solid #e2e8f0;${isError?'background:#fef2f2;color:#991b1b':''}">${escapeHtml(v)}</td>`;
+              }).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${errors.length > 0 ? `<div style="margin-top:10px;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:12px">
+        ⚠ ${errors.length}件のエラー: ${escapeHtml(errors.slice(0,3).join(' / '))}${errors.length>3?` 他${errors.length-3}件`:''}
+      </div>` : ''}
+    </div>
+  `;
+
+  return `
+<div class="card">
+  <h3>CSV 一括インポート <span class="pill">クライアント企業から受領した顧客名簿</span></h3>
+  <div style="font-size:13px;color:#374151;line-height:1.6;margin-bottom:12px">
+    クライアント企業から受領した顧客名簿 (CSV) をアップロードして、まとめてカルテを作成します。<br>
+    <span style="font-size:11px;color:var(--mute)">対応形式: UTF-8 CSV ／ 1行目をヘッダー扱い ／ 自動でカラムを推定 (氏名・メール・電話など)</span>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="btn primary" onclick="document.getElementById('iv0-file').click()">ファイル選択 (CSV)</button>
+    <button class="btn ghost" onclick="iv0DownloadTemplate()">📥 サンプルCSVをダウンロード</button>
+    <button class="btn ghost" onclick="iv0LoadDemo()">デモデータで試す (5名分)</button>
+    <input id="iv0-file" type="file" accept=".csv,.tsv,.txt" style="display:none" onchange="iv0ParseFile(this.files[0])">
+  </div>
+
+  ${fileName ? `<div style="font-size:12px;color:var(--ok);margin-bottom:8px">✓ ${escapeHtml(fileName)} を読み込み中 (${rows.length}行)</div>` : ''}
+
+  <details style="margin-top:8px">
+    <summary style="font-size:12px;color:var(--mute);cursor:pointer">▶ CSV を直接貼り付ける（クリックで展開）</summary>
+    <textarea id="iv0-paste" class="input" rows="6" style="margin-top:6px;font-family:monospace;font-size:11px" placeholder="氏名,所属企業,メール,動機,目標&#10;田中 太郎,明治安田柏支社,taro@example.com,健診で指摘,体重 -5kg"></textarea>
+    <button class="btn ghost sm" style="margin-top:6px" onclick="iv0ParseText()">この内容を取り込み</button>
+  </details>
+</div>
+
+${previewTable}
+
+${rows.length > 0 ? `
+<div class="card">
+  <h3>取り込み時の共通設定</h3>
+  <div class="row c2">
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">起点 source（全件に適用）</div>
+      <select id="iv0-source" class="input" style="max-width:280px">
+        <option value="kenpo_direct">健保からの直接案内</option>
+        <option value="referral">紹介</option>
+        <option value="web">Web 申込</option>
+        <option value="interviewer_direct">面談担当代理</option>
+      </select>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px">取り込み後の面談割当</div>
+      <select id="iv0-assign" class="input" style="max-width:280px">
+        <option value="">未割当 (後で個別に割当)</option>
+        <option value="${DS.staff.id}" selected>自分 (${escapeHtml(DS.staff.name)}) に割当</option>
+        <option value="even">面談担当者へ均等分配</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--mute);line-height:1.6">
+    • <code>氏名 *</code> 列の空行はスキップされます<br>
+    • <code>メール</code> 重複は警告のみ（Phase 0 では強制マージなし、Phase 1 で重複検出ロジック追加）<br>
+    • 取り込み後、customer_processes は email=completed + first_meeting=not_started で 2 行ずつ作成
+  </div>
+</div>
+
+<div id="iv0-import-msg" style="margin-bottom:12px"></div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="iv0Reset()">クリア</button>
+  <button class="btn primary" onclick="iv0ExecuteImport()">${rows.length}件を取り込む ▶</button>
+</div>
+` : `
+<div class="card" style="background:#fafafa;text-align:center;padding:40px 20px;color:var(--mute);font-size:13px">
+  CSVファイルを選択するか、デモデータで試してください
+</div>
+`}
+`;
+}
+
+function iv0DetectMapping(headers){
+  const FIELD_DEFS = [
+    {key:'name', alias:['氏名','名前','フルネーム','name','full_name','姓名']},
+    {key:'company', alias:['企業','会社','所属','支社','部署','company','organization','支店']},
+    {key:'email', alias:['メール','メールアドレス','email','mail','e-mail']},
+    {key:'phone', alias:['電話','電話番号','tel','phone','mobile']},
+    {key:'line_id', alias:['line','line_id','lineid','line id','ライン']},
+    {key:'age', alias:['年齢','age','歳']},
+    {key:'gender', alias:['性別','gender','sex']},
+    {key:'job', alias:['職種','職業','業務','job','occupation','role']},
+    {key:'motivation', alias:['動機','参加理由','motivation','reason']},
+    {key:'goal', alias:['目標','goal','target']},
+    {key:'support', alias:['支援基盤','家族','支援者','support']},
+    {key:'concern', alias:['不安','懸念','心配','concern']},
+    {key:'food', alias:['食習慣','食生活','food','diet']},
+    {key:'lifestyle', alias:['運動','睡眠','生活習慣','lifestyle','exercise']},
+    {key:'memo', alias:['備考','メモ','note','memo','remarks']}
+  ];
+  const mapping = {};
+  headers.forEach(h => {
+    const norm = String(h).toLowerCase().trim();
+    for(const f of FIELD_DEFS){
+      if(f.alias.some(a => norm.includes(String(a).toLowerCase()))){
+        if(!mapping[f.key]) mapping[f.key] = h;
+        break;
+      }
+    }
+  });
+  return mapping;
+}
+
+function iv0ParseFile(file){
+  if(!file) return;
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    encoding: 'UTF-8',
+    complete: (results) => {
+      iv0HandleParseResult(results, file.name);
+    },
+    error: (err) => {
+      alert('CSV パースエラー: '+err.message);
+    }
+  });
+}
+
+function iv0ParseText(){
+  const text = document.getElementById('iv0-paste').value;
+  if(!text.trim()) return;
+  const results = Papa.parse(text, {header: true, skipEmptyLines: true});
+  iv0HandleParseResult(results, '貼り付けデータ');
+}
+
+function iv0HandleParseResult(results, fileName){
+  const headers = results.meta?.fields || [];
+  const rows = results.data || [];
+  const mapping = iv0DetectMapping(headers);
+  const errors = [];
+  if(mapping.name){
+    rows.forEach((r, i) => {
+      if(!String(r[mapping.name]||'').trim()) errors.push(`${i+1}行目: 氏名が空`);
+    });
+  } else {
+    errors.push('氏名列が見つかりません');
+  }
+  window._iv0csv = { headers, rows, mapping, errors, fileName };
+  show('iv0');
+}
+
+function iv0SetMap(fieldKey, headerName){
+  if(!window._iv0csv) return;
+  window._iv0csv.mapping[fieldKey] = headerName || null;
+  show('iv0');
+}
+
+function iv0Reset(){
+  window._iv0csv = null;
+  show('iv0');
+}
+
+function iv0LoadDemo(){
+  const csv = `氏名,所属企業,メール,電話,年齢,性別,職種,動機,目標,支援基盤,不安,食習慣,運動,備考
+山田 太郎,明治安田柏支社,yamada@example.com,090-1234-5678,42,男性,営業,健診で指摘,体重 -5kg,妻が栄養士,続けられるか自信ない,外食 5回/週,週末ゴルフのみ,単身赴任 3年目
+佐藤 美穂,明治安田柏支社,sato@example.com,090-2345-6789,38,女性,事務,会社推奨,腹囲改善,家族同居,数字に縛られたくない,朝食抜き 週4,なし,育児中
+鈴木 健司,長崎支社諫早営業所,suzuki@example.com,,51,男性,管理職,メタボ判定,リバウンド回避,孤立,過去にダイエット失敗あり,間食多い,週1ジョギング,出張多
+高橋 真理,長崎支社佐世保営業所,takahashi@example.com,090-4567-8901,45,女性,営業,自発的,継続的な体重管理,夫サポートあり,続かない,夜食習慣,なし,
+渡辺 隆,明治安田柏支社,watanabe@example.com,,49,男性,営業,健診C判定,HbA1c改善,別居,完璧主義気質,飲酒 週5,なし,出張月10日`;
+  const results = Papa.parse(csv, {header: true, skipEmptyLines: true});
+  iv0HandleParseResult(results, 'demo_customers.csv (5名)');
+}
+
+function iv0DownloadTemplate(){
+  const csv = '﻿' + // BOM for Excel UTF-8 compatibility
+`氏名,所属企業,メール,電話,LINE ID,年齢,性別,職種,動機,目標,支援基盤,不安,食習慣,運動,備考
+田中 太郎,〇〇支社,taro@example.com,090-1234-5678,U_xxxxx,42,男性,営業,健診で指摘,体重 -5kg,妻が栄養士,続けられるか不安,外食 5回/週,週末ゴルフ,単身赴任`;
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'hansaming_customer_template.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function iv0ExecuteImport(){
+  if(!window._iv0csv) return;
+  const {rows, mapping} = window._iv0csv;
+  const msgEl = document.getElementById('iv0-import-msg');
+  const source = document.getElementById('iv0-source').value;
+  const assignVal = document.getElementById('iv0-assign').value;
+
+  // 面談担当者リスト (均等分配用)
+  const ivStaff = DS.allStaff.filter(s => s.role === '面談担当' && s.is_active);
+
+  const validRows = rows.filter(r => mapping.name && String(r[mapping.name]||'').trim());
+  if(validRows.length === 0){
+    msgEl.innerHTML = `<div style="padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px">⚠ 氏名が入った有効行がありません</div>`;
+    return;
+  }
+
+  msgEl.innerHTML = `<div style="padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:13px">取り込み中... (${validRows.length}件)</div>`;
+
+  let success = 0, failed = 0, errors = [];
+  const G = (r, k) => mapping[k] ? String(r[mapping[k]]||'').trim() : '';
+
+  for(let i=0; i<validRows.length; i++){
+    const r = validRows[i];
+    const name = G(r,'name');
+    const pre = {
+      company: G(r,'company'), age: G(r,'age'), gender: G(r,'gender'), job: G(r,'job'),
+      motivation: G(r,'motivation'), goal: G(r,'goal'), support: G(r,'support'),
+      concern: G(r,'concern'), food: G(r,'food'), lifestyle: G(r,'lifestyle'),
+      memo: G(r,'memo'),
+      imported_by: DS.staff.name,
+      imported_at: new Date().toISOString(),
+      source_file: window._iv0csv.fileName
+    };
+    let assignedTo = null;
+    if(assignVal === 'even' && ivStaff.length > 0){
+      assignedTo = ivStaff[i % ivStaff.length].id;
+    } else if(assignVal && assignVal !== 'even'){
+      assignedTo = assignVal;
+    }
+    try {
+      const {data: cust, error: e1} = await sb.from('customers').insert({
+        name,
+        email: G(r,'email') || null,
+        phone: G(r,'phone') || null,
+        line_id: G(r,'line_id') || null,
+        source: source || 'kenpo_direct',
+        notes: JSON.stringify(pre, null, 2)
+      }).select().single();
+      if(e1) throw e1;
+
+      await sb.from('customer_processes').insert([
+        { customer_id: cust.id, step: 'email', status: 'completed', assigned_staff_id: assignedTo, completed_at: new Date().toISOString(), notes: 'CSV一括インポート' },
+        { customer_id: cust.id, step: 'first_meeting', status: 'not_started', assigned_staff_id: assignedTo }
+      ]);
+      success++;
+    } catch(e) {
+      failed++;
+      errors.push(`${name}: ${e.message}`);
+    }
+    if(i % 5 === 0){
+      msgEl.innerHTML = `<div style="padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:13px">取り込み中... ${i+1}/${validRows.length}</div>`;
+    }
+  }
+
+  const {data: cs} = await sb.from('customers').select('*');
+  DS.customers = cs || [];
+  await reloadInterviews();
+
+  msgEl.innerHTML = `<div style="padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:13px;line-height:1.6">
+    <b>✓ 取り込み完了</b><br>
+    成功: ${success}件 ／ 失敗: ${failed}件<br>
+    ${failed > 0 ? `<div style="margin-top:6px;font-size:11px;color:#991b1b">エラー: ${escapeHtml(errors.slice(0,3).join(' / '))}${errors.length>3?` 他${errors.length-3}件`:''}</div>`:''}
+    <div style="margin-top:10px"><button class="btn ghost sm" onclick="iv0Reset();show('iv1')">マイダッシュボードへ</button></div>
+  </div>`;
+}
+
+async function submitNewKarte(goToBrief){
+  const msgEl = document.getElementById('k-msg');
+  msgEl.innerHTML = '<div style="color:var(--mute);font-size:12px">保存中...</div>';
+  try {
+    const name = document.getElementById('k-name').value.trim();
+    if(!name) throw new Error('氏名は必須です');
+
+    const company = document.getElementById('k-company').value.trim();
+    const age = document.getElementById('k-age').value;
+    const gender = document.getElementById('k-gender').value;
+    const job = document.getElementById('k-job').value;
+    const email = document.getElementById('k-email').value.trim();
+    const phone = document.getElementById('k-phone').value.trim();
+    const lineId = document.getElementById('k-line').value.trim();
+    const source = document.getElementById('k-source').value;
+
+    const preSurvey = {
+      company, age, gender, job,
+      motivation: document.getElementById('k-motivation').value,
+      goal: document.getElementById('k-goal').value,
+      support: document.getElementById('k-support').value,
+      concern: document.getElementById('k-concern').value,
+      food: document.getElementById('k-food').value,
+      lifestyle: document.getElementById('k-lifestyle').value,
+      memo: document.getElementById('k-memo').value,
+      authored_by_interviewer: DS.staff.name,
+      authored_at: new Date().toISOString()
+    };
+    const notes = JSON.stringify(preSurvey, null, 2);
+
+    // 1. customers INSERT
+    const {data: cust, error: e1} = await sb.from('customers').insert({
+      name,
+      email: email || null,
+      phone: phone || null,
+      line_id: lineId || null,
+      source: source || 'interviewer_direct',
+      notes
+    }).select().single();
+    if(e1) throw e1;
+
+    // 2. customer_processes INSERT
+    const {error: e2} = await sb.from('customer_processes').insert([
+      { customer_id: cust.id, step: 'email', status: 'completed', assigned_staff_id: DS.staff.id, completed_at: new Date().toISOString(), notes: '面談担当代理起票' },
+      { customer_id: cust.id, step: 'first_meeting', status: 'not_started', assigned_staff_id: DS.staff.id }
+    ]);
+    if(e2) console.warn('customer_processes warning:', e2);
+
+    // 3. interviews INSERT (optional)
+    const ivDt = document.getElementById('k-iv-datetime').value;
+    let ivId = null;
+    if(ivDt){
+      const ivTitle = document.getElementById('k-iv-title').value.trim() || `${name}さん 初回面談`;
+      const {data: iv, error: e3} = await sb.from('interviews').insert({
+        customer_id: cust.id,
+        interviewer_staff_id: DS.staff.id,
+        title: ivTitle,
+        recorded_at: new Date(ivDt).toISOString(),
+        status: 'pending'
+      }).select().single();
+      if(e3) throw e3;
+      ivId = iv.id;
+    }
+
+    msgEl.innerHTML = `<div style="padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:13px">
+      ✓ ${escapeHtml(name)}さんのカルテを作成しました (customer_id: <code>${cust.id.slice(0,8)}</code>)<br>
+      ${ivId ? `面談スロット作成済 (interview_id: <code>${ivId.slice(0,8)}</code>) ／ S-IV-1 の「準備中」に表示されます` : '面談スケジュールは後で S-IV-1 から追加できます'}
+    </div>`;
+
+    await reloadInterviews();
+    const {data: cs} = await sb.from('customers').select('*');
+    DS.customers = cs || [];
+
+    if(goToBrief && ivId){
+      await loadInterviewDetail(ivId);
+      setTimeout(()=>show('iv2'), 900);
+    } else {
+      setTimeout(()=>show('iv1'), 1400);
+    }
+  } catch(e) {
+    msgEl.innerHTML = `<div style="padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px">⚠ ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ============================================================
+// SCREEN: S-IV-1  マイ面談ダッシュボード（実データ駆動）
+// ============================================================
+function S_IV_1(){
+  const ivs = DS.interviews || [];
+  const cols = {col1:[],col2:[],col3:[],col4:[],col5:[]};
+  ivs.forEach(iv => cols[classifyStatus(iv)].push(iv));
+  const colHtml = (label, arr, max=4) => {
+    const items = arr.slice(0, max).map(iv => `
+      <div class="item" onclick="selectInterview('${iv.id}')">
+        <div class="name">${escapeHtml(iv.title||'(無題)')}</div>
+        <div class="sub">${fmtFullDate(iv.recorded_at)}</div>
+      </div>`).join('');
+    const more = arr.length > max ? `<div style="text-align:center;color:var(--mute);font-size:11px;padding:6px">他 ${arr.length-max} 件</div>` : '';
+    const empty = arr.length === 0 ? '<div style="font-size:11px;color:var(--mute);text-align:center;padding:15px 0">なし</div>' : '';
+    return `<div class="col">
+      <h4>${label}<span class="count">${arr.length}</span></h4>
+      ${items}${empty}${more}
+    </div>`;
+  };
+  const total = ivs.length;
+  const completed = ivs.filter(iv=>(iv.interview_analyses||[]).some(a=>a.analysis_source==='human')).length;
+  const aiOnly = ivs.filter(iv=>(iv.interview_analyses||[]).some(a=>a.analysis_source==='ai') && !(iv.interview_analyses||[]).some(a=>a.analysis_source==='human')).length;
+  const noAi = ivs.filter(iv=>iv.status==='completed' && !(iv.interview_analyses||[]).length).length;
+  const reviewRate = total>0 ? Math.round(completed/total*100) : 0;
+
+  return `
+<div class="crumb">栄養士ホーム / 面談担当</div>
+<div class="screen-title">S-IV-1 ／ マイ面談ダッシュボード <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">${DS.staff.name}さんの担当 ${total} 件</span></div>
+<div class="screen-desc">担当面談を5ステータスで管理。カード or 担当面談リンクから個別カルテへ。</div>
+
+<div class="row c4" style="margin-bottom:14px">
+  <div class="kpi"><div class="label">担当総数</div><div class="value">${total}件</div><div class="sub">interviewer_staff_id ${DS.staff.id?.slice(0,8) || '-'}</div></div>
+  <div class="kpi"><div class="label">栄養士確定</div><div class="value" style="color:var(--ok)">${completed}件</div><div class="sub green">${reviewRate}%</div></div>
+  <div class="kpi"><div class="label">AIドラフトのみ</div><div class="value" style="color:var(--warn)">${aiOnly}件</div><div class="sub yellow">栄養士レビュー待ち</div></div>
+  <div class="kpi"><div class="label">分析未完了</div><div class="value">${noAi}件</div><div class="sub">面談録画はあり</div></div>
+</div>
+
+<div class="card">
+  <h3>担当面談 カンバン <span class="pill">${DS.staff.name} / ${DS.staff.role}</span></h3>
+  <div class="kanban">
+    ${colHtml('① 準備中', cols.col1)}
+    ${colHtml('② 予定済', cols.col2)}
+    ${colHtml('③ 実施済', cols.col3)}
+    ${colHtml('④ 起票中（AIのみ）', cols.col4)}
+    ${colHtml('⑤ 完了', cols.col5)}
+  </div>
+</div>
+
+<div class="card">
+  <h3>クイックアクション</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn primary" onclick="show('iv0')" style="background:#ca8a04">＋ カルテ新規作成</button>
+    <button class="btn ghost" onclick="show('iv2')">面談ブリーフを開く</button>
+    <button class="btn ghost" onclick="show('iv5')">マイパフォーマンス</button>
+    <button class="btn ghost" onclick="reloadInterviews().then(()=>show('iv1'))">データ再読込</button>
+  </div>
+</div>
+
+<div style="margin-top:14px;font-size:11px;color:var(--mute);text-align:right">
+  実データソース: interviews (interviewer_staff_id) + interview_analyses + customer_speech_analyses
+</div>
+`;
+}
+
+// ============================================================
+// SCREEN: S-IV-2  面談前ブリーフ
+// ============================================================
+function S_IV_2(){return `
+<div class="crumb">栄養士ホーム / 面談担当 / 田中 太郎さん</div>
+<div class="screen-title">S-IV-2 ／ 面談前ブリーフ</div>
+<div class="screen-desc">田中 太郎さん（37歳・〇〇支社・営業職） ／ 面談予定 5/30 (火) 14:00 ／ 残り 1日</div>
+
+<div class="card">
+  <h3>事前アンケート <span class="pill">Phase 3 全回答済</span></h3>
+  <div class="row c2">
+    <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:13px">
+      <div style="color:var(--mute)">動機</div><div>健診で指摘されて／会社の福利厚生だから</div>
+      <div style="color:var(--mute)">目標</div><div>体重 -5kg ／ 食生活の見直し</div>
+      <div style="color:var(--mute)">支援基盤</div><div>妻が栄養士 ／ 週末は同食</div>
+      <div style="color:var(--mute)">不安</div><div>「続けられるか自信が無い」「平日は単身赴任で…」</div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:13px">
+      <div style="color:var(--mute)">食習慣</div><div>外食 5回/週 ／ 飲酒 週3 ／ 朝食抜き 週4</div>
+      <div style="color:var(--mute)">運動</div><div>週末ゴルフ ／ 平日は0分</div>
+      <div style="color:var(--mute)">睡眠</div><div>平均6時間 ／ 出張時は崩れる</div>
+      <div style="color:var(--mute)">推定タイプ</div><div>外発+自発 ／ 分析型の傾向 <span class="badge gray">AI推定</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>過去の自分の類似ケース面談 <span class="pill">AI レコメンド</span></h3>
+  <div style="font-size:12px;color:var(--mute);margin-bottom:10px">あなたが過去に担当した「分析型・男性40代・単身赴任」の類似 4 件から、参考になりそうな所見抜粋。</div>
+  <div class="user-list">
+    <div class="row-u head"><div>過去面談</div><div>類似度</div><div>該当抜粋</div><div>結果</div><div></div></div>
+    <div class="row-u">
+      <div class="name">2026-03-12 山口 浩二<small>43歳・営業・単身赴任</small></div>
+      <div><span class="badge green">92%</span></div>
+      <div style="font-size:12px;line-height:1.5">「外食の選び方を 3 つに絞る」アプローチが奏功</div>
+      <div><span class="badge green">90日完走</span></div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="row-u">
+      <div class="name">2026-01-22 西田 雅彦<small>40歳・技術・出張多</small></div>
+      <div><span class="badge green">87%</span></div>
+      <div style="font-size:12px;line-height:1.5">完璧主義への共感が初期信頼を作った</div>
+      <div><span class="badge green">90日完走</span></div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="row-u">
+      <div class="name">2025-11-08 林 信一<small>41歳・管理職・単身赴任</small></div>
+      <div><span class="badge blue">81%</span></div>
+      <div style="font-size:12px;line-height:1.5">数字目標が強すぎて中盤で失速。要再現性配慮</div>
+      <div><span class="badge yellow">45日離脱</span></div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="row-u">
+      <div class="name">2025-09-30 大野 拓也<small>38歳・営業・出張多</small></div>
+      <div><span class="badge blue">76%</span></div>
+      <div style="font-size:12px;line-height:1.5">配偶者連携を早期に組み込めたケース</div>
+      <div><span class="badge green">90日完走</span></div>
+      <div class="arrow">▶</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--mute);margin-top:8px">→ AI が embedding 類似度で計算 ／ 直接成功要因の抽出は QC レビュー済の 4 件のみ表示</div>
+</div>
+
+<div class="row c2">
+  <div class="card">
+    <h3>過去履歴（本人の前回面談）</h3>
+    <div style="text-align:center;padding:30px 0;color:var(--mute);font-size:13px">初回面談のため履歴なし</div>
+  </div>
+  <div class="card">
+    <h3>私の事前メモ <span class="pill">任意</span></h3>
+    <textarea class="input" rows="3" placeholder="面談前の論点や仮説を自由に">単身赴任の食習慣を深掘り。妻のサポート活用度と距離感を確認。
+「やる気はある、けど」の "けど" の中身を聞き出す。
+類似ケース山口さんの「外食 3 択化」を参考にしたい。</textarea>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="btn primary" onclick="show('iv3')">面談を開始</button>
+      <button class="btn ghost">A4で印刷</button>
+      <button class="btn ghost">管理者に質問</button>
+    </div>
+  </div>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-IV-3  面談カルテ（実データ駆動）
+// ============================================================
+async function S_IV_3(){
+  if(!DS.selectedIv){
+    const candidate = DS.interviews.find(iv=>(iv.interview_analyses||[]).some(a=>a.analysis_source==='ai')) || DS.interviews[0];
+    if(candidate) await loadInterviewDetail(candidate.id);
+  }
+  if(!DS.selectedIv){
+    return `<div class="screen-title">S-IV-3</div><div class="card">担当面談がまだありません。S-IV-1から選択してください。</div>`;
+  }
+  const tab = window._iv3tab || 'b';
+  const iv = DS.selectedIv;
+  let body = '';
+  if(tab==='a') body = S_IV_3_live(iv);
+  else if(tab==='b') body = S_IV_3_review(iv);
+  else body = S_IV_3_reflect(iv);
+
+  // pick another interview selector
+  const ivOptions = DS.interviews.map(x => `<option value="${x.id}" ${x.id===iv.id?'selected':''}>${escapeHtml(x.title||'(無題)')} - ${fmtFullDate(x.recorded_at)}</option>`).join('');
+
+  return `
+<div class="crumb">栄養士ホーム / 面談担当 / ${escapeHtml(iv.title||'無題')} 面談カルテ</div>
+<div class="screen-title">S-IV-3 ／ 面談カルテ <span style="font-size:13px;color:var(--mute);font-weight:400">— AI が下書きを生成、栄養士がレビュー</span></div>
+<div class="screen-desc">
+  <select onchange="selectInterview(this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;font-family:inherit;max-width:500px">${ivOptions}</select>
+  ／ ${fmtFullDate(iv.recorded_at)} ／ <span class="badge green">✓ ${iv.status}</span>
+</div>
+
+<div class="tab-row">
+  <div class="tab ${tab==='a'?'on':''}" onclick="ivTab('a')">a. 面談中ライブ <span style="font-size:10px;color:var(--mute);margin-left:4px">AI 伴走</span></div>
+  <div class="tab ${tab==='b'?'on':''}" onclick="ivTab('b')">b. カルテ確認・確定 <span style="font-size:10px;color:var(--mute);margin-left:4px">面談後</span></div>
+  <div class="tab ${tab==='c'?'on':''}" onclick="ivTab('c')">c. 振り返り（自分の学び） <span style="font-size:10px;color:var(--mute);margin-left:4px">任意</span></div>
+</div>
+
+${body}
+
+<div style="margin-top:16px;font-size:11px;color:var(--mute);text-align:right">interview_id: <code style="background:#f1f5f9;padding:1px 6px;border-radius:3px">${iv.id}</code></div>
+`}
+
+function S_IV_3_live(iv){
+  const tx = DS.selectedTranscripts || [];
+  return `
+<div class="three-col" style="grid-template-columns:1fr 1fr 320px">
+  <div class="pane" style="min-height:540px">
+    <h4>📝 リアルタイム文字起こし <span style="float:right;font-size:11px;color:var(--mute);font-weight:600">interview_transcripts ${tx.length}件</span></h4>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">録画済み面談の文字起こしを冒頭順に表示（Phase 1 で Whisper streaming に置換）</div>
+    <div class="line-history" style="max-height:430px;overflow-y:auto">
+      ${tx.slice(0, 30).map(t => {
+        const role = t.speaker_role === 'customer' ? '被験者' : t.speaker_role === 'interviewer' ? '栄養士' : (t.speaker_name || t.speaker_role || '不明');
+        const sec = t.start_seconds != null ? `${Math.floor(t.start_seconds/60)}:${String(Math.floor(t.start_seconds%60)).padStart(2,'0')}` : '—';
+        return `<div class="post"><div class="date">${sec} ／ ${escapeHtml(role)}</div><div class="body">${escapeHtml(t.text||'')}</div></div>`;
+      }).join('') || '<div style="padding:30px;text-align:center;color:var(--mute);font-size:12px">この面談に文字起こしデータがありません</div>'}
+    </div>
+  </div>
+
+  <div class="pane" style="min-height:540px">
+    <h4>📋 自動生成カルテ <span style="float:right;font-size:11px;color:var(--mute);font-weight:600">ai_karte_drafts</span></h4>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">Phase 1 で Claude API 連携を実装すると、面談中の発言から AI が逐次組み立て</div>
+    <div style="background:#f8fafc;padding:14px;border-radius:6px;font-size:13px;color:var(--mute);line-height:1.6;text-align:center;margin-top:40px;border:1px dashed #cbd5e1">
+      🚧 AI カルテ自動生成は Phase 1 で実装<br>
+      <small>既存 interview_analyses の AI 所見は「b. カルテ確認」タブで参照可</small>
+    </div>
+  </div>
+
+  <div class="pane" style="min-height:540px;background:#fffaf0;border-color:#fde68a">
+    <h4 style="color:#92400e">💡 AI 深掘り提案 <span style="font-size:11px;color:#a16207;float:right">ai_drill_suggestions</span></h4>
+    <div style="font-size:11px;color:#854d0e;margin-bottom:12px;line-height:1.5">Phase 1 で実装予定。録画済み面談データを学習データとして蓄積中。</div>
+    <div style="background:#fff;border:1px dashed #fde68a;padding:14px;border-radius:6px;font-size:12px;color:var(--mute);line-height:1.6;text-align:center;margin-top:30px">
+      🚧 ライブ Co-Pilot は Phase 1 で実装<br>
+      <small>類似ケース embedding + Claude による深掘り推奨</small>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="ivTab('b')">カルテ確認へ ▶</button>
+</div>
+`;
+}
+
+function S_IV_3_live_DEPRECATED(){return `
+<div class="three-col" style="grid-template-columns:1fr 1fr 320px">
+  <div class="pane" style="min-height:540px">
+    <h4>📝 リアルタイム文字起こし <span style="float:right;font-size:11px;color:var(--bad);font-weight:600">● REC 14:18</span></h4>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">Whisper streaming ／ 8秒遅延</div>
+    <div class="line-history" style="max-height:430px;overflow-y:auto">
+      <div class="post"><div class="date">14:00:12 ／ 栄養士</div><div class="body">本日はよろしくお願いします。まずアンケートで気になった「単身赴任」について、もう少し詳しく教えていただけますか。</div></div>
+      <div class="post"><div class="date">14:00:48 ／ 被験者</div><div class="body">単身赴任は 3 年目になります。最初の頃は妻が作り置きを送ってくれたんですけど、今はもう…自分で適当にやってます。コンビニ多いですね。</div></div>
+      <div class="post"><div class="date">14:01:35 ／ 栄養士</div><div class="body">「適当にやってる」というのは、具体的にはどんな感じですか？</div></div>
+      <div class="post"><div class="date">14:01:52 ／ 被験者</div><div class="body">朝はコーヒーだけ、昼は会社の弁当か外食、夜は…帰りが遅いとコンビニで済ませます。週に 2-3 回はそんな感じですね。</div></div>
+      <div class="post warn"><div class="date">14:08:15 ／ 被験者</div><div class="body">「やる気はあるんですけど、続けられる自信はないというか…完璧にやれるなら最初からやってますし」</div></div>
+      <div class="post"><div class="date">14:12:30 ／ 栄養士</div><div class="body">完璧にやらなきゃ、という気持ちはどこから来ているんでしょうか？</div></div>
+      <div class="post"><div class="date">14:13:00 ／ 被験者</div><div class="body">仕事もそうなんですけど、中途半端が嫌いで。健康診断で C 判定とかになると、もう全部リセットしなきゃ気が済まないんです。</div></div>
+      <div class="post bad"><div class="date">14:15:42 ／ 被験者</div><div class="body">「だから今回も、ちゃんと結果出さないと意味がないというか」</div></div>
+      <div class="post" style="background:#fff;border-left-color:#cbd5e1"><div class="date">14:18:03 ／ 進行中</div><div class="body" style="color:var(--mute);font-style:italic">… 妻の話を、最後にもう少しだけ聞いてもいいですか …</div></div>
+    </div>
+  </div>
+
+  <div class="pane" style="min-height:540px">
+    <h4>📋 自動生成カルテ <span style="float:right;font-size:11px;color:var(--brand);font-weight:600">⟳ 最終更新 14:17</span></h4>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">面談中の発言から AI が逐次組み立て中。面談後にレビュー可。</div>
+    <div class="sub-section" style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">特徴 <span class="badge gray" style="font-size:9px">推定中</span></div>
+      <div style="font-size:13px;line-height:1.55">分析型・慎重・<b>完璧主義の傾向が強い</b>。「中途半端が嫌い」「全か無か」志向が複数発言で確認された。</div>
+    </div>
+    <div class="sub-section" style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">強み</div>
+      <div style="font-size:13px;line-height:1.55">健康診断結果を真剣に受け止める姿勢。自己観察力が高い。</div>
+    </div>
+    <div class="sub-section" style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">課題</div>
+      <div style="font-size:13px;line-height:1.55"><b>完璧主義による「全リセット型」リスク</b>。失敗時に全停止する傾向。単身赴任 3 年で配偶者サポートが弱体化している。</div>
+    </div>
+    <div class="sub-section" style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">最近の取組</div>
+      <div style="font-size:13px;line-height:1.55" class="t-mute"><i>未発話 / 後半で質問予定</i></div>
+    </div>
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #f1f5f9">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:6px">推定タグ（リアルタイム）</div>
+      <div class="chk-grid">
+        <span class="chk on">外発</span>
+        <span class="chk on">自発</span>
+        <span class="chk on">慎重</span>
+        <span class="chk on">分析型</span>
+        <span class="chk on">完璧主義</span>
+        <span class="chk on">単身赴任</span>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #f1f5f9;font-size:11px;color:var(--mute);line-height:1.6">
+      AI 6 軸スコア（暫定） ／ 共感 70 ・ 具体性 62 ・ 深掘り 73 ・ 傾聴 80 ・ 再現性 — ・ リバウンド配慮 —<br>
+      ※ 後半質問で再現性／リバウンド配慮を確定予定
+    </div>
+  </div>
+
+  <div class="pane" style="min-height:540px;background:#fffaf0;border-color:#fde68a">
+    <h4 style="color:#92400e">💡 AI 深掘り提案 <span style="font-size:11px;color:#a16207;float:right">Co-Pilot</span></h4>
+    <div style="font-size:11px;color:#854d0e;margin-bottom:12px;line-height:1.5">面談中の発言から、追加で確認すべきポイントを提案します。採用は任意。</div>
+
+    <div class="alert-card y" style="margin-bottom:10px">
+      <div class="title">🔥 重要度 高</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.55;margin-top:4px"><b>「完璧主義」を具体的な過去経験で聞く</b><br>「中途半端が嫌い」が抽象的。<u>過去の挫折経験</u>を 1 つ聞き出すと介入計画が立てやすい。</div>
+      <div class="actions"><button class="btn primary sm">採用</button><button class="btn ghost sm">スキップ</button></div>
+    </div>
+
+    <div class="alert-card y" style="margin-bottom:10px">
+      <div class="title">🔥 重要度 高</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.55;margin-top:4px"><b>妻との関係性を確認</b><br>「妻が栄養士」だが、3 年で作り置きが止まった経緯と<u>現在の連絡頻度</u>が未聴取。</div>
+      <div class="actions"><button class="btn primary sm">採用</button><button class="btn ghost sm">スキップ</button></div>
+    </div>
+
+    <div class="alert-card" style="margin-bottom:10px;background:#fef9c3;border-color:#fde047">
+      <div class="title" style="color:#854d0e">⚠️ 重要度 中</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.55;margin-top:4px"><b>朝食の話題を再開する</b><br>14:01 で出たが深掘り未。<u>「コーヒーだけ」</u>の背景（時間／空腹感／意図）。</div>
+      <div class="actions"><button class="btn ghost sm">採用</button><button class="btn ghost sm">スキップ</button></div>
+    </div>
+
+    <div class="alert-card g" style="margin-bottom:10px">
+      <div class="title">✅ 既に深掘り済</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.55;margin-top:4px">単身赴任の食事パターン (14:00-14:02)<br>完璧主義の言語化 (14:12-14:13)</div>
+    </div>
+
+    <div style="margin-top:14px;padding-top:10px;border-top:1px dashed #fde68a;font-size:11px;color:#854d0e;line-height:1.55">
+      💬 残り時間 <b>12 分</b>。重点話題 3/5 完了。<br>
+      AI は <b>類似ケース山口さん面談</b>を参考に提案を生成しています。
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost">面談を一時停止</button>
+  <button class="btn primary" onclick="ivTab('b')">面談を終了して確認画面へ ▶</button>
+</div>
+`}
+
+function S_IV_3_review(iv){
+  const aiAnalysis = (iv.interview_analyses||[]).find(a=>a.analysis_source==='ai');
+  const humanAnalysis = (iv.interview_analyses||[]).find(a=>a.analysis_source==='human');
+  const speech = (iv.customer_speech_analyses||[])[0];
+  const acoustic = (iv.interview_acoustic_metrics||[])[0];
+
+  const scores = aiAnalysis ? [
+    ['共感', aiAnalysis.empathy_score],
+    ['具体性', aiAnalysis.specificity_score],
+    ['深掘り', aiAnalysis.elicitation_depth_score],
+    ['傾聴', aiAnalysis.listening_quality_score],
+    ['再現性', aiAnalysis.reproducibility_score],
+    ['リバウンド配慮', aiAnalysis.rebound_consideration_score]
+  ].filter(([_,v])=>v!=null) : [];
+
+  const summary = aiAnalysis?.summary || '';
+  const strengths = aiAnalysis?.strengths || [];
+  const improvements = aiAnalysis?.improvement_points || [];
+  const flatten = (x) => Array.isArray(x) ? x.map(s=>typeof s==='string'?s:(s.text||s.point||JSON.stringify(s))).join('\n') : (typeof x==='string'?x:'');
+  const strengthsText = flatten(strengths);
+  const improvementsText = flatten(improvements);
+
+  return `
+<div class="row c2" style="margin-bottom:14px">
+  <div class="card">
+    <h3>AI 6 軸スコア <span class="pill">${aiAnalysis ? '確定 ／ 客観評価' : 'AI分析なし'}</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">AI による定量評価。栄養士の自己採点は行わず、QC 監査で校正する運用。</div>
+    ${scores.length === 0 ? `<div style="padding:20px;text-align:center;color:var(--mute);font-size:13px;background:#f8fafc;border-radius:6px">この面談のAI分析がまだ実行されていません</div>` : ''}
+    ${scores.map(([k, v])=>{
+      const num = Number(v);
+      const pct = Math.min(100, num <= 10 ? num*10 : num);
+      return `<div class="score-row" style="grid-template-columns:130px 60px 1fr">
+        <div>${k}</div>
+        <div class="human">${num.toFixed(1)}</div>
+        <div class="bar"><div style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('')}
+    ${aiAnalysis?.overall_score != null ? `<div style="font-size:12px;color:var(--mute);margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9">総合 <b>${Number(aiAnalysis.overall_score).toFixed(1)}</b> ／ v${aiAnalysis.version} ／ analyzed_by: ${escapeHtml(aiAnalysis.analyzed_by||'')}</div>` : ''}
+    ${speech ? `<div style="font-size:12px;color:var(--mute);margin-top:6px;line-height:1.6">継続予測: <span class="badge blue">${speech.predicted_continuation_class||'未判定'}</span> ／ 信頼度 ${speech.prediction_confidence ? Number(speech.prediction_confidence).toFixed(2) : '—'}<br>発話 ${speech.total_utterances||'—'}回 ／ 語数 ${speech.total_words||'—'} ／ 具体性率 ${speech.specificity_rate ? (Number(speech.specificity_rate)*100).toFixed(0)+'%' : '—'} ／ 意志力ワード率 ${speech.willpower_word_rate ? (Number(speech.willpower_word_rate)*100).toFixed(0)+'%' : '—'}</div>` : ''}
+    ${humanAnalysis ? `<div style="font-size:11px;color:var(--ok);margin-top:8px;padding-top:6px;border-top:1px solid #f1f5f9">✓ 栄養士レビュー済 (v${humanAnalysis.version} / ${fmtFullDate(humanAnalysis.analyzed_at)})</div>` : ''}
+  </div>
+
+  <div class="card">
+    <h3>AI ドラフト所見 <span class="pill">${humanAnalysis ? '人間レビュー済' : '編集可'}</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">${aiAnalysis ? 'interview_analyses から AI 出力を表示。栄養士は気になる箇所のみ編集。' : 'まだ AI 分析が実行されていません。'}</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>サマリ</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="5" id="rev-summary">${escapeHtml(summary)}</textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>強み</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="4" id="rev-strengths">${escapeHtml(strengthsText)}</textarea>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>改善点 / 課題</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="4" id="rev-improvements">${escapeHtml(improvementsText)}</textarea>
+    </div>
+  </div>
+</div>
+
+${acoustic ? `
+<div class="card">
+  <h3>面談メトリクス <span class="pill">interview_acoustic_metrics</span></h3>
+  <div class="row c4">
+    <div class="kpi"><div class="label">面談時間</div><div class="value">${acoustic.duration_seconds ? Math.round(Number(acoustic.duration_seconds)/60) : '—'}分</div></div>
+    <div class="kpi"><div class="label">被験者発話比率</div><div class="value">${acoustic.customer_speaking_ratio ? Math.round(Number(acoustic.customer_speaking_ratio)*100) : '—'}%</div></div>
+    <div class="kpi"><div class="label">ターン交代</div><div class="value">${acoustic.turn_changes || '—'}回</div></div>
+    <div class="kpi"><div class="label">3秒以上沈黙</div><div class="value">${acoustic.gaps_over_3s || '—'}回</div></div>
+  </div>
+</div>` : ''}
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="ivTab('c')">振り返りを書く</button>
+  <button class="btn primary" onclick="saveReviewedKarte('${iv.id}')">確定して引継ぎへ ▶</button>
+</div>
+`;
+}
+
+async function saveReviewedKarte(ivId){
+  // Phase 0: interview_analyses に human_reviewed として INSERT
+  const summary = document.getElementById('rev-summary')?.value || '';
+  const strengths = (document.getElementById('rev-strengths')?.value || '').split('\n').filter(Boolean);
+  const improvements = (document.getElementById('rev-improvements')?.value || '').split('\n').filter(Boolean);
+  const {error} = await sb.from('interview_analyses').insert({
+    interview_id: ivId,
+    analysis_source: 'human',
+    analyzed_by: DS.staff.email || DS.staff.name,
+    version: 1,
+    summary, strengths, improvement_points: improvements
+  });
+  if(error){
+    alert('保存に失敗: '+error.message);
+    return;
+  }
+  alert('栄養士レビュー版を保存しました（interview_analyses analysis_source=human）');
+  await reloadInterviews();
+  DS.selectedIvId = null; DS.selectedIv = null;
+  await loadInterviewDetail(ivId);
+  await show('iv4');
+}
+
+function S_IV_3_review_DEPRECATED(){return `
+<div class="row c2" style="margin-bottom:14px">
+  <div class="card">
+    <h3>AI 6 軸スコア <span class="pill">確定 ／ 客観評価</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">AI による定量評価。栄養士の自己採点は行わず、QC 監査で校正する運用。</div>
+    <div class="score-row head">
+      <div>軸</div><div>スコア</div><div></div><div></div><div></div><div></div>
+    </div>
+    ${[['共感',72],['具体性',58],['深掘り',73],['傾聴',80],['再現性',61],['リバウンド配慮',68],['介入適切性',70]].map(([k,a])=>`
+      <div class="score-row" style="grid-template-columns:130px 60px 1fr">
+        <div>${k}</div>
+        <div class="human">${a}</div>
+        <div class="bar"><div style="width:${a}%"></div></div>
+      </div>`).join('')}
+    <div style="font-size:12px;color:var(--mute);margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9;line-height:1.6">
+      継続予測: <span class="badge blue">long_term</span> ／ AI信頼度 0.82<br>
+      ${'<span style="font-size:11px">違和感があれば「振り返り」タブに記録 → QCへ反映</span>'}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>AI ドラフト所見 <span class="pill">編集可</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">面談中の発言から AI が下書きしました。気になる箇所のみ編集してください。</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>特徴</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="2">分析型で慎重。完璧主義の傾向が強く、「中途半端が嫌い」「全か無か」志向が複数発言で確認された。</textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>強み</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="2">健康診断結果を真剣に受け止める姿勢。自己観察力が高く、課題を言語化できる。</textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>課題</span><span class="badge green" style="font-size:9px">栄養士編集</span></div>
+      <textarea class="input" rows="3" style="border-color:#86efac;background:#f0fdf4">完璧主義による「全リセット型」リスク。失敗時に全停止する傾向。単身赴任 3 年で配偶者サポートが弱体化。
+※ 14:15 の "ちゃんと結果出さないと意味がない" は要警戒ワード。LINE 引継ぎ時に明記。</textarea>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;justify-content:space-between"><span>最近の取組</span><span class="badge gray" style="font-size:9px">AI下書き</span></div>
+      <textarea class="input" rows="2">朝食を週5回に増やそうとした (3 月) が継続せず。コンビニのタンパク質商品は意識し始めている。</textarea>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>AI 推定タグ <span class="pill">編集可</span></h3>
+  <div style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:6px">動機タイプ（AI推定: 外発 + 自発）</div>
+    <div class="chk-grid">
+      <span class="chk on">外発</span><span class="chk">内発</span><span class="chk on">自発</span><span class="chk">他律</span>
+    </div>
+  </div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:6px">性格（AI推定: 慎重・分析型・完璧主義）</div>
+    <div class="chk-grid">
+      <span class="chk on">慎重</span><span class="chk">衝動</span><span class="chk on">分析型</span><span class="chk">楽観</span><span class="chk">悲観</span><span class="chk on">完璧主義</span>
+    </div>
+  </div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:6px">障壁（AI推定: 単身赴任・出張多）</div>
+    <div class="chk-grid">
+      <span class="chk on">単身赴任</span><span class="chk on">出張多</span><span class="chk">夜勤</span><span class="chk">育児</span><span class="chk">介護</span>
+    </div>
+  </div>
+  <div>
+    <div style="font-size:11px;color:var(--mute);margin-bottom:6px">支援基盤（AI推定: 配偶者 ※弱体化）</div>
+    <div class="chk-grid">
+      <span class="chk on">配偶者</span><span class="chk">親</span><span class="chk">同僚</span><span class="chk">友人</span><span class="chk">孤立</span>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="ivTab('c')">振り返りを書く</button>
+  <button class="btn primary" onclick="show('iv4')">確定して引継ぎへ ▶</button>
+</div>
+`}
+
+function S_IV_3_reflect(){return `
+<div class="row c2" style="margin-bottom:14px">
+  <div class="card">
+    <h3>今日の面談で良かったこと <span class="pill">自由記述</span></h3>
+    <textarea id="iv3rGood" class="input" rows="5" placeholder="自分が手応えを感じた部分を残しておきましょう。後で読み返せます。">「完璧にやらなきゃ」と言われた時に、すぐに反論せず「どこから来てるんでしょう？」と聞き返したのは良かった。本人が "中途半端が嫌い" まで言語化できた。
+類似ケース山口さんのとき以来、この問いかけは効果的だと実感している。</textarea>
+  </div>
+  <div class="card">
+    <h3>次回もし同じケースに当たったら <span class="pill">改善メモ</span></h3>
+    <textarea id="iv3rNext" class="input" rows="5" placeholder="次回の自分への申し送り">朝食の話題（14:01 のコーヒーだけ発言）を後半まで放置してしまった。AI 提案でも中重要度で挙がっていた。
+→ 次回は「気になる発言を 5 分以内に深掘りに戻す」を意識する。</textarea>
+  </div>
+</div>
+
+<div class="card">
+  <h3>AI スコア・所見への違和感 <span class="pill">任意 ／ QC 連携</span></h3>
+  <div style="font-size:12px;color:var(--mute);margin-bottom:10px">栄養士は採点しませんが、AI 評価への違和感は記録すると校正フィードバックに使われます。</div>
+  <div class="row c2">
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:5px">違和感のあった軸</div>
+      <div class="chk-grid">
+        <span class="chk">共感 72</span>
+        <span class="chk on">具体性 58</span>
+        <span class="chk">深掘り 73</span>
+        <span class="chk">傾聴 80</span>
+        <span class="chk">再現性 61</span>
+        <span class="chk on">リバウンド配慮 68</span>
+        <span class="chk">介入適切性 70</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:5px">違和感の度合い</div>
+      <div class="tone-grid">
+        <label><input type="radio" name="dist" checked>軽い違和感（参考にしてほしい）</label>
+        <label><input type="radio" name="dist">中程度（要再校正）</label>
+        <label><input type="radio" name="dist">強い違和感（QC レビュー希望）</label>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:5px">違和感の中身（自由記述）</div>
+    <textarea class="input" rows="3">具体性 58 は低すぎる印象。後半で「朝食を週5回」など具体例を本人から複数引き出せていた。リバウンド配慮 68 も、完璧主義リスクへの問いかけを評価してほしい。</textarea>
+  </div>
+</div>
+
+<div class="card">
+  <h3>印象に残った被験者の発言 <span class="pill">学習素材化</span></h3>
+  <div style="font-size:12px;color:var(--mute);margin-bottom:10px">QC レビュー後、研修教材に匿名化して活用されます。</div>
+  <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;font-size:13px;line-height:1.6;border-left:3px solid var(--brand)">
+    「ちゃんと結果出さないと意味がないというか」<br>
+    <span style="font-size:11px;color:var(--mute)">14:15:42 ／ "全か無か" 思考の象徴的な発言</span>
+  </div>
+  <button class="btn ghost sm" style="margin-top:8px">＋ 印象的な発言を追加</button>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+  <button class="btn ghost" onclick="ivTab('b')">カルテに戻る</button>
+  <button class="btn ghost" onclick="knFromReflect()">💡 この学びをナレッジ化</button>
+  <button class="btn primary">振り返りを保存</button>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-IV-4  引継ぎノート起票
+// ============================================================
+async function S_IV_4(){
+  if(!DS.selectedIv){
+    const candidate = DS.interviews.find(iv=>(iv.interview_analyses||[]).length>0) || DS.interviews[0];
+    if(candidate) await loadInterviewDetail(candidate.id);
+  }
+  if(!DS.selectedIv){
+    return `<div class="screen-title">S-IV-4</div><div class="card">担当面談がありません。S-IV-1から選択してください。</div>`;
+  }
+  const iv = DS.selectedIv;
+  const speech = (iv.customer_speech_analyses||[])[0];
+  const ai = (iv.interview_analyses||[]).find(a=>a.analysis_source==='ai');
+  const continuation = speech?.predicted_continuation_class || '—';
+  const conf = speech?.prediction_confidence ? Number(speech.prediction_confidence).toFixed(2) : '—';
+  // LINE 担当一覧
+  const lineStaff = DS.allStaff.filter(s=>s.role==='LINE担当' && s.is_active);
+  const lineOptions = lineStaff.map((s,i)=>`<option value="${s.id}" ${i===0?'selected':''}>${escapeHtml(s.name)}（${escapeHtml(s.email||'')}）</option>`).join('');
+  // 既存の handover_records があるか確認するのは挙動が複雑になるので今回は新規作成のみ
+
+  return `
+<div class="crumb">栄養士ホーム / 面談担当 / ${escapeHtml(iv.title||'無題')} 引継ぎ</div>
+<div class="screen-title">S-IV-4 ／ 引継ぎノート起票</div>
+<div class="screen-desc">${escapeHtml(iv.title||'無題')} ／ ${fmtFullDate(iv.recorded_at)} ／ LINE 栄養士へ引き継ぐためのノートを起票</div>
+
+<div class="card">
+  <h3>カルテからの転記 <span class="pill">編集可</span></h3>
+  <div style="display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:13px;align-items:center">
+    <div style="color:var(--mute)">対象者タイプ</div>
+    <div id="ho-tags-container" class="chk-grid">
+      <span class="chk on" data-tag="外発+自発" onclick="this.classList.toggle('on')">外発+自発</span>
+      <span class="chk on" data-tag="分析型" onclick="this.classList.toggle('on')">分析型</span>
+      <span class="chk on" data-tag="慎重" onclick="this.classList.toggle('on')">慎重</span>
+      <span class="chk" data-tag="完璧主義" onclick="this.classList.toggle('on')">完璧主義</span>
+      <span class="chk" data-tag="単身赴任" onclick="this.classList.toggle('on')">単身赴任</span>
+      <span class="chk" data-tag="出張多" onclick="this.classList.toggle('on')">出張多</span>
+      <span class="chk" data-tag="配偶者支援あり" onclick="this.classList.toggle('on')">配偶者支援あり</span>
+    </div>
+    <div style="color:var(--mute)">継続見込みランク</div>
+    <div>
+      <select id="ho-rank" class="input" style="max-width:160px;display:inline-block">
+        <option value="A">A (最良)</option>
+        <option value="B" selected>B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+        <option value="E">E (要警戒)</option>
+      </select>
+      <span style="font-size:12px;color:var(--mute);margin-left:8px">AI予測: <span class="badge blue">${continuation}</span> 信頼度 ${conf}</span>
+    </div>
+    <div style="color:var(--mute)">継続見込みスコア</div>
+    <div><input id="ho-score" type="number" class="input" style="max-width:100px;display:inline-block" value="${ai?.overall_score ? Number(ai.overall_score).toFixed(0) : 70}" min="0" max="100"> 点</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Phase 6 用 重点話題 <span class="pill" style="background:var(--soft-bad);color:var(--bad)">必須 3つ</span></h3>
+  <input id="ho-topic1" class="input" placeholder="例: 外食時の選び方を具体化する" style="margin-bottom:6px">
+  <input id="ho-topic2" class="input" placeholder="例: 週末の妻との同期を保つ" style="margin-bottom:6px">
+  <input id="ho-topic3" class="input" placeholder="例: 自己効力感の言語化を促す">
+</div>
+
+<div class="card">
+  <h3>早期警戒シグナル <span class="pill" style="background:var(--soft-bad);color:var(--bad)">必須</span></h3>
+  <div style="margin-bottom:10px">
+    <div style="font-size:11px;color:var(--mute);margin-bottom:5px">自然文記述</div>
+    <textarea id="ho-warning-text" class="input" rows="3" placeholder="例: 出張・接待が増えると食事記録が崩れる傾向の予兆あり"></textarea>
+  </div>
+  <div>
+    <div style="font-size:11px;color:var(--mute);margin-bottom:5px">構造化タグ（クリックで選択）</div>
+    <div class="chk-grid" id="ho-signal-tags">
+      <span class="chk on" data-sig="willpower_word_spike" onclick="this.classList.toggle('on')">willpower_word_spike</span>
+      <span class="chk on" data-sig="food_detail_drop" onclick="this.classList.toggle('on')">food_detail_drop</span>
+      <span class="chk on" data-sig="post_silence" onclick="this.classList.toggle('on')">post_silence</span>
+      <span class="chk" data-sig="sentiment_negative_surge" onclick="this.classList.toggle('on')">sentiment_negative_surge</span>
+      <span class="chk" data-sig="char_count_decline" onclick="this.classList.toggle('on')">char_count_decline</span>
+      <span class="chk" data-sig="reply_unread" onclick="this.classList.toggle('on')">reply_unread</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>初回声かけドラフト <span class="pill">編集可</span></h3>
+  <div class="ai-suggest" style="margin-bottom:10px">
+    <div class="lab">AI提案 (Phase 1で Claude API 接続)</div>
+    はじめまして。LINE担当の[名前]と申します。先日の面談、お疲れさまでした。お話で伺った件、私も一緒に考えていきたいと思っています。完璧を目指さなくて大丈夫です。まずは "気づいたこと" を写真と一緒に教えてください。
+  </div>
+  <textarea id="ho-message" class="input" rows="4" placeholder="送信する初回メッセージを記入">はじめまして。LINE担当の[名前]と申します。先日の面談、お疲れさまでした。
+お話で伺った件、私も一緒に考えていきたいと思っています。
+完璧を目指さなくて大丈夫です。まずは "気づいたこと" を写真と一緒に教えてください。</textarea>
+</div>
+
+<div class="card">
+  <h3>担当 LINE 栄養士</h3>
+  ${lineStaff.length === 0 ? `<div style="font-size:13px;color:var(--bad)">⚠ LINE担当のstaffが未登録です</div>` : `
+  <select id="ho-to-staff" class="input" style="max-width:400px">${lineOptions}</select>
+  <div style="font-size:11px;color:var(--mute);margin-top:6px">Phase 1で類似ケース実績ベースの推奨ロジック追加予定</div>
+  `}
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <button class="btn ghost" onclick="submitHandover('${iv.id}', 'draft')">下書き保存</button>
+  <button class="btn primary" onclick="submitHandover('${iv.id}', 'sent')">送信して引継ぎ完了 ▶</button>
+</div>
+
+<div id="ho-msg" style="margin-top:12px"></div>
+`;
+}
+
+async function submitHandover(ivId, status){
+  const msgEl = document.getElementById('ho-msg');
+  msgEl.innerHTML = '<div style="color:var(--mute);font-size:12px">保存中...</div>';
+  try {
+    const iv = DS.selectedIv;
+    const customerId = iv?.customer_id || null;
+    const tags = [...document.querySelectorAll('#ho-tags-container .chk.on')].map(el=>el.dataset.tag);
+    const sigTags = [...document.querySelectorAll('#ho-signal-tags .chk.on')].map(el=>el.dataset.sig);
+    const topics = [
+      document.getElementById('ho-topic1').value,
+      document.getElementById('ho-topic2').value,
+      document.getElementById('ho-topic3').value
+    ].filter(t=>t && t.trim());
+    const rank = document.getElementById('ho-rank').value;
+    const score = Number(document.getElementById('ho-score').value) || null;
+    const warningText = document.getElementById('ho-warning-text').value;
+    const msg = document.getElementById('ho-message').value;
+    const toStaff = document.getElementById('ho-to-staff')?.value || null;
+
+    // バリデーション (sent のみ厳しく)
+    if(status === 'sent'){
+      if(topics.length < 3){ throw new Error('重点話題は3つ必須です'); }
+      if(!warningText.trim()){ throw new Error('早期警戒シグナルの自然文は必須です'); }
+      if(!toStaff){ throw new Error('LINE担当の選択が必要です'); }
+      if(!msg.trim()){ throw new Error('初回声かけメッセージは必須です'); }
+    }
+
+    const payload = {
+      customer_id: customerId,
+      interview_id: ivId,
+      from_staff_id: DS.staff.id,
+      to_staff_id: toStaff,
+      customer_type_tags: tags,
+      continuation_rank: rank,
+      continuation_score: score,
+      focus_topics: topics,
+      warning_signals_text: warningText,
+      warning_signals_tags: sigTags,
+      initial_message_draft: msg,
+      initial_message_final: status === 'sent' ? msg : null,
+      status: status,
+      sent_at: status === 'sent' ? new Date().toISOString() : null
+    };
+
+    const {data, error} = await sb.from('handover_records').insert(payload).select().single();
+    if(error) throw error;
+
+    msgEl.innerHTML = `<div style="padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:13px">
+      ✓ ${status === 'sent' ? '送信完了' : '下書き保存'} ／ handover_records に保存 (id: <code>${data.id.slice(0,8)}</code>)<br>
+      ${status === 'sent' ? `LINE担当 ${escapeHtml(DS.allStaff.find(s=>s.id===toStaff)?.name||'')} さんに通知が届きます (Phase 1 で notification 実装予定)` : ''}
+      <div style="margin-top:8px"><button class="btn ghost sm" onclick="show('iv1')">マイダッシュボードへ戻る</button></div>
+    </div>`;
+  } catch(e) {
+    msgEl.innerHTML = `<div style="padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px">
+      ⚠ ${escapeHtml(e.message)}
+    </div>`;
+  }
+}
+
+// ============================================================
+// SCREEN: S-IV-5  マイパフォーマンス（reflective practice ベース）
+// ============================================================
+function S_IV_5(){return `
+<div class="crumb">栄養士ホーム / 面談担当 / 自己レビュー</div>
+<div class="screen-title">S-IV-5 ／ マイパフォーマンス</div>
+<div class="card" style="background:#fffbeb;border-color:#fde68a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <div style="font-size:13px;color:#92400e">💡 振り返りで気づいた学びは、知見として仲間に残せます（やりがいの回路）</div>
+  <div style="display:flex;gap:6px"><button class="btn ghost sm" onclick="knNewFrom({})">＋ ナレッジ化</button><button class="btn ghost sm" onclick="show('knowledge')">知見フィード</button></div>
+</div>
+<div class="screen-desc">面談スキルを継続的に育てるための reflective practice ダッシュボード。<br>自己採点は行いません — 振り返り記録の積み重ねと、担当ユーザーの結果フィードバックが軸。</div>
+
+<div class="row c4" style="margin-bottom:14px">
+  <div class="kpi"><div class="label">起票完了率 (6ヶ月)</div><div class="value">91%</div><div class="sub green">先月 +3pt</div></div>
+  <div class="kpi"><div class="label">振り返り記録率</div><div class="value">75%</div><div class="sub yellow">先月 +12pt</div></div>
+  <div class="kpi"><div class="label">担当者の90日完走率</div><div class="value">68%</div><div class="sub green">全体平均 +6pt</div></div>
+  <div class="kpi"><div class="label">QC指摘事項対応率</div><div class="value">100%</div><div class="sub green">指摘 2件すべて反映</div></div>
+</div>
+
+<div class="card">
+  <h3>月次推移 <span class="pill">6ヶ月</span></h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse">
+    <thead>
+      <tr style="background:#f1f5f9;font-size:11px;text-transform:uppercase;color:#475569">
+        <th style="text-align:left;padding:8px">月</th>
+        <th style="text-align:right;padding:8px">担当面談</th>
+        <th style="text-align:right;padding:8px">起票完了率</th>
+        <th style="text-align:right;padding:8px">振り返り記録</th>
+        <th style="text-align:right;padding:8px">担当者90日完走</th>
+        <th style="text-align:right;padding:8px">違和感記録</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:8px">2025-12</td><td style="text-align:right">11件</td><td style="text-align:right">82%</td><td style="text-align:right">45%</td><td style="text-align:right">61%</td><td style="text-align:right">2件</td></tr>
+      <tr><td style="padding:8px">2026-01</td><td style="text-align:right">9件</td><td style="text-align:right">89%</td><td style="text-align:right">56%</td><td style="text-align:right">64%</td><td style="text-align:right">3件</td></tr>
+      <tr><td style="padding:8px">2026-02</td><td style="text-align:right">12件</td><td style="text-align:right">92%</td><td style="text-align:right">63%</td><td style="text-align:right">66%</td><td style="text-align:right">4件</td></tr>
+      <tr><td style="padding:8px">2026-03</td><td style="text-align:right">10件</td><td style="text-align:right">90%</td><td style="text-align:right">70%</td><td style="text-align:right">69%</td><td style="text-align:right">3件</td></tr>
+      <tr><td style="padding:8px">2026-04</td><td style="text-align:right">8件</td><td style="text-align:right">100%</td><td style="text-align:right">63%</td><td style="text-align:right">71%</td><td style="text-align:right">5件</td></tr>
+      <tr style="background:#eff6ff;font-weight:600"><td style="padding:8px">2026-05</td><td style="text-align:right">8件</td><td style="text-align:right">93%</td><td style="text-align:right">75%</td><td style="text-align:right">68%</td><td style="text-align:right">4件</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="row c2">
+  <div class="card">
+    <h3>あなたが書いた振り返りから抽出された学習テーマ <span class="pill">AI 集計</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">過去6ヶ月の "次回もし同じケースに当たったら" を NLP クラスタリング</div>
+    <div style="display:grid;gap:8px">
+      <div style="background:#eff6ff;padding:10px 12px;border-radius:6px;border-left:3px solid var(--brand)">
+        <div style="font-size:12px;font-weight:600;color:var(--brand);margin-bottom:3px">完璧主義タイプへの介入 <span class="badge blue" style="font-size:10px">7 回言及</span></div>
+        <div style="font-size:12px;color:#1f2937;line-height:1.5">「全か無か」の言語化を引き出す問いかけが奏功するパターンを発見</div>
+      </div>
+      <div style="background:#f0fdf4;padding:10px 12px;border-radius:6px;border-left:3px solid var(--ok)">
+        <div style="font-size:12px;font-weight:600;color:var(--ok);margin-bottom:3px">気になる発言の即時深掘り <span class="badge green" style="font-size:10px">5 回言及</span></div>
+        <div style="font-size:12px;color:#1f2937;line-height:1.5">「5分以内に深掘りに戻る」を 4 月から意識し始め、定着しつつある</div>
+      </div>
+      <div style="background:#fefce8;padding:10px 12px;border-radius:6px;border-left:3px solid var(--warn)">
+        <div style="font-size:12px;font-weight:600;color:var(--warn);margin-bottom:3px">朝食話題の取りこぼし <span class="badge yellow" style="font-size:10px">3 回言及 ／ 未克服</span></div>
+        <div style="font-size:12px;color:#1f2937;line-height:1.5">3回連続で同じ振り返りが出ている。次回意識すべきテーマ。</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>AIスコア違和感記録 <span class="pill">QC連携</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">あなたが違和感を記録した軸と、QC のフィードバック状況</div>
+    <div class="user-list">
+      <div class="row-u head" style="grid-template-columns:1fr 110px 130px 100px">
+        <div>面談</div><div>軸</div><div>違和感度合い</div><div>QC対応</div>
+      </div>
+      <div class="row-u" style="grid-template-columns:1fr 110px 130px 100px">
+        <div style="font-size:12px">5/28 佐藤 健太</div><div><span class="badge yellow">具体性 58</span></div><div style="font-size:11px">軽い違和感</div><div><span class="badge gray">レビュー中</span></div>
+      </div>
+      <div class="row-u" style="grid-template-columns:1fr 110px 130px 100px">
+        <div style="font-size:12px">5/15 田中 健司</div><div><span class="badge red">リバ配慮 45</span></div><div style="font-size:11px">強い違和感</div><div><span class="badge green">校正済</span></div>
+      </div>
+      <div class="row-u" style="grid-template-columns:1fr 110px 130px 100px">
+        <div style="font-size:12px">4/22 岡田 真理子</div><div><span class="badge yellow">深掘り 58</span></div><div style="font-size:11px">中程度</div><div><span class="badge green">校正済</span></div>
+      </div>
+      <div class="row-u" style="grid-template-columns:1fr 110px 130px 100px">
+        <div style="font-size:12px">4/08 山本 浩司</div><div><span class="badge yellow">再現性 78</span></div><div style="font-size:11px">軽い違和感</div><div><span class="badge blue">記録のみ</span></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--mute);line-height:1.55">QC は違和感記録 3件以上で 1 軸の再校正対象とする運用。<br>「リバウンド配慮」は AI モデルがあなたの違和感を取り込んで再学習しました。</div>
+  </div>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#f0fdf4 0%,#eff6ff 100%);border:1px solid #bbf7d0">
+  <h3 style="color:#166534;font-size:16px">🌱 あなたが面談した方々の "今"<span class="pill" style="background:rgba(255,255,255,.7);color:#166534">モチベーション</span></h3>
+  <div style="font-size:13px;color:#1f2937;line-height:1.6;margin-bottom:14px">
+    あなたが初回面談で関わった方が、その後どう変わったか。一人ひとりの "物語の続き" を、定期的に見られるようにしました。
+  </div>
+
+  <div class="row c4" style="margin-bottom:14px">
+    <div class="kpi" style="background:#fff;border:1px solid #bbf7d0">
+      <div class="label" style="color:#166534">🎯 累計担当</div>
+      <div class="value" style="color:#166534">46名</div>
+      <div class="sub green">過去6ヶ月</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid #bbf7d0">
+      <div class="label" style="color:#166534">💪 平均減量</div>
+      <div class="value" style="color:#166534">-2.8kg</div>
+      <div class="sub green">完走者31名平均</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid #bbf7d0">
+      <div class="label" style="color:#166534">🏆 最大減量</div>
+      <div class="value" style="color:#166534">-7.4kg</div>
+      <div class="sub">山口 浩二さん (90日)</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid #bbf7d0">
+      <div class="label" style="color:#166534">💌 卒業時の感謝メッセージ</div>
+      <div class="value" style="color:#166534">23通</div>
+      <div class="sub">完走者の74%</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div style="font-size:12px;color:#166534;margin-bottom:8px;font-weight:600">最近の卒業ニュース ／ ハイライト</div>
+    <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:600;color:#166534">🎉 山口 浩二さん（43歳・営業・単身赴任）</div>
+        <span class="badge green">90日完走・-7.4kg</span>
+      </div>
+      <div style="font-size:12px;color:#374151;line-height:1.6;font-style:italic;padding-left:8px;border-left:3px solid #86efac">
+        「面談で『外食の選び方を3つに絞る』って教わったのが本当に効きました。コンビニで毎回迷わなくなって、それだけで気持ちが楽に。妻にも『顔が変わったね』と言ってもらえました。ありがとうございました。」
+      </div>
+      <div style="font-size:11px;color:var(--mute);margin-top:6px">2026-05-22 卒業 ／ 面談: 2026-02-12 (あなた担当)</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:600;color:#166534">🌟 西田 雅彦さん（40歳・技術・出張多）</div>
+        <span class="badge green">90日完走・-4.2kg</span>
+      </div>
+      <div style="font-size:12px;color:#374151;line-height:1.6;font-style:italic;padding-left:8px;border-left:3px solid #86efac">
+        「完璧主義の自分を変えるのは難しいと思っていました。面談で『完璧じゃなくて大丈夫』と言ってもらえたのが転機。出張中も無理せず続けられました。」
+      </div>
+      <div style="font-size:11px;color:var(--mute);margin-top:6px">2026-04-18 卒業 ／ 面談: 2026-01-22 (あなた担当)</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #fde047;border-radius:8px;padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:600;color:#854d0e">💭 中田 真理子さん（38歳・育児中）</div>
+        <span class="badge yellow">継続中 60日目・-1.2kg</span>
+      </div>
+      <div style="font-size:12px;color:#374151;line-height:1.6;padding-left:8px;border-left:3px solid #fde047">
+        引継ぎノートの "育児ストレスへの共感を最優先" が活きて、初期離脱を回避。現在はLINE栄養士の佐藤さんが伴走中で、来月の卒業判定を目指しています。
+      </div>
+      <div style="font-size:11px;color:var(--mute);margin-top:6px">面談: 2026-03-30 (あなた担当)</div>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px">
+    <div style="font-size:12px;color:#166534;font-weight:600;margin-bottom:8px">📊 体重変化の分布（完走者31名 / Phase 6終了時）</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;align-items:flex-end;height:80px;margin-bottom:6px">
+      ${[1,3,5,8,7,5,2].map((v,i)=>{
+        const labels=['-1kg未満','-1~2kg','-2~3kg','-3~4kg','-4~5kg','-5~7kg','-7kg超'];
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="font-size:11px;font-weight:600;color:#166534">${v}名</div>
+          <div style="width:100%;background:#22c55e;height:${v*8}px;border-radius:2px"></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;color:var(--mute);text-align:center">
+      <div>-1kg未満</div><div>-1~2kg</div><div>-2~3kg</div><div>-3~4kg</div><div>-4~5kg</div><div>-5~7kg</div><div>-7kg超</div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.6);border-radius:6px;font-size:12px;color:#166534;line-height:1.6;text-align:center">
+    💚 あなたが起点となった "変化の物語" は <b>31本</b>。次の面談も、また一人の物語が始まります。
+  </div>
+</div>
+
+<div class="card">
+  <h3>引継ぎノートの活用度 <span class="pill">あなたの面談 → LINE実績</span></h3>
+  <div style="font-size:12px;color:var(--mute);margin-bottom:10px">あなたの引継ぎノートの "重点話題" がLINE で言及された率</div>
+  <div style="background:#e5e7eb;height:10px;border-radius:5px;overflow:hidden;position:relative;margin-bottom:8px">
+    <div style="width:73%;height:100%;background:var(--ok);border-radius:5px"></div>
+    <div style="position:absolute;right:8px;top:-3px;font-size:11px;font-weight:600;color:#fff">73%</div>
+  </div>
+  <div style="font-size:11px;color:var(--mute)">全栄養士平均 61% ／ 重点話題の言語化が明確だと LINE での会話が深まりやすい</div>
+  <div class="row c3" style="margin-top:14px">
+    <div class="kpi" style="background:#f0fdf4"><div class="label">90日完走</div><div class="value" style="color:var(--ok)">31名 (68%)</div></div>
+    <div class="kpi" style="background:#fefce8"><div class="label">中盤離脱</div><div class="value" style="color:var(--warn)">8名 (18%)</div></div>
+    <div class="kpi" style="background:#fef2f2"><div class="label">早期離脱</div><div class="value" style="color:var(--bad)">5名 (11%)</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>QC レビュー履歴と研修</h3>
+  <div class="row c2">
+    <div>
+      <div style="font-size:12px;color:var(--mute);margin-bottom:8px">直近の QC 指摘事項（過去6ヶ月）</div>
+      <div class="line-history">
+        <div class="post"><div class="date">2026-04-15 ／ QC 田所さん</div><div class="body">「再現性」軸の所見が "AI ドラフトのまま" の比率が高い。栄養士の観察を加える運用を推奨。<br><span class="badge green" style="font-size:10px">対応済 5月から</span></div></div>
+        <div class="post"><div class="date">2026-02-22 ／ QC 田所さん</div><div class="body">引継ぎノートの "警戒シグナル" タグが空白の事例あり。必須化推奨。<br><span class="badge green" style="font-size:10px">対応済</span></div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;color:var(--mute);margin-bottom:8px">研修・認定</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="padding:10px 12px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0">
+          <div style="font-size:13px;font-weight:600;color:#166534">基礎研修</div>
+          <div style="font-size:11px;color:#16a34a">2026-03 修了 ／ 評価 A</div>
+        </div>
+        <div style="padding:10px 12px;background:#eff6ff;border-radius:6px;border:1px solid #bfdbfe">
+          <div style="font-size:13px;font-weight:600;color:#1e40af">継続評価 2026-Q1</div>
+          <div style="font-size:11px;color:var(--brand)">良 ／ 次回 2026-Q3</div>
+        </div>
+        <div style="padding:10px 12px;background:#fef3c7;border-radius:6px;border:1px solid #fde047">
+          <div style="font-size:13px;font-weight:600;color:#854d0e">推奨研修</div>
+          <div style="font-size:11px;color:#a16207">完璧主義タイプ介入セミナー ／ あなたの担当に多いケース</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-LC-1  朝のチェックイン
+// ============================================================
+function lcOpen(cid){ window._lcSelId=cid; show('lc2'); }
+const LC_SIG={willpower_word_spike:'意志力ワード急増',food_detail_drop:'食事詳細率低下',post_silence:'無投稿',char_count_decline:'文字数減少',sentiment_negative_surge:'ネガティブ急増',reply_unread:'未読'};
+function lcResolveCoach(){
+  if(DS.staff && DS.staff.role==='LINE担当') return DS.staff;
+  return (DS.allStaff||[]).find(s=>s.email==='takahashi@handsoming.jp') || (DS.allStaff||[]).find(s=>s.role==='LINE担当') || null;
+}
+async function S_LC_1(){
+  const coach = lcResolveCoach();
+  if(!coach || !coach.id){ return `<div class="screen-title">S-LC-1 ／ 朝のチェックイン</div><div class="card" style="color:#94a3b8">LINE担当スタッフが見つかりません。</div>`; }
+  window._lcCoach = coach.id;
+  const proxy = (DS.staff && coach.id!==DS.staff.id) ? `<span style="background:#fef9c3;color:#854d0e;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:400;margin-left:8px">プロト：${escapeHtml(coach.name||'')}さんの担当を表示</span>` : '';
+  const {data,error}=await sb.rpc('line_checkin',{coach:coach.id});
+  if(error){ return `<div class="screen-title">S-LC-1</div><div class="card" style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b">エラー: ${escapeHtml(error.message)}</div>`; }
+  const rows=data||[];
+  const seg=k=>rows.filter(r=>r.segment===k);
+  const urg=seg('urgent'),imp=seg('important'),nor=seg('normal'),wat=seg('watch');
+  const lastTxt=r=> r.days_since>=999?'投稿なし':(r.days_since===0?'今日':`${r.days_since}日前`);
+  const badge=r=> r.top_signal
+    ? `<span class="badge ${r.top_severity==='high'?'red':'yellow'}">${LC_SIG[r.top_signal]||r.top_signal}${r.active_signals>1?(' +'+(r.active_signals-1)):''}</span>`
+    : (r.days_since>=5?`<span class="badge yellow">無投稿${r.days_since}日</span>`:'<span style="color:#94a3b8;font-size:12px">—</span>');
+  const snip=r=>{const t=r.last_post_text||'';return t? escapeHtml(t.slice(0,16))+(t.length>16?'…':'') : '<span style="color:#cbd5e1">—</span>';};
+  const row=r=>`<div class="row-u" onclick="lcOpen('${r.customer_id}')">
+    <div class="name">${escapeHtml(r.line_id||'')} ${escapeHtml(r.name||'')}<small>担当${r.assigned_days??'—'}日目 ／ ${escapeHtml(r.continuation||'—')}</small></div>
+    <div>${badge(r)}</div>
+    <div style="font-size:12px;color:#64748b">${snip(r)}</div>
+    <div>${lastTxt(r)}</div>
+    <div class="arrow">▶</div>
+  </div>`;
+  const head=`<div class="row-u head"><div>担当者</div><div>シグナル</div><div>直近の声</div><div>最終投稿</div><div></div></div>`;
+  const dateStr=new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+  return `
+<div class="crumb">栄養士ホーム / LINE 担当 / 朝のチェックイン</div>
+<div class="screen-title">S-LC-1 ／ 朝のチェックイン ${proxy}</div>
+<div class="screen-desc">${escapeHtml(coach.name||'')}さん ／ おはようございます。今朝 (${dateStr}) のチェックインです。担当 ${rows.length} 名。</div>
+
+<div class="row c5" style="margin-bottom:14px">
+  <div class="kpi"><div class="label">担当数</div><div class="value">${rows.length}名</div></div>
+  <div class="kpi"><div class="label" style="color:var(--bad)">🚨 緊急</div><div class="value" style="color:var(--bad)">${urg.length}件</div><div class="sub red">即対応推奨</div></div>
+  <div class="kpi"><div class="label" style="color:var(--warn)">🟡 重要</div><div class="value" style="color:var(--warn)">${imp.length}件</div><div class="sub yellow">無投稿5日+警戒</div></div>
+  <div class="kpi"><div class="label" style="color:var(--brand)">🟢 通常</div><div class="value" style="color:var(--brand)">${nor.length}件</div><div class="sub">未対応・最近投稿</div></div>
+  <div class="kpi"><div class="label">💤 静観</div><div class="value">${wat.length}名</div><div class="sub">介入不要</div></div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--bad)">🚨 緊急セグメント <span class="pill" style="background:var(--soft-bad);color:var(--bad)">${urg.length}件</span></h3>
+  <div class="user-list">
+    ${head}
+    ${urg.map(row).join('') || '<div style="padding:12px;color:var(--mute);font-size:12px">緊急はありません。</div>'}
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--warn)">🟡 重要セグメント <span class="pill" style="background:var(--soft-warn);color:#92400e">${imp.length}件</span></h3>
+  <div class="user-list">
+    ${imp.map(row).join('') || '<div style="padding:12px;color:var(--mute);font-size:12px">重要はありません。</div>'}
+  </div>
+</div>
+
+<div class="row c2">
+  <div class="card">
+    <h3 style="color:var(--brand)">🟢 通常セグメント <span class="pill">${nor.length}件</span></h3>
+    <div class="user-list">${nor.map(row).join('') || '<div style="padding:12px;color:var(--mute);font-size:12px">なし</div>'}</div>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--mute)">💤 静観セグメント <span class="pill">${wat.length}名</span></h3>
+    <div class="user-list">${wat.map(row).join('') || '<div style="padding:12px;color:var(--mute);font-size:12px">なし</div>'}</div>
+  </div>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+  <button class="btn ghost">後で続ける</button>
+  <button class="btn primary">チェックインを完了する</button>
+</div>
+`;
+}
+
+// ============================================================
+// SCREEN: S-LC-2  個別ユーザー伴走
+// ============================================================
+function S_LC_2(){return `
+<div class="crumb">栄養士ホーム / LINE 担当 / U-0234 田中 太郎さん</div>
+<div class="screen-title">S-LC-2 ／ 個別ユーザー伴走</div>
+<div class="screen-desc">田中 太郎さん ／ U-0234 ／ 担当 32日目 ／ <span class="badge yellow">継続予測: short_term</span> <span class="badge red">🚨 緊急</span></div>
+
+<div class="three-col">
+  <div class="pane">
+    <h4>📋 カルテ要約</h4>
+    <div class="sub-section">
+      <div class="label">対象者タイプ</div>
+      <div><span class="tag">外発+自発</span><span class="tag">分析型</span><span class="tag">慎重</span></div>
+    </div>
+    <div class="sub-section">
+      <div class="label">動機 / 目標</div>
+      <div class="value">健診指摘 ／ -5kg目標</div>
+    </div>
+    <div class="sub-section">
+      <div class="label">強み</div>
+      <div class="value">分析力 ／ 情報処理</div>
+    </div>
+    <div class="sub-section">
+      <div class="label">課題</div>
+      <div class="value">単身赴任 ／ 完璧主義</div>
+    </div>
+    <div class="sub-section">
+      <div class="label">重点話題（引継ぎより）</div>
+      <ul>
+        <li>外食の選び方を具体化</li>
+        <li>週末の妻との同期</li>
+        <li>自己効力感の言語化</li>
+      </ul>
+    </div>
+    <div class="sub-section">
+      <div class="label">面談スコア (6軸)</div>
+      <div style="font-size:11px;color:var(--mute);line-height:1.8">
+        共感 68 ／ 具体 65 ／ 深掘り 70<br>
+        傾聴 78 ／ 再現 50 ／ リバ 65
+      </div>
+    </div>
+    <button class="btn ghost sm" style="width:100%" onclick="show('iv4')">↗ 引継ぎノートを見る</button>
+  </div>
+
+  <div class="pane">
+    <h4>📱 LINE 履歴（過去30日）</h4>
+    <div class="line-history" style="max-height:280px;overflow-y:auto;margin-bottom:14px">
+      <div class="post bad"><div class="date">2026-05-22 19:42 ／ 6日無投稿の前</div><div class="body">「今日は接待で外食でした。。。やっぱり無理ですね。完璧にはできない…」</div></div>
+      <div class="post warn"><div class="date">2026-05-19 22:08</div><div class="body">「妻と電話で話して、もう一度頑張ろうって思いました。意志力でなんとかします」</div></div>
+      <div class="post"><div class="date">2026-05-17 21:30</div><div class="body">「忙しくて投稿遅れました。コンビニのサラダチキンと味噌汁で済ませた」</div></div>
+      <div class="post"><div class="date">2026-05-14 13:05</div><div class="body">「ランチ。鶏胸肉とサラダ、雑穀ごはん半分にしました。」 📷</div></div>
+      <div class="post"><div class="date">2026-05-12 20:14</div><div class="body">「妻が作り置きしてくれた野菜炒め。」 📷</div></div>
+    </div>
+
+    <h4 style="margin-top:18px">📈 言語シグナル推移（30日）</h4>
+    <div style="display:grid;grid-template-columns:130px 1fr 50px;gap:8px;font-size:12px;align-items:center;padding:5px 0">
+      <div>食事詳細率</div>
+      <div class="spark bad">${[7,5,6,4,3,2,1,2,3,2,1].map(h=>`<span style="height:${h*2}px"></span>`).join('')}</div>
+      <div style="color:var(--bad);font-weight:600">-42%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:130px 1fr 50px;gap:8px;font-size:12px;align-items:center;padding:5px 0">
+      <div>意志力ワード</div>
+      <div class="spark warn">${[1,1,1,1,1,2,2,3,4,5,5].map(h=>`<span style="height:${h*2}px"></span>`).join('')}</div>
+      <div style="color:var(--warn);font-weight:600">↑×3</div>
+    </div>
+    <div style="display:grid;grid-template-columns:130px 1fr 50px;gap:8px;font-size:12px;align-items:center;padding:5px 0">
+      <div>自発開示</div>
+      <div class="spark">${[5,5,4,4,3,3,2,2,1,1,0].map(h=>`<span style="height:${h*2}px"></span>`).join('')}</div>
+      <div style="color:var(--mute);font-weight:600">↓</div>
+    </div>
+
+    <h4 style="margin-top:18px;color:var(--bad)">⚠ 警戒シグナル（自動検出）</h4>
+    <div class="alert-card">
+      <div class="title">willpower_word_spike</div>
+      <div class="meta">「頑張る」「意志力」「完璧」を今週3回検出（先週0回）</div>
+    </div>
+    <div class="alert-card">
+      <div class="title">food_detail_drop</div>
+      <div class="meta">食事詳細率 7日平均で先週比 -42%</div>
+    </div>
+  </div>
+
+  <div class="pane">
+    <h4>✏️ コメント作成</h4>
+    <div class="ai-suggest">
+      <div class="lab">AI提案（過去 7日の文脈考慮）</div>
+      田中さん、お疲れさまです。「完璧にはできない」と書いてくださってありがとうございます。
+      実は私、田中さんの 5/14 の "雑穀ごはん半分"、すごくいい選択だと思っていました。
+      "全力" じゃなくても、続いていれば十分前進です。今日はまず一行だけでいいので、状況を教えてください。
+    </div>
+    <div style="display:flex;gap:5px;margin-bottom:10px">
+      <button class="btn primary sm" style="flex:1">採用</button>
+      <button class="btn ghost sm" style="flex:1">編集して使う</button>
+      <button class="btn ghost sm">破棄</button>
+    </div>
+
+    <div style="font-size:11px;color:var(--mute);margin-bottom:5px">私のコメント（送信前）</div>
+    <textarea class="input" rows="6"></textarea>
+
+    <div class="tone-grid">
+      <label><input type="radio" name="tone" checked>共感 <span style="color:var(--mute);font-size:11px">- 「全か無か」モードを和らげる</span></label>
+      <label><input type="radio" name="tone">質問 <span style="color:var(--mute);font-size:11px">- 状況の解像度を上げる</span></label>
+      <label><input type="radio" name="tone">具体提案 <span style="color:var(--mute);font-size:11px">- 完璧主義の代替案</span></label>
+      <label><input type="radio" name="tone">褒め <span style="color:var(--mute);font-size:11px">- 小さな前進にスポット</span></label>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="btn primary" style="flex:1">送信</button>
+      <button class="btn ghost sm">下書き保存</button>
+    </div>
+
+    <div style="margin-top:14px;font-size:11px;color:var(--mute);padding-top:10px;border-top:1px solid #f1f5f9">
+      過去24h送信: 0通 ／ 提案採用率(月): 38%
+    </div>
+  </div>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-LC-3  警戒アラート対応
+// ============================================================
+function S_LC_3(){return `
+<div class="crumb">栄養士ホーム / LINE 担当 / 警戒アラート</div>
+<div class="screen-title">S-LC-3 ／ 警戒アラート対応</div>
+<div class="screen-desc">大熊 美咲さん 担当 58名 ／ 発火中 3件 ／ 24h以内対応必須</div>
+
+<div class="card">
+  <h3>シグナル種別フィルタ</h3>
+  <div class="chk-grid">
+    <span class="chk on">すべて (3)</span>
+    <span class="chk">willpower_word_spike (1)</span>
+    <span class="chk">food_detail_drop (1)</span>
+    <span class="chk">post_silence (1)</span>
+    <span class="chk">char_count_decline (0)</span>
+    <span class="chk">sentiment_negative_surge (0)</span>
+  </div>
+</div>
+
+<div class="alert-card">
+  <div class="title">🚨 U-0234 田中 太郎  ／  発火 2026-05-27 (2日前)</div>
+  <div class="meta">担当32日目 ／ short_term予測 ／ 男性42歳・営業職</div>
+  <div style="font-size:13px;line-height:1.6;color:#374151;margin-top:6px">
+    <div><b>シグナル:</b> <span class="badge red">willpower_word_spike</span> ×3 + <span class="badge red">post_silence</span> 6日</div>
+    <div style="margin-top:4px"><b>過去対応:</b> 5/15 声かけ → 一時改善 → 再発</div>
+    <div style="margin-top:4px"><b>引継ぎノート備考:</b> "出張・接待が増えると食事記録が崩れる傾向"</div>
+  </div>
+  <div class="actions">
+    <button class="btn primary sm" onclick="show('lc2')">対応する（個別画面へ）</button>
+    <button class="btn ghost sm">声かけテンプレ</button>
+    <button class="btn ghost sm">面談担当に再相談</button>
+    <button class="btn ghost sm">管理者へエスカレーション</button>
+  </div>
+</div>
+
+<div class="alert-card">
+  <div class="title">🚨 U-0891 鈴木 由香  ／  発火 2026-05-28 (1日前)</div>
+  <div class="meta">担当45日目 ／ mid_term予測 ／ 女性38歳・事務職</div>
+  <div style="font-size:13px;line-height:1.6;color:#374151;margin-top:6px">
+    <div><b>シグナル:</b> <span class="badge red">food_detail_drop</span> -42% (先週比)</div>
+    <div style="margin-top:4px"><b>過去対応:</b> 5/20 質問送信 → 未返信</div>
+    <div style="margin-top:4px"><b>引継ぎノート備考:</b> "繁忙期になると詳細記述が薄くなる傾向"</div>
+  </div>
+  <div class="actions">
+    <button class="btn primary sm">対応する</button>
+    <button class="btn ghost sm">質問テンプレ</button>
+    <button class="btn ghost sm">管理者へエスカレーション</button>
+  </div>
+</div>
+
+<div class="alert-card">
+  <div class="title">🚨 U-0567 佐藤 直人  ／  発火 2026-05-29 (今朝)</div>
+  <div class="meta">担当21日目 ／ long_term予測 ／ 男性35歳・技術職</div>
+  <div style="font-size:13px;line-height:1.6;color:#374151;margin-top:6px">
+    <div><b>シグナル:</b> <span class="badge red">post_silence</span> 6日（過去30日では活発、初の長期沈黙）</div>
+    <div style="margin-top:4px"><b>過去対応:</b> なし（初回警戒）</div>
+    <div style="margin-top:4px"><b>引継ぎノート備考:</b> "出張は月1-2回、出張中は投稿が止まりがち"</div>
+  </div>
+  <div class="actions">
+    <button class="btn primary sm">対応する</button>
+    <button class="btn ghost sm">声かけテンプレ</button>
+  </div>
+</div>
+
+<div class="card" style="background:#f8fafc">
+  <h3>📊 今週のアラート集計</h3>
+  <div class="row c4">
+    <div><div style="font-size:12px;color:var(--mute)">発火件数</div><div style="font-size:22px;font-weight:700">11件</div></div>
+    <div><div style="font-size:12px;color:var(--mute)">24h以内対応</div><div style="font-size:22px;font-weight:700;color:var(--ok)">10件 (91%)</div></div>
+    <div><div style="font-size:12px;color:var(--mute)">改善判定</div><div style="font-size:22px;font-weight:700">7件</div></div>
+    <div><div style="font-size:12px;color:var(--mute)">継続再発</div><div style="font-size:22px;font-weight:700;color:var(--warn)">2件</div></div>
+  </div>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-LC-4  週次レビュー
+// ============================================================
+function S_LC_4(){return `
+<div class="crumb">栄養士ホーム / LINE 担当 / 週次レビュー</div>
+<div class="screen-title">S-LC-4 ／ 週次レビュー</div>
+<div class="screen-desc">大熊 美咲さん ／ 2026年5月23日〜29日 ／ 担当58名の状態を俯瞰</div>
+
+<div class="row c4" style="margin-bottom:14px">
+  <div class="kpi"><div class="label">今週送ったコメント</div><div class="value">142通</div><div class="sub">先週 128通 +11%</div></div>
+  <div class="kpi"><div class="label">警戒対応回数</div><div class="value">11件</div><div class="sub yellow">先週 8件 +3</div></div>
+  <div class="kpi"><div class="label">proactive介入</div><div class="value">5件</div><div class="sub green">月次目標 月20件</div></div>
+  <div class="kpi"><div class="label">AI提案採用率</div><div class="value">38%</div><div class="sub">編集距離 中央値 42文字</div></div>
+</div>
+
+<div class="card">
+  <h3>担当58名 投稿活発度ヒートマップ <span class="pill">直近7日</span></h3>
+  <div class="heatmap">
+    ${(()=>{
+      let h='';
+      const samples=[8,7,6,5,5,4,4,3,3,3,2,2,2,1,1,1,0,0,0,0,5,5,4,4,3,3,3,2,2,2,1,1,7,7,6,6,5,5,5,4,4,3,3,2,1,0,0,0,7,6,5,4,3,2,1,0,5,3];
+      for(let i=0;i<58;i++){
+        const v=samples[i]||0;
+        const colors=['#f1f5f9','#fee2e2','#fef3c7','#dbeafe','#bbf7d0','#86efac','#4ade80','#22c55e','#16a34a'];
+        const c=colors[Math.min(v,8)];
+        const tc=v<3?'#1f2937':'#fff';
+        h+=`<div class="cell" style="background:${c};color:${tc}" title="U-${(234+i*9).toString().padStart(4,'0')} 投稿${v}件">${v}</div>`;
+      }
+      return h;
+    })()}
+  </div>
+  <div class="heatmap-leg">
+    <span>少</span>
+    <span class="swatch" style="background:#f1f5f9"></span>
+    <span class="swatch" style="background:#fee2e2"></span>
+    <span class="swatch" style="background:#fef3c7"></span>
+    <span class="swatch" style="background:#dbeafe"></span>
+    <span class="swatch" style="background:#22c55e"></span>
+    <span class="swatch" style="background:#16a34a"></span>
+    <span>多</span>
+    <span style="margin-left:14px">セル = 担当ユーザー1名 ／ 数字 = 直近7日の投稿数</span>
+  </div>
+</div>
+
+<div class="row c2">
+  <div class="card">
+    <h3>継続予測クラス推移</h3>
+    <table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead><tr style="background:#f1f5f9;font-size:11px;color:#475569">
+        <th style="text-align:left;padding:8px">クラス</th>
+        <th style="text-align:right;padding:8px">先週</th>
+        <th style="text-align:right;padding:8px">今週</th>
+        <th style="text-align:right;padding:8px">変化</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:8px"><span class="badge green">long_term</span></td><td style="text-align:right">18</td><td style="text-align:right">19</td><td style="text-align:right;color:var(--ok)">+1 ▲</td></tr>
+        <tr><td style="padding:8px"><span class="badge blue">mid_term</span></td><td style="text-align:right">22</td><td style="text-align:right">21</td><td style="text-align:right;color:var(--mute)">-1</td></tr>
+        <tr><td style="padding:8px"><span class="badge yellow">short_term</span></td><td style="text-align:right">12</td><td style="text-align:right">14</td><td style="text-align:right;color:var(--warn)">+2 ▼</td></tr>
+        <tr><td style="padding:8px"><span class="badge red">early_dropout</span></td><td style="text-align:right">6</td><td style="text-align:right">4</td><td style="text-align:right;color:var(--ok)">-2 ▲</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6">short_term へのスライドが2名増加。要因解析: 全員 willpower_word_spike 発火前後。</div>
+  </div>
+  <div class="card">
+    <h3>来週の注力ユーザー <span class="pill">AI提案</span></h3>
+    <div class="user-list">
+      <div class="row-u"><div class="name">U-0234 田中<small>緊急対応継続</small></div><div><span class="badge red">緊急</span></div><div></div><div></div><div><input type="checkbox" checked></div></div>
+      <div class="row-u"><div class="name">U-0445 高橋<small>文字数低下</small></div><div><span class="badge yellow">注意</span></div><div></div><div></div><div><input type="checkbox" checked></div></div>
+      <div class="row-u"><div class="name">U-0203 中村<small>未読3通</small></div><div><span class="badge yellow">注意</span></div><div></div><div></div><div><input type="checkbox" checked></div></div>
+      <div class="row-u"><div class="name">U-0567 佐藤<small>初の長期沈黙</small></div><div><span class="badge red">緊急</span></div><div></div><div></div><div><input type="checkbox" checked></div></div>
+      <div class="row-u"><div class="name">U-0778 渡辺<small>無投稿5日</small></div><div><span class="badge yellow">注意</span></div><div></div><div></div><div><input type="checkbox"></div></div>
+    </div>
+    <button class="btn primary sm" style="margin-top:10px">来週の注力リストを確定</button>
+  </div>
+</div>
+`}
+
+// ============================================================
+// SCREEN: S-LC-5  月次セルフレポート
+// ============================================================
+function S_LC_5(){return `
+<div class="crumb">栄養士ホーム / LINE 担当 / 月次セルフレポート</div>
+<div class="screen-title">S-LC-5 ／ 月次セルフレポート</div>
+<div class="card" style="background:#fffbeb;border-color:#fde68a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <div style="font-size:13px;color:#92400e">💡 効いた声かけ・気づきは、知見として仲間に残せます（やりがいの回路）</div>
+  <div style="display:flex;gap:6px"><button class="btn ghost sm" onclick="knNewFrom({})">＋ ナレッジ化</button><button class="btn ghost sm" onclick="show('knowledge')">知見フィード</button></div>
+</div>
+<div class="screen-desc">大熊 美咲さん ／ 2026年5月 ／ 自分のコーチングスタイルを全栄養士基準で位置確認</div>
+
+<div class="row c4" style="margin-bottom:14px">
+  <div class="kpi"><div class="label">月次コメント率</div><div class="value">72%</div><div class="sub green">目標70%達成</div></div>
+  <div class="kpi"><div class="label">月次離脱率</div><div class="value" style="color:var(--ok)">9%</div><div class="sub green">全体平均 -3pt</div></div>
+  <div class="kpi"><div class="label">完走率（過去90日）</div><div class="value">68%</div><div class="sub green">全体平均 +6pt</div></div>
+  <div class="kpi"><div class="label">AI提案採用率</div><div class="value">38%</div><div class="sub">編集距離 中央値 42文字</div></div>
+</div>
+
+<div class="row c2">
+  <div class="card">
+    <h3>自分のスタイル偏差 <span class="pill">vs 全74名</span></h3>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:10px">action_analysis.html のスタイル指標を自分のスコープで再表示</div>
+    ${[['褒め型',+12],['質問型',-8],['具体提案型',+4],['共感型',+18],['指示型',-14]].map(([k,d])=>{
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px">
+        <div style="width:100px">${k}</div>
+        <div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;position:relative">
+          <div style="position:absolute;left:50%;top:-3px;height:14px;width:1px;background:#94a3b8"></div>
+          <div style="position:absolute;top:0;height:8px;background:${d>=0?'#22c55e':'#ef4444'};border-radius:4px;${d>=0?'left:50%':'right:50%'};width:${Math.abs(d)*2}%"></div>
+        </div>
+        <div style="width:50px;text-align:right;font-weight:600;color:${d>0?'var(--ok)':d<0?'var(--bad)':'var(--mute)'}">${d>0?'+':''}${d}pt</div>
+      </div>`;
+    }).join('')}
+    <div style="font-size:11px;color:var(--mute);margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9">
+      <b>傾向:</b> 共感型・褒め型が突出。指示型は意図的に控えめ。<br>
+      短期離脱層 (early_dropout) には共感型が有効と分析中。
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>AI提案 採用率推移</h3>
+    <table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead><tr style="background:#f1f5f9;font-size:11px;color:#475569">
+        <th style="text-align:left;padding:8px">月</th>
+        <th style="text-align:right;padding:8px">採用</th>
+        <th style="text-align:right;padding:8px">編集</th>
+        <th style="text-align:right;padding:8px">独自</th>
+        <th style="text-align:right;padding:8px">編集距離</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:6px 8px">2025-12</td><td style="text-align:right">28%</td><td style="text-align:right">35%</td><td style="text-align:right">37%</td><td style="text-align:right">63文字</td></tr>
+        <tr><td style="padding:6px 8px">2026-01</td><td style="text-align:right">30%</td><td style="text-align:right">38%</td><td style="text-align:right">32%</td><td style="text-align:right">58文字</td></tr>
+        <tr><td style="padding:6px 8px">2026-02</td><td style="text-align:right">33%</td><td style="text-align:right">40%</td><td style="text-align:right">27%</td><td style="text-align:right">52文字</td></tr>
+        <tr><td style="padding:6px 8px">2026-03</td><td style="text-align:right">35%</td><td style="text-align:right">42%</td><td style="text-align:right">23%</td><td style="text-align:right">47文字</td></tr>
+        <tr><td style="padding:6px 8px">2026-04</td><td style="text-align:right">37%</td><td style="text-align:right">41%</td><td style="text-align:right">22%</td><td style="text-align:right">44文字</td></tr>
+        <tr style="background:#eff6ff;font-weight:600"><td style="padding:6px 8px">2026-05</td><td style="text-align:right">38%</td><td style="text-align:right">43%</td><td style="text-align:right">19%</td><td style="text-align:right">42文字</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:var(--mute);margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9">
+      <b>解釈:</b> AI 提案を起点に編集する運用に習熟。完全採用ではなく "編集中心" のスタイル。
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>今月のケーススタディ <span class="pill">自分で選定</span></h3>
+  <div class="row c2">
+    <div class="alert-card g">
+      <div class="title">💚 成功事例 ／ U-0876 木下 由美</div>
+      <div class="meta">短期離脱予測 → 90日完走 ／ -3.2kg達成</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.6;margin-top:6px">
+        初期28日は意志力ワード多発・食事詳細率低かったが、4/15 の "完璧じゃなくて大丈夫" の共感メッセージが転機。
+        以降、自発開示が増加し継続率が長期化に変化。<br>
+        <b>学び:</b> 共感メッセージのタイミングが核。早すぎず遅すぎず、本人が "ダメだった" と書いた直後が最適。
+      </div>
+    </div>
+    <div class="alert-card y">
+      <div class="title">📝 振り返り事例 ／ U-0312 林 信一</div>
+      <div class="meta">long_term予測 → 45日早期離脱</div>
+      <div style="font-size:12px;color:#1f2937;line-height:1.6;margin-top:6px">
+        高スコア・面談良好だったが、4/30 以降の沈黙に対して声かけが遅れ（6日後）、復帰せず。<br>
+        <b>学び:</b> long_term予測層こそ無投稿初動への警戒が必要。AI予測の高さに油断していた。
+      </div>
+    </div>
+  </div>
+  <button class="btn ghost sm" style="margin-top:10px">＋ ケーススタディを追加</button>
+</div>
+`}
+
+// ============================================================
+// SCREEN: マニュアル検索 (RAG) — JTBD#3「マニュアル探しのストレスをなくしたい」
+// ============================================================
+const MANUAL_EXAMPLES = [
+  'LINEで痩せないと言われた時の初動は？',
+  '無投稿が続くユーザーへの声かけの基準',
+  '面談前ブリーフで必ず確認する項目',
+  '励ましのコメントで気をつけること'
+];
+function S_MANUAL(){
+  const chips = MANUAL_EXAMPLES.map(q=>`<button class="btn ghost sm" onclick="manualAsk('${q.replace(/'/g,"\\'")}')">${q}</button>`).join(' ');
+  return `
+<div class="screen-title">🔎 マニュアル検索 <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">自然文で質問 → AIが出典付きで回答 (RAG)</span></div>
+<div class="card">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <input id="manualQ" type="text" placeholder="例: LINEで痩せないと言われた時の初動は？"
+      style="flex:1;min-width:260px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px"
+      onkeydown="if(event.key==='Enter')runManualSearch()">
+    <button class="btn" onclick="runManualSearch()">検索</button>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
+  <div style="margin-top:10px;font-size:11px;color:var(--mute)">マニュアル本文(pgroonga 日本語全文検索)から関連箇所を取得し、Claude が出典付きで回答します。回答は必ず出典(マニュアル箇所)を伴います。</div>
+</div>
+<div id="manualResult" style="margin-top:14px"></div>
+`;
+}
+function manualAsk(q){
+  const el=document.getElementById('manualQ'); if(el){ el.value=q; runManualSearch(); }
+}
+async function runManualSearch(){
+  const q = (document.getElementById('manualQ')?.value||'').trim();
+  const box = document.getElementById('manualResult');
+  if(!q){ box.innerHTML=''; return; }
+  box.innerHTML = `<div class="card" style="color:#94a3b8">検索中… (関連箇所の取得 → AI回答合成)</div>`;
+  try{
+    const {data, error} = await sb.functions.invoke('manual-search', { body: { query:q, staff_id: DS.staff?.id || null } });
+    if(error) throw error;
+    if(data && data.error) throw new Error(data.error);
+    const ans = escapeHtml(data.answer||'').replace(/\n/g,'<br>');
+    const sources = data.sources||[];
+    const srcs = sources.map((s,i)=>`
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-top:8px;background:#f8fafc">
+        <div style="font-size:12px;color:#0369a1;font-weight:600">[出典${i+1}] ${escapeHtml(s.heading_path||s.manual_title||'')}</div>
+        <div style="font-size:13px;color:#334155;margin-top:4px">${escapeHtml(s.snippet||'')}…</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px">${escapeHtml(s.manual_title||'')}${s.category?(' ／ '+escapeHtml(s.category)):''} ｜ score ${Number(s.score||0).toFixed(1)}</div>
+      </div>`).join('');
+    box.innerHTML = `
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:8px">AI回答</div>
+        <div style="font-size:14px;line-height:1.7;color:#1e293b">${ans||'(回答なし)'}</div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div style="font-weight:700;margin-bottom:4px">出典 (${sources.length}件)</div>
+        ${srcs||'<div style="color:#94a3b8;font-size:13px">該当する出典はマニュアル内に見つかりませんでした。</div>'}
+      </div>`;
+    // 現場の知見(栄養士の形式知)を同じクエリで混ぜる
+    try{
+      const {data:kn}=await sb.rpc('search_knowledge_cards',{pgroonga_query:_knPg(q),match_count:3});
+      if(kn&&kn.length){
+        const khtml=kn.map(c=>`<div style="border-left:3px solid #f59e0b;padding:6px 10px;margin-top:8px;background:#fffbeb">
+          <div style="font-weight:600;font-size:13px">${escapeHtml(c.title)}</div>
+          <div style="font-size:12px;color:#475569;margin-top:2px">${escapeHtml((c.body||'').slice(0,120))}…</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">✍ ${escapeHtml(c.author_name||'—')} ｜ 👍${c.helpful||0} ✅${c.used||0}</div></div>`).join('');
+        box.insertAdjacentHTML('beforeend', `<div class="card" style="margin-top:12px"><div style="font-weight:700;margin-bottom:4px">💡 現場の知見（栄養士の形式知）</div>${khtml}<div style="margin-top:8px"><button class="btn ghost sm" onclick="show('knowledge')">知見フィードを開く</button></div></div>`);
+      }
+    }catch(_e){}
+  }catch(e){
+    box.innerHTML = `<div class="card" style="background:#fef2f2;border-color:#fecaca;color:#991b1b">エラー: ${escapeHtml(e.message||String(e))}</div>`;
+  }
+}
+
+// ============================================================
+// SCREEN: 💡 知見フィード — 栄養士の形式知ループ(内部)
+// ============================================================
+let _knTab='new', _knQuery='', _knShowForm=false;
+function _knPg(q){
+  const t=(q||'').replace(/[、。？！?!,.「」　]/g,' ').split(/\s+/).filter(s=>s.length>=2);
+  return t.length? t.join(' OR ') : (q||'');
+}
+function knTab(t){ _knTab=t; _knQuery=''; show('knowledge'); }
+let _knPrefill=null;
+function knToggleForm(){ _knShowForm=!_knShowForm; if(!_knShowForm) _knPrefill=null; show('knowledge'); }
+function knNewFrom(p){ _knPrefill=p||null; _knShowForm=true; show('knowledge'); }
+function knFromReflect(){
+  const good=(document.getElementById('iv3rGood')?.value||'').trim();
+  const next=(document.getElementById('iv3rNext')?.value||'').trim();
+  knNewFrom({title:'', situation:'（面談の振り返りから）', body: good + (next?('\n\n【次回への申し送り】'+next):''), ref:'面談振り返り'});
+}
+async function knSetStatus(id,status){
+  try{ const {error}=await sb.from('knowledge_cards').update({status}).eq('id',id); if(error) throw error; }
+  catch(e){ alert('ステータス更新に失敗: '+(e.message||e)); }
+  show('knowledge');
+}
+let _curatePreview=false;
+function canCurate(){ return ['管理者','統括コーチ'].includes(DS.staff?.role) || _curatePreview; }
+function knTogglePreview(){ _curatePreview=!_curatePreview; show('knowledge'); }
+function knRunSearch(){ _knQuery=(document.getElementById('knQ')?.value||'').trim(); show('knowledge'); }
+async function knReact(id,type){
+  if(!DS.staff?.id){ alert('スタッフ未登録のため承認できません'); return; }
+  try{ await sb.from('knowledge_reactions').insert({card_id:id, staff_id:DS.staff.id, reaction_type:type}); }
+  catch(e){ /* 既に押下済み(unique制約)等は無視 */ }
+  show('knowledge');
+}
+async function knPost(){
+  const title=(document.getElementById('knfTitle')?.value||'').trim();
+  const body=(document.getElementById('knfBody')?.value||'').trim();
+  if(!title||!body){ alert('見出しと「こうする」は必須です'); return; }
+  const situation=(document.getElementById('knfSit')?.value||'').trim();
+  const tags=(document.getElementById('knfTags')?.value||'').split(/[,、\s]+/).filter(Boolean);
+  const ref=(document.getElementById('knfRef')?.value||'').trim();
+  const audience=document.getElementById('knfAud')?.value||'both';
+  try{
+    const {error}=await sb.from('knowledge_cards').insert({author_staff_id:DS.staff?.id||null, title, situation, body, tags, ref_source:ref||null, audience, status:'peer'});
+    if(error) throw error;
+    _knShowForm=false; _knTab='mine'; _knQuery=''; _knPrefill=null;
+  }catch(e){ alert('投稿に失敗: '+(e.message||e)); return; }
+  show('knowledge');
+}
+function knCardHtml(c, withScore){
+  const tags=(c.tags||[]).map(t=>`<span style="background:#eef2ff;color:#4338ca;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:4px">#${escapeHtml(t)}</span>`).join('');
+  const statusBadge = c.status==='official'?'<span style="background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600">公式</span>':(c.status==='reviewed'?'<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:10px">QC確認済</span>':'<span style="background:#f1f5f9;color:#64748b;font-size:11px;padding:2px 8px;border-radius:10px">仲間内</span>');
+  return `<div class="card" style="margin-top:10px">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
+      <div style="font-weight:700;font-size:15px">${escapeHtml(c.title)}</div>
+      ${statusBadge}
+    </div>
+    ${c.situation?`<div style="font-size:12px;color:#64748b;margin-top:4px">🟡 こんな時：${escapeHtml(c.situation)}</div>`:''}
+    <div style="font-size:14px;line-height:1.7;color:#1e293b;margin-top:6px">${escapeHtml(c.body).replace(/\n/g,'<br>')}</div>
+    <div style="margin-top:8px">${tags}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:11px;color:#94a3b8">✍ ${escapeHtml(c.author_name||'—')}${c.ref_source?(' ｜ 出典: '+escapeHtml(c.ref_source)):''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn ghost sm" onclick="knReact('${c.card_id}','helpful')">👍 参考になった ${c.helpful||0}</button>
+        <button class="btn ghost sm" onclick="knReact('${c.card_id}','used')">✅ 使った ${c.used||0}</button>
+        <button class="btn ghost sm" onclick="knReact('${c.card_id}','thanks')">🙏 ありがとう ${c.thanks||0}</button>
+      </div>
+    </div>
+    ${withScore&&c.score!=null?`<div style="font-size:10px;color:#cbd5e1;margin-top:4px">score ${Number(c.score).toFixed(1)}</div>`:''}
+    ${canCurate()?`<div style="display:flex;gap:6px;margin-top:8px;border-top:1px dashed #e2e8f0;padding-top:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:11px;color:#94a3b8">QC操作（統括コーチ）:</span>
+      ${c.status!=='reviewed'?`<button class="btn ghost sm" onclick="knSetStatus('${c.card_id}','reviewed')">QC確認済に</button>`:''}
+      ${c.status!=='official'?`<button class="btn ghost sm" onclick="knSetStatus('${c.card_id}','official')">公式化 ▶</button>`:''}
+      ${c.status!=='peer'?`<button class="btn ghost sm" onclick="knSetStatus('${c.card_id}','peer')">仲間内に戻す</button>`:''}
+    </div>`:''}
+  </div>`;
+}
+async function S_KNOWLEDGE(){
+  let stats={authored:0,reactions:0,official:0};
+  if(DS.staff?.id){ const {data}=await sb.rpc('get_my_knowledge_stats',{p_staff:DS.staff.id}); if(data&&data[0]) stats=data[0]; }
+  let cards=[];
+  if(_knQuery){ const {data}=await sb.rpc('search_knowledge_cards',{pgroonga_query:_knPg(_knQuery),match_count:30}); cards=data||[]; }
+  else { const {data}=await sb.rpc('list_knowledge_cards',{p_sort:_knTab==='popular'?'popular':'new',p_limit:80}); cards=data||[];
+    if(_knTab==='mine' && DS.staff?.id) cards=cards.filter(c=>c.author_staff_id===DS.staff.id);
+  }
+  const tabBtn=(k,label)=>`<button class="btn ${(_knTab===k&&!_knQuery)?'':'ghost'} sm" onclick="knTab('${k}')">${label}</button>`;
+  const form = _knShowForm? `
+    <div class="card" style="background:#fffbeb;border-color:#fde68a">
+      <div style="font-weight:700;margin-bottom:8px">💡 知見を形式知化する</div>
+      <input id="knfTitle" value="${escapeHtml(_knPrefill?.title||'')}" placeholder="見出し（例：会食が多い人にはコントロールできる所だけ集中させる）" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:6px">
+      <input id="knfSit" value="${escapeHtml(_knPrefill?.situation||'')}" placeholder="どんな時（任意）" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:6px">
+      <textarea id="knfBody" placeholder="こうする（具体・行動につながる一手を。励まし＋具体をセットで）" style="width:100%;height:80px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:6px">${escapeHtml(_knPrefill?.body||'')}</textarea>
+      <input id="knfTags" placeholder="タグ（カンマ区切り：会食, 置き換え）" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:6px">
+      <input id="knfRef" value="${escapeHtml(_knPrefill?.ref||'')}" placeholder="出典（任意：コーチマニュアル スライドXX 等）" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:6px">
+      <select id="knfAud" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:8px"><option value="both">対象：両方</option><option value="coach">LINEコーチ向け</option><option value="interview">面談担当向け</option></select>
+      <div style="font-size:11px;color:#92400e;margin-bottom:8px">⚠ 受講者の個人名は書かない（属性のみ）。健康・栄養の踏み込んだ内容は後でQCが確認し「公式」化します。</div>
+      <button class="btn" onclick="knPost()">投稿する</button>
+      <button class="btn ghost" onclick="knToggleForm()">キャンセル</button>
+    </div>`:'';
+  return `
+<div class="screen-title">💡 知見フィード <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">栄養士の形式知を貯めて、仲間と分かち合う</span></div>
+<div class="card" style="background:linear-gradient(90deg,#fef9c3,#ecfccb)">
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
+    <div style="font-size:13px;color:#3f6212"><b>あなたの知見</b> ｜ 寄稿 <b>${stats.authored||0}</b> 件 ・ 受けた承認 <b>${stats.reactions||0}</b> ・ 公式化 <b>${stats.official||0}</b></div>
+    <button class="btn" onclick="knToggleForm()">＋ 知見を投稿</button>
+  </div>
+</div>
+${form}
+<div class="card">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input id="knQ" placeholder="知見を検索（例：会食 / 痩せない / 置き換え）" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px" onkeydown="if(event.key==='Enter')knRunSearch()">
+    <button class="btn ghost sm" onclick="knRunSearch()">検索</button>
+    ${tabBtn('new','新着')} ${tabBtn('popular','人気')} ${tabBtn('mine','自分の')}
+    ${_knQuery?`<button class="btn ghost sm" onclick="knTab('new')">×検索解除</button>`:''}
+    <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;margin-left:auto"><input type="checkbox" ${_curatePreview?'checked':''} onclick="knTogglePreview()"> 🛡 統括コーチとして表示(プロト)</label>
+  </div>
+</div>
+${canCurate()?`<div class="card" style="background:#eef2ff;border-color:#c7d2fe;font-size:12px;color:#3730a3">🛡 統括コーチ／QCビュー：各カード下部の「QC操作」で 仲間内→QC確認済→公式 に昇格できます。公式化された対応例は新人研修やマニュアルへ横展開できます。${(()=>{const p=cards.filter(c=>c.status==='peer').length;return p?` ｜ 表示中の公式化待ち <b>${p}</b> 件`:'';})()}</div>`:''}
+${cards.length? cards.map(c=>knCardHtml(c, !!_knQuery)).join('') : '<div class="card" style="color:#94a3b8">まだ知見がありません。「＋ 知見を投稿」から最初の1枚を。</div>'}
+`;
+}
+
+// ============================================================
+// SCREEN: 📩 おすすめ対応例 — B層向け「受け取るだけ」軽配信
+// ============================================================
+let _tipCards=null, _tipIdx=0;
+async function tipLoad(force){
+  if(_tipCards && !force) return;
+  const {data}=await sb.rpc('list_knowledge_cards',{p_sort:'popular',p_limit:80});
+  const w={official:3,reviewed:2,peer:1,draft:0};
+  _tipCards=(data||[]).slice().sort((a,b)=> (w[b.status]||0)-(w[a.status]||0) || (b.total||0)-(a.total||0));
+}
+function tipNext(){ if(_tipCards&&_tipCards.length){ _tipIdx=(_tipIdx+1)%_tipCards.length; } show('tips'); }
+async function tipReact(type){
+  const c=_tipCards&&_tipCards[_tipIdx];
+  if(c && DS.staff?.id){ try{ await sb.from('knowledge_reactions').insert({card_id:c.card_id, staff_id:DS.staff.id, reaction_type:type}); }catch(e){} }
+  tipNext();
+}
+async function S_TIPS(){
+  await tipLoad(false);
+  const cards=_tipCards||[];
+  if(!cards.length) return `<div class="screen-title">📩 おすすめ対応例</div><div class="card" style="color:#94a3b8">まだ対応例がありません。</div>`;
+  if(_tipIdx>=cards.length) _tipIdx=0;
+  const c=cards[_tipIdx];
+  const tags=(c.tags||[]).map(t=>`<span style="background:#eef2ff;color:#4338ca;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:4px">#${escapeHtml(t)}</span>`).join('');
+  const badge=c.status==='official'?'<span style="background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600">公式</span>':(c.status==='reviewed'?'<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:10px">QC確認済</span>':'');
+  return `
+<div class="screen-title">📩 おすすめ対応例 <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">受け取るだけ。困ったときのヒントに</span></div>
+<div class="card" style="border-left:5px solid #f59e0b">
+  <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
+    <div style="font-weight:700;font-size:17px">${escapeHtml(c.title)}</div>${badge}
+  </div>
+  ${c.situation?`<div style="font-size:13px;color:#64748b;margin-top:6px">🟡 こんな時：${escapeHtml(c.situation)}</div>`:''}
+  <div style="font-size:15px;line-height:1.8;color:#1e293b;margin-top:10px">${escapeHtml(c.body).replace(/\n/g,'<br>')}</div>
+  <div style="margin-top:10px">${tags}</div>
+  <div style="font-size:11px;color:#94a3b8;margin-top:8px">✍ ${escapeHtml(c.author_name||'—')}${c.ref_source?(' ｜ 出典: '+escapeHtml(c.ref_source)):''} ｜ ${_tipIdx+1} / ${cards.length}</div>
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+    <button class="btn" onclick="tipReact('helpful')">👍 役に立った</button>
+    <button class="btn ghost" onclick="tipNext()">次の対応例 →</button>
+  </div>
+</div>
+<div class="card" style="background:#fffbeb;border-color:#fde68a;font-size:12px;color:#92400e">💡 もっと貢献したくなったら「知見フィード」で自分の対応例も書けます。<button class="btn ghost sm" onclick="show('knowledge')" style="margin-left:6px">知見フィードへ</button></div>
+`;
+}
+
+// ============================================================
+// SCREEN: 🛡 統括コーチ ホーム — 本部⇔各コーチの中間サポート役
+// ============================================================
+async function S_SUP(){
+  const {data:kc}=await sb.rpc('list_knowledge_cards',{p_sort:'new',p_limit:100});
+  const cards=kc||[];
+  const peer=cards.filter(c=>c.status==='peer');
+  const official=cards.filter(c=>c.status==='official');
+  const recent=cards.slice(0,5);
+  const coaches=(DS.allStaff||[]).filter(s=>['面談担当','LINE担当'].includes(s.role));
+  const mockLoad=(s)=> s.role==='LINE担当' ? (38 + (s.name.length*9)%32) : null; // プロト用の擬似対応人数
+  const kpi=(label,val,sub,cls)=>`<div class="kpi ${cls||''}" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px"><div style="font-size:11px;color:#6b7280">${label}</div><div style="font-size:22px;font-weight:700;color:${cls==='warn'?'#d97706':cls==='green'?'#16a34a':'#2563eb'}">${val}</div><div style="font-size:11px;color:#94a3b8">${sub}</div></div>`;
+  const triage = peer.slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
+    <div style="font-size:13px"><span style="background:#f1f5f9;color:#64748b;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:6px">仲間内</span>${escapeHtml(c.title)} <span style="color:#94a3b8;font-size:11px">✍${escapeHtml(c.author_name||'—')} ｜ 👍${c.total||0}</span></div>
+  </div>`).join('') || '<div style="color:#94a3b8;font-size:13px">公式化待ちはありません。</div>';
+  const coachRows = coaches.map(s=>`<tr>
+    <td>${escapeHtml(s.name)}</td>
+    <td><span style="font-size:11px;color:#475569">${escapeHtml(s.role)}</span></td>
+    <td>${s.role==='LINE担当'?(mockLoad(s)+' 名'):'—'}</td>
+    <td>${s.role==='LINE担当'&&mockLoad(s)>60?'<span style="background:#fee2e2;color:#991b1b;font-size:11px;padding:2px 8px;border-radius:10px">要相談</span>':'<span style="background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:10px">適正</span>'}</td>
+  </tr>`).join('');
+  const recentVoice = recent.map(c=>`<li style="font-size:13px;padding:4px 0">${escapeHtml(c.title)} <span style="color:#94a3b8;font-size:11px">／ ${escapeHtml(c.author_name||'—')}</span></li>`).join('');
+  return `
+<div class="screen-title">🛡 統括コーチ ホーム <span style="font-size:13px;color:var(--mute);font-weight:400;margin-left:8px">本部 ⇔ 各コーチ をつなぐサポート役（評価者ではありません）</span></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">
+  ${kpi('公式化待ち', peer.length, '仲間内の知見', peer.length?'warn':'')}
+  ${kpi('公式化済み', official.length, '横展開できる対応例', 'green')}
+  ${kpi('担当コーチ', coaches.length, '面談＋LINE')}
+  ${kpi('未対応の相談', '2', 'Teams（プロト）', 'warn')}
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div style="font-weight:700">🛡 公式化トリアージ <span style="font-size:12px;color:var(--mute);font-weight:400">良い対応例を「公式」にして横展開</span></div>
+    <button class="btn ghost sm" onclick="show('knowledge')">知見フィードで公式化 →</button>
+  </div>
+  <div style="margin-top:8px">${triage}</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div style="font-weight:700;margin-bottom:6px">👥 担当コーチの状況 <span style="font-size:11px;color:var(--mute);font-weight:400">（対応人数・稼働はプロト値。実データ化は後続）</span></div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f1f5f9"><th style="text-align:left;padding:8px">コーチ</th><th style="text-align:left;padding:8px">役割</th><th style="text-align:left;padding:8px">LINE対応人数</th><th style="text-align:left;padding:8px">稼働</th></tr></thead>
+    <tbody>${coachRows||'<tr><td colspan="4" style="padding:8px;color:#94a3b8">コーチ未登録</td></tr>'}</tbody>
+  </table>
+</div>
+
+<div class="row c2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:6px">📣 現場の声 → 本部</div>
+    <div style="font-size:12px;color:var(--mute);margin-bottom:6px">形式知化された現場の気づき（直近）。本部への改善提案の素材に。</div>
+    <ul style="list-style:none;padding:0;margin:0">${recentVoice||'<li style="color:#94a3b8;font-size:13px">まだありません</li>'}</ul>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:6px">💬 相談（Teams転記・プロト）</div>
+    <div style="font-size:13px;border-left:3px solid #f59e0b;padding:6px 10px;background:#fffbeb;margin-bottom:6px">「LINE対応人数を5名減らしたい」<span style="color:#94a3b8;font-size:11px">／ 高橋さん</span></div>
+    <div style="font-size:13px;border-left:3px solid #f59e0b;padding:6px 10px;background:#fffbeb">「痩せない方へのフォロー、他の人の例を知りたい」<span style="color:#94a3b8;font-size:11px">／ 佐藤さん → 知見フィードを案内</span></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px">※ 相談の一次窓口はTeamsチャネル②③④⑦。ここは記録・対応例への変換を補助（実連携は後続）。</div>
+  </div>
+</div>
+`;
+}
+
+// ============================================================
+//  SUPABASE INIT + GLOBAL DATA STORE
+// ============================================================
+const SB_URL='https://shmsyuohusfjjbopqokr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+const sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+const DS = {
+  staff: null,
+  allStaff: [],
+  interviews: [],
+  selectedIvId: null,
+  selectedIv: null,
+  selectedTranscripts: null,
+  customers: []
+};
+
+async function doLogout(){
+  await sb.auth.signOut();
+  location.href='index.html';
+}
+
+function fmtDate(s){ if(!s) return '—'; const d=new Date(s); return `${d.getMonth()+1}/${d.getDate()}`; }
+function fmtFullDate(s){ if(!s) return '—'; const d=new Date(s); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function classifyStatus(iv){
+  const st = iv.status;
+  if(st==='pending' || st==='uploading') return 'col1';
+  if(st==='transcribing' || st==='analyzing') return 'col3';
+  const hasAi = (iv.interview_analyses||[]).some(a=>a.analysis_source==='ai');
+  const hasHuman = (iv.interview_analyses||[]).some(a=>a.analysis_source==='human');
+  if(st==='completed' && !hasAi) return 'col3';
+  if(st==='completed' && hasAi && !hasHuman) return 'col4';
+  if(st==='completed' && hasHuman) return 'col5';
+  return 'col2';
+}
+
+async function bootstrap(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){ location.href='index.html'; return; }
+
+  // staff resolve
+  const email = session.user.email;
+  const {data: st} = await sb.from('staff').select('*').eq('email', email).maybeSingle();
+  if(!st){
+    // 既存のadminアカウントでログインしているケース（mys258ダッシュボード用）
+    // 既知のadmin emailならstaffを引かず管理者扱い、それ以外は仮で田中美咲扱い
+    const {data: anyAdmin} = await sb.from('staff').select('*').eq('role','管理者').limit(1).maybeSingle();
+    DS.staff = anyAdmin || {id:null, name:email, role:'管理者'};
+    document.getElementById('hdr-staff').innerHTML = `<span style="color:#fde047">⚠ ${email} は staff テーブル未登録。管理者ビューで表示中</span>`;
+  }else{
+    DS.staff = st;
+    document.getElementById('hdr-staff').textContent = `${st.name}（${st.role}） ／ ${email}`;
+  }
+
+  // load all staff (for reference / handover dropdown)
+  const {data: allStaff} = await sb.from('staff').select('*').order('role').order('name');
+  DS.allStaff = allStaff || [];
+
+  // load own interviews with related
+  await reloadInterviews();
+
+  // load customers
+  const {data: cust} = await sb.from('customers').select('*');
+  DS.customers = cust || [];
+
+  // wire side
+  document.querySelectorAll('.role-tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      const role = t.dataset.role;
+      show(role==='iv' ? 'iv1' : 'lc1');
+    });
+  });
+  document.querySelectorAll('.side .item').forEach(i=>{
+    i.addEventListener('click', ()=> show(i.dataset.screen));
+  });
+
+  // initial screen — URLハッシュ優先、なければロール別デフォルト
+  const hashKey = (location.hash||'').replace('#','');
+  if(hashKey && SCREENS[hashKey]){
+    show(hashKey);
+  } else {
+    const role = DS.staff.role;
+    if(role==='統括コーチ') show('sup');
+    else if(role==='LINE担当') show('lc1');
+    else show('iv1');
+  }
+
+  // ハッシュ変更でも画面遷移（ブラウザの戻る/進むに対応）
+  window.addEventListener('hashchange', ()=>{
+    const k = (location.hash||'').replace('#','');
+    if(k && SCREENS[k]) show(k);
+  });
+}
+
+async function reloadInterviews(){
+  let q = sb.from('interviews')
+    .select('*, customer:customers(*), interview_analyses(*), customer_speech_analyses(*), interview_acoustic_metrics(*), video_content_analyses(*)')
+    .order('recorded_at', {ascending: false, nullsFirst: false});
+  if(DS.staff?.role === '面談担当' && DS.staff.id){
+    q = q.eq('interviewer_staff_id', DS.staff.id);
+  }
+  const {data, error} = await q;
+  if(error){ console.error('loadInterviews:', error); return; }
+  DS.interviews = data || [];
+}
+
+async function loadInterviewDetail(ivId){
+  if(DS.selectedIvId === ivId && DS.selectedIv) return DS.selectedIv;
+  DS.selectedIvId = ivId;
+  const iv = DS.interviews.find(x=>x.id===ivId);
+  if(!iv){
+    const {data} = await sb.from('interviews').select('*, customer:customers(*), interview_analyses(*), customer_speech_analyses(*), interview_acoustic_metrics(*), video_content_analyses(*)').eq('id', ivId).single();
+    DS.selectedIv = data;
+  }else{
+    DS.selectedIv = iv;
+  }
+  const {data: tx} = await sb.from('interview_transcripts')
+    .select('*')
+    .eq('interview_id', ivId)
+    .order('segment_index', {ascending: true})
+    .limit(60);
+  DS.selectedTranscripts = tx || [];
+  return DS.selectedIv;
+}
+
+// ============================================================
+//  RENDER ENGINE
+// ============================================================
+const SCREENS = {
+  iv0: {role:'iv', render: S_IV_0},
+  iv1: {role:'iv', render: S_IV_1},
+  iv2: {role:'iv', render: S_IV_2},
+  iv3: {role:'iv', render: S_IV_3},
+  iv4: {role:'iv', render: S_IV_4},
+  iv5: {role:'iv', render: S_IV_5},
+  lc1: {role:'lc', render: S_LC_1},
+  lc2: {role:'lc', render: S_LC_2},
+  lc3: {role:'lc', render: S_LC_3},
+  lc4: {role:'lc', render: S_LC_4},
+  lc5: {role:'lc', render: S_LC_5},
+  manual: {role:'any', render: S_MANUAL},
+  knowledge: {role:'any', render: S_KNOWLEDGE},
+  tips: {role:'any', render: S_TIPS},
+  sup: {role:'any', render: S_SUP}
+};
+
+async function show(key){
+  const s = SCREENS[key]; if(!s) return;
+  // URLハッシュ同期（無限ループ回避: 既に一致してれば書き換えない）
+  if(location.hash !== '#'+key){
+    history.replaceState(null, '', '#'+key);
+  }
+  if(s.role==='iv' || s.role==='lc'){
+    document.querySelectorAll('.role-tab').forEach(t=>t.classList.toggle('active',t.dataset.role===s.role));
+    document.getElementById('menu-iv').style.display = s.role==='iv' ? '' : 'none';
+    document.getElementById('menu-lc').style.display = s.role==='lc' ? '' : 'none';
+  }
+  document.querySelectorAll('.side .item').forEach(i=>i.classList.toggle('active',i.dataset.screen===key));
+  const main = document.getElementById('screen');
+  main.innerHTML = `<div style="padding:60px;text-align:center;color:#94a3b8">読み込み中...</div>`;
+  try {
+    const html = await s.render();
+    main.innerHTML = html;
+  } catch(e){
+    main.innerHTML = `<div style="padding:30px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b">エラー: ${e.message}</div>`;
+    console.error(e);
+  }
+  window.scrollTo(0,0);
+}
+
+async function ivTab(t){
+  window._iv3tab = t;
+  await show('iv3');
+}
+
+async function selectInterview(ivId){
+  await loadInterviewDetail(ivId);
+  window._iv3tab = 'b';
+  await show('iv3');
+}
+
+// Kick off
+bootstrap();
+</script>
+</body></html>

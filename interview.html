@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>初回面談ヒアリング分析 | ハンサミング</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script>
+  // Fallback: if jsdelivr fails, try unpkg
+  window.addEventListener('error', function(ev) {
+    if (ev.target && ev.target.tagName === 'SCRIPT' && /supabase-js/.test(ev.target.src) && !ev.target.dataset.fb) {
+      const fb = document.createElement('script');
+      fb.src = 'https://unpkg.com/@supabase/supabase-js@2.45.0/dist/umd/supabase.js';
+      fb.dataset.fb = '1';
+      document.head.appendChild(fb);
+    }
+  }, true);
+</script>
+<style>
+  :root {
+    --color-bg:        #f5f7fa;
+    --color-card:      #ffffff;
+    --color-text:      #1f2937;
+    --color-muted:     #6b7280;
+    --color-border:    #e5e7eb;
+    --color-primary:   #4f8cff;
+    --color-success:   #10b981;
+    --color-warning:   #f59e0b;
+    --color-danger:    #ef4444;
+    --color-ai:        #6366f1;
+    --color-human:     #ec4899;
+    --shadow-card:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+  header {
+    background: var(--color-card);
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header .nav a {
+    margin-left: 16px;
+    color: var(--color-muted);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  header .nav a.active { color: var(--color-primary); font-weight: 600; }
+  header .user-info { font-size: 13px; color: var(--color-muted); }
+  header .user-info button {
+    margin-left: 12px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .page-header h2 { margin: 0 0 4px 0; font-size: 22px; }
+  .page-header p { margin: 0; color: var(--color-muted); font-size: 14px; }
+
+  .btn {
+    padding: 10px 20px;
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .btn:hover { opacity: .9; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+  .card {
+    background: var(--color-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .card h3 { margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--color-muted); }
+  .card .desc { font-size: 12px; color: var(--color-muted); margin-bottom: 12px; }
+
+  .kpi-card .value { font-size: 26px; font-weight: 700; color: var(--color-text); line-height: 1.2; }
+  .kpi-card .sub { font-size: 11px; color: var(--color-muted); margin-top: 4px; }
+  .kpi-card.warn .value { color: var(--color-danger); }
+  .kpi-card.good .value { color: var(--color-success); }
+  .kpi-card.info .value { color: var(--color-primary); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-pending     { background: #f3f4f6; color: #6b7280; }
+  .badge-uploading   { background: #dbeafe; color: #1e40af; }
+  .badge-transcribing{ background: #e0e7ff; color: #3730a3; }
+  .badge-analyzing   { background: #fef3c7; color: #92400e; }
+  .badge-completed   { background: #d1fae5; color: #065f46; }
+  .badge-failed      { background: #fee2e2; color: #991b1b; }
+
+  .badge-class-long_term     { background: #d1fae5; color: #065f46; }
+  .badge-class-mid_term      { background: #dbeafe; color: #1e3a8a; }
+  .badge-class-short_term    { background: #fed7aa; color: #7c2d12; }
+  .badge-class-early_dropout { background: #fee2e2; color: #991b1b; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+  }
+  th { color: var(--color-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; user-select: none; }
+  th.sort-asc::after  { content: ' ▲'; font-size: 10px; }
+  th.sort-desc::after { content: ' ▼'; font-size: 10px; }
+  tr:hover { background: #fafafa; cursor: pointer; }
+  .score-cell { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .score-ai    { color: var(--color-ai); }
+  .score-human { color: var(--color-human); }
+  .score-low   { color: var(--color-danger); }
+  .score-mid   { color: var(--color-text); }
+  .score-high  { color: var(--color-success); }
+
+  .hidden { display: none !important; }
+
+  /* セクションタブ */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--color-border); margin-bottom: 24px; }
+  .tab {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--color-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+  /* フィルタ行 */
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .filter-row label { color: var(--color-muted); margin-right: 4px; }
+  .filter-row select, .filter-row input {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  /* 支社別バーリスト */
+  .branch-row {
+    display: grid;
+    grid-template-columns: 160px 50px 1fr 70px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+  }
+  .branch-row:last-child { border-bottom: none; }
+  .branch-row .name { font-weight: 500; }
+  .branch-row .count { color: var(--color-muted); font-size: 12px; }
+  .branch-bar-wrap { background: #f3f4f6; height: 18px; border-radius: 4px; position: relative; overflow: hidden; }
+  .branch-bar { height: 100%; border-radius: 4px; background: var(--color-primary); transition: width .35s; }
+  .branch-bar-label { position: absolute; right: 8px; top: 0; line-height: 18px; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-text); }
+
+  /* ログイン画面 */
+  #login-section {
+    max-width: 400px;
+    margin: 80px auto;
+  }
+  #login-section input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* アップロードモーダル */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    background: var(--color-card);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+  }
+  .modal h3 { margin: 0 0 16px 0; }
+  .form-row { margin-bottom: 16px; }
+  .form-row label { display: block; font-size: 13px; margin-bottom: 4px; color: var(--color-muted); }
+  .form-row input, .form-row select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+  /* 詳細ページ */
+  #detail-section .back-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .transcript-list { max-height: 500px; overflow-y: auto; }
+  .transcript-segment {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+  }
+  .transcript-segment .speaker {
+    font-weight: 600;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+  .transcript-segment .speaker.interviewer { color: var(--color-primary); }
+  .transcript-segment .speaker.customer    { color: var(--color-success); }
+  .transcript-segment .speaker.other       { color: var(--color-muted); }
+  .transcript-segment.seekable { cursor: pointer; transition: background 0.1s; }
+  .transcript-segment.seekable:hover { background: #f0f9ff; }
+  .transcript-segment.active-segment { background: #fef9c3; border-left: 3px solid var(--color-warning); }
+  .transcript-segment .ts {
+    color: var(--color-muted);
+    font-size: 11px;
+    margin-right: 8px;
+    font-family: monospace;
+  }
+  .transcript-segment.seekable .ts { color: var(--color-primary); text-decoration: underline; }
+  .speed-btn {
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--color-text);
+  }
+  .speed-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  #audio-card { background: linear-gradient(180deg, #fefce8 0%, #ffffff 60%); }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--color-muted);
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .legend-dot.ai    { background: var(--color-ai); }
+  .legend-dot.human { background: var(--color-human); }
+  .legend-dot.long_term { background: #10b981; }
+  .legend-dot.mid_term { background: #4f8cff; }
+  .legend-dot.short_term { background: #f59e0b; }
+  .legend-dot.early_dropout { background: #ef4444; }
+
+  .note {
+    padding: 12px 16px;
+    background: #fef3c7;
+    border-left: 4px solid var(--color-warning);
+    border-radius: 4px;
+    font-size: 13px;
+    color: #92400e;
+    margin-bottom: 16px;
+  }
+  .insight-box {
+    padding: 12px 14px;
+    background: #eff6ff;
+    border-left: 3px solid var(--color-primary);
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1e3a8a;
+    margin-top: 16px;
+  }
+  .insight-box strong { color: #1e1b4b; }
+  canvas { max-height: 320px; }
+</style>
+</head>
+<body>
+
+<!-- ====== ログイン (デフォルトで表示。JS成功後にcheckAuth()で切替) ====== -->
+<div id="login-section" class="card">
+  <h2 style="margin-top:0;">初回面談ヒアリング分析</h2>
+  <p style="color:var(--color-muted);font-size:13px;">ハンサミング管理者アカウントでログインしてください</p>
+  <input type="email" id="login-email" placeholder="メールアドレス" />
+  <input type="password" id="login-password" placeholder="パスワード" />
+  <button class="btn" id="login-btn" style="width:100%;">ログイン</button>
+  <p id="login-error" style="color:var(--color-danger);font-size:13px;margin-top:8px;"></p>
+</div>
+
+<!-- ====== メインアプリ ====== -->
+<div id="app" class="hidden">
+  <header>
+    <div>
+      <h1>ハンサミング 管理ダッシュボード</h1>
+    </div>
+    <div style="display:flex;align-items:center;">
+      <nav class="nav">
+        <a href="dashboard.html">管理ダッシュボード</a>
+        <a href="coach.html">栄養士ダッシュボード</a>
+        <a href="process.html">顧客プロセス</a>
+        <a href="interview.html" class="active">面談分析</a>
+        <a href="action_analysis.html" style="background:#fef2f2;color:#dc2626;font-weight:600;padding:2px 8px;border-radius:4px;">行動連携分析</a>
+      </nav>
+      <div class="user-info" style="margin-left:24px;">
+        <span id="user-email"></span>
+        <button id="logout-btn">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ====== 一覧画面（タブ切替: 概要 / 個別一覧） ====== -->
+    <section id="list-section">
+      <div class="page-header">
+        <div>
+          <h2>初回面談ヒアリング分析</h2>
+          <p>面談動画から文字起こし・話者分離・ヒアリング品質スコアを自動算出。<span id="last-updated" style="color:var(--color-muted);font-size:12px;"></span></p>
+        </div>
+        <button class="btn" id="upload-btn">+ 面談動画をアップロード</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">📊 概要</button>
+        <button class="tab" data-tab="list">📋 個別一覧</button>
+        <button class="tab" data-tab="customers">👥 顧客</button>
+        <button class="tab" data-tab="staff">🥗 栄養士</button>
+      </div>
+
+      <!-- ────────── 概要タブ ────────── -->
+      <div id="tab-overview">
+
+        <!-- KPIカード x 6 -->
+        <div class="grid grid-6" style="margin-bottom:20px;">
+          <div class="card kpi-card">
+            <h3>分析済み面談</h3>
+            <div class="value" id="kpi-total">--</div>
+            <div class="sub" id="kpi-total-sub">完了ステータス</div>
+          </div>
+          <div class="card kpi-card info">
+            <h3>AI 平均スコア</h3>
+            <div class="value" id="kpi-ai-avg">--</div>
+            <div class="sub" id="kpi-ai-sub">/ 100点</div>
+          </div>
+          <div class="card kpi-card good">
+            <h3>長期継続予測</h3>
+            <div class="value" id="kpi-long">--</div>
+            <div class="sub" id="kpi-long-sub">long_term</div>
+          </div>
+          <div class="card kpi-card">
+            <h3>中期継続予測</h3>
+            <div class="value" id="kpi-mid">--</div>
+            <div class="sub" id="kpi-mid-sub">mid_term</div>
+          </div>
+          <div class="card kpi-card warn">
+            <h3>早期離脱予測</h3>
+            <div class="value" id="kpi-early">--</div>
+            <div class="sub" id="kpi-early-sub">early_dropout — 要フォロー</div>
+          </div>
+          <div class="card kpi-card">
+            <h3>処理待ち / 失敗</h3>
+            <div class="value" id="kpi-pending">--</div>
+            <div class="sub">pending/transcribing/analyzing/failed</div>
+          </div>
+        </div>
+
+        <!-- 支社フィルタ -->
+        <div class="filter-row">
+          <label>📍 支社で絞り込み:</label>
+          <select id="overview-branch"><option value="">全支社</option></select>
+          <button class="btn btn-secondary" id="overview-reset" style="padding:6px 14px;font-size:13px;">リセット</button>
+        </div>
+
+        <!-- レーダー / ヒストグラム -->
+        <div class="grid grid-2" style="margin-bottom:20px;">
+          <div class="card">
+            <h3>ヒアリング品質 6 軸の平均</h3>
+            <div class="desc">empathy / specificity / elicitation / listening / reproducibility / rebound — 低い軸が改善優先順位。</div>
+            <canvas id="overview-radar"></canvas>
+          </div>
+          <div class="card">
+            <h3>overall_score の分布</h3>
+            <div class="desc">10 点刻み。中央に寄っているか・外れ値の有無を確認。</div>
+            <canvas id="overview-hist"></canvas>
+          </div>
+        </div>
+
+        <!-- 継続予測クラス / クラス別発話特徴 -->
+        <div class="grid grid-2" style="margin-bottom:20px;">
+          <div class="card">
+            <h3>継続予測クラスの分布</h3>
+            <div class="desc">long → mid → short → early_dropout の件数。早期離脱率が高いほど現場フォローが必要。</div>
+            <canvas id="overview-class"></canvas>
+          </div>
+          <div class="card">
+            <h3>クラスごとの顧客発話特徴</h3>
+            <div class="desc">過去 17,401 件の日次レポート分析で「平均発話長 / 具体性 / 食事詳細」が継続率と相関。クラス間の段階性を確認。</div>
+            <canvas id="overview-speech"></canvas>
+          </div>
+        </div>
+
+        <!-- 支社別 平均 overall -->
+        <div class="card" style="margin-bottom:20px;">
+          <h3>支社別 平均 overall_score</h3>
+          <div class="desc">支社ごとの平均スコア。バーは 0–100 の絶対値。件数も併記。</div>
+          <div id="branch-list"></div>
+        </div>
+
+        <div class="insight-box" id="insight-box">
+          <strong>インサイト:</strong> <span id="insight-text">解析中…</span>
+        </div>
+
+      </div>
+
+      <!-- ────────── 個別一覧タブ ────────── -->
+      <div id="tab-list" class="hidden">
+
+        <div class="filter-row">
+          <label>📍 支社:</label>
+          <select id="list-branch"><option value="">全支社</option></select>
+          <label>🎯 予測クラス:</label>
+          <select id="list-class">
+            <option value="">全クラス</option>
+            <option value="long_term">long_term</option>
+            <option value="mid_term">mid_term</option>
+            <option value="short_term">short_term</option>
+            <option value="early_dropout">early_dropout</option>
+          </select>
+          <label>🔍 検索:</label>
+          <input type="text" id="list-search" placeholder="タイトル / 顧客名" style="min-width:200px;" />
+          <button class="btn btn-secondary" id="list-reset" style="padding:6px 14px;font-size:13px;">リセット</button>
+          <span style="margin-left:auto;color:var(--color-muted);font-size:12px;" id="list-count"></span>
+        </div>
+
+        <div class="card" style="overflow-x:auto;">
+          <table id="interviews-table">
+            <thead>
+              <tr>
+                <th data-sort="recorded_at">収録日時</th>
+                <th data-sort="title">タイトル</th>
+                <th data-sort="recorded_location">支社</th>
+                <th data-sort="status">状態</th>
+                <th data-sort="overall" class="text-right">overall</th>
+                <th data-sort="empathy" class="text-right">共感</th>
+                <th data-sort="specificity" class="text-right">具体性</th>
+                <th data-sort="elicitation" class="text-right">深掘り</th>
+                <th data-sort="listening" class="text-right">傾聴</th>
+                <th data-sort="reproducibility" class="text-right">再現性</th>
+                <th data-sort="rebound" class="text-right">リバ配慮</th>
+                <th data-sort="pred_class">予測</th>
+                <th data-sort="human_overall">人間</th>
+              </tr>
+            </thead>
+            <tbody id="interviews-tbody">
+              <tr><td colspan="13" style="text-align:center;color:var(--color-muted);padding:40px;">読み込み中...</td></tr>
+            </tbody>
+          </table>
+          <div class="legend">
+            <span><span class="legend-dot ai"></span>AI(Claude) スコア</span>
+            <span><span class="legend-dot human"></span>人間（Chuckyさん等）</span>
+            <span><span class="legend-dot long_term"></span>long</span>
+            <span><span class="legend-dot mid_term"></span>mid</span>
+            <span><span class="legend-dot short_term"></span>short</span>
+            <span><span class="legend-dot early_dropout"></span>early_dropout</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ────────── 顧客タブ ────────── -->
+      <div id="tab-customers" class="hidden">
+
+        <div class="filter-row">
+          <label>🔍 検索:</label>
+          <input type="text" id="cust-search" placeholder="名前 / メール / 電話" style="min-width:240px;" />
+          <button class="btn" id="cust-add-btn" style="padding:6px 14px;font-size:13px;margin-left:auto;">＋ 顧客を追加</button>
+        </div>
+
+        <div class="card" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>メール</th>
+                <th>電話</th>
+                <th>LINE ID</th>
+                <th>流入元</th>
+                <th>備考</th>
+                <th>登録日</th>
+                <th style="width:140px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody">
+              <tr><td colspan="8" style="text-align:center;color:var(--color-muted);padding:40px;">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--color-muted);">
+          顧客レコードを作成すると、面談詳細画面のドロップダウンから紐付けできるようになります。
+        </div>
+      </div>
+
+      <!-- ────────── 栄養士タブ ────────── -->
+      <div id="tab-staff" class="hidden">
+
+        <div class="filter-row">
+          <label>🔍 検索:</label>
+          <input type="text" id="staff-search" placeholder="名前 / メール" style="min-width:240px;" />
+          <label>役割:</label>
+          <select id="staff-role-filter">
+            <option value="">全役割</option>
+            <option value="メール担当">メール担当</option>
+            <option value="面談担当">面談担当</option>
+            <option value="LINE担当">LINE担当</option>
+            <option value="管理者">管理者</option>
+          </select>
+          <button class="btn" id="staff-add-btn" style="padding:6px 14px;font-size:13px;margin-left:auto;">＋ 栄養士を追加</button>
+        </div>
+
+        <div class="card" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>メール</th>
+                <th>役割</th>
+                <th>有効</th>
+                <th>登録日</th>
+                <th style="width:140px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="staff-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--color-muted);padding:40px;">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--color-muted);">
+          栄養士・スタッフを登録すると、面談詳細画面の担当者ドロップダウンから紐付けできます。役割は「面談担当」「管理者」が面談分析の対象となります。
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 詳細画面 ====== -->
+    <section id="detail-section" class="hidden">
+      <a class="back-link" id="back-to-list">← 一覧に戻る</a>
+
+      <div class="page-header">
+        <div>
+          <h2 id="detail-title">面談詳細</h2>
+          <p id="detail-meta"></p>
+        </div>
+        <div>
+          <button class="btn btn-secondary" id="reanalyze-btn">再分析</button>
+        </div>
+      </div>
+
+      <div id="processing-note" class="note hidden">
+        この面談はまだ処理中です（ステータス: <span id="processing-status"></span>）。
+        完了すると分析結果が表示されます。
+      </div>
+
+      <!-- 顧客・担当栄養士の紐付け -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:13px;color:var(--color-muted);min-width:60px;">👤 顧客:</label>
+            <select id="assign-customer" style="min-width:200px;padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;">
+              <option value="">未選択</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:13px;color:var(--color-muted);min-width:80px;">🥗 担当栄養士:</label>
+            <select id="assign-staff" style="min-width:200px;padding:6px 10px;border:1px solid var(--color-border);border-radius:6px;font-size:13px;">
+              <option value="">未選択</option>
+            </select>
+          </div>
+          <button class="btn" id="assign-save-btn" style="padding:6px 14px;font-size:13px;">保存</button>
+          <span id="assign-status" style="font-size:12px;color:var(--color-muted);"></span>
+        </div>
+      </div>
+
+      <!-- 音声プレイヤー + 人間メモ（横並び） -->
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card" id="audio-card">
+          <h3>🎧 録音音声</h3>
+          <div id="audio-status" style="font-size:12px;color:var(--color-muted);margin-bottom:8px;">読み込み中...</div>
+          <audio id="audio-player" controls preload="metadata" style="width:100%;display:none;"></audio>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--color-muted);">
+            <span>速度:</span>
+            <button class="speed-btn" data-rate="1.0">1.0x</button>
+            <button class="speed-btn" data-rate="1.25">1.25x</button>
+            <button class="speed-btn" data-rate="1.5">1.5x</button>
+            <button class="speed-btn" data-rate="2.0">2.0x</button>
+          </div>
+          <div style="font-size:11px;color:var(--color-muted);margin-top:6px;">
+            ⏱ 文字起こしの行をクリックでその時刻にジャンプします
+          </div>
+        </div>
+
+        <div class="card" id="note-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <h3 style="margin:0;">📝 人間メモ（栄養士・管理者）</h3>
+            <span id="note-status" style="font-size:11px;color:var(--color-muted);">読み込み中...</span>
+          </div>
+          <textarea id="note-textarea" placeholder="ここに気づき・所感・改善案を記入できます。&#10;&#10;例:&#10;・お客様の食習慣の話で、家族の協力姿勢が見えた&#10;・栄養士は「頑張る」発言を行動描写に変換できていなかった&#10;・次回は具体的な食品を 3 つ挙げてもらう約束に繋げたい&#10;&#10;※AI 分析（共感・深掘り等のスコア）と並べて、人間の定性的な観点を蓄積し、後で比較分析します。" style="width:100%;min-height:160px;padding:12px;border:1px solid var(--color-border);border-radius:6px;font-family:inherit;font-size:13px;line-height:1.6;resize:vertical;background:#fefce8;"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:11px;color:var(--color-muted);">
+            <button class="btn btn-secondary" id="note-save-btn" style="padding:6px 14px;font-size:12px;">保存</button>
+            <span id="note-meta"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- スコアレーダーチャート（AI vs 人間） -->
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <h3>ヒアリング品質スコア（観点別）</h3>
+          <canvas id="score-radar"></canvas>
+          <div class="legend">
+            <span><span class="legend-dot ai"></span>AI（Claude）分析</span>
+            <span><span class="legend-dot human"></span>人間分析</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>顧客発話の特徴</h3>
+          <canvas id="speech-bar"></canvas>
+          <p style="font-size:12px;color:var(--color-muted);margin-top:8px;">
+            既存ダッシュボードの継続率分析と同じ軸で初回面談の発話を評価。
+          </p>
+        </div>
+      </div>
+
+      <!-- 改善提案 / 強み -->
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <h3>強み</h3>
+          <ul id="strengths-list" style="margin:0;padding-left:20px;font-size:14px;"></ul>
+        </div>
+        <div class="card">
+          <h3>改善ポイント</h3>
+          <ul id="improvements-list" style="margin:0;padding-left:20px;font-size:14px;"></ul>
+        </div>
+      </div>
+
+      <!-- 全体所感 -->
+      <div class="card" style="margin-bottom:24px;">
+        <h3>AI全体所感</h3>
+        <p id="summary-text" style="font-size:14px;line-height:1.8;white-space:pre-wrap;"></p>
+      </div>
+
+      <!-- 文字起こし -->
+      <div class="card">
+        <h3>文字起こし（話者分離付き）</h3>
+        <div class="transcript-list" id="transcript-list"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ====== アップロードモーダル ====== -->
+<div id="upload-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>面談動画をアップロード</h3>
+    <div class="form-row">
+      <label>タイトル *</label>
+      <input type="text" id="upload-title" placeholder="例: 長崎支社様佐世保営業所 初回面談" />
+    </div>
+    <div class="form-row">
+      <label>収録日</label>
+      <input type="date" id="upload-recorded-date" />
+    </div>
+    <div class="form-row">
+      <label>収録場所</label>
+      <input type="text" id="upload-location" placeholder="例: 長崎支社佐世保営業所" />
+    </div>
+    <div class="form-row">
+      <label>顧客（任意）</label>
+      <select id="upload-customer"><option value="">未選択</option></select>
+    </div>
+    <div class="form-row">
+      <label>担当栄養士（任意）</label>
+      <select id="upload-staff"><option value="">未選択</option></select>
+    </div>
+    <div class="form-row">
+      <label>動画ファイル *（mp4 / mov / m4a / wav, 最大500MB）</label>
+      <input type="file" id="upload-file" accept="video/*,audio/*" />
+    </div>
+    <div id="upload-progress" class="hidden" style="font-size:13px;color:var(--color-muted);">
+      アップロード中: <span id="upload-progress-text">0%</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="upload-cancel">キャンセル</button>
+      <button class="btn" id="upload-submit">アップロード</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 顧客 追加/編集モーダル ====== -->
+<div id="cust-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 id="cust-modal-title">顧客を追加</h3>
+    <input type="hidden" id="cust-id" />
+    <div class="form-row"><label>名前 *</label><input type="text" id="cust-name" placeholder="例: 山田 太郎" /></div>
+    <div class="form-row"><label>メール</label><input type="email" id="cust-email" placeholder="任意" /></div>
+    <div class="form-row"><label>電話</label><input type="text" id="cust-phone" placeholder="任意" /></div>
+    <div class="form-row"><label>LINE ID</label><input type="text" id="cust-line" placeholder="任意" /></div>
+    <div class="form-row">
+      <label>流入元</label>
+      <select id="cust-source">
+        <option value="web">web</option>
+        <option value="line">line</option>
+        <option value="referral">referral</option>
+        <option value="other">other</option>
+      </select>
+    </div>
+    <div class="form-row"><label>備考</label><input type="text" id="cust-notes" placeholder="任意" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cust-cancel">キャンセル</button>
+      <button class="btn" id="cust-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 栄養士 追加/編集モーダル ====== -->
+<div id="staff-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 id="staff-modal-title">栄養士を追加</h3>
+    <input type="hidden" id="staff-id" />
+    <div class="form-row"><label>名前 *</label><input type="text" id="staff-name" placeholder="例: 佐藤 花子" /></div>
+    <div class="form-row"><label>メール</label><input type="email" id="staff-email" placeholder="任意" /></div>
+    <div class="form-row">
+      <label>役割 *</label>
+      <select id="staff-role">
+        <option value="面談担当">面談担当</option>
+        <option value="メール担当">メール担当</option>
+        <option value="LINE担当">LINE担当</option>
+        <option value="管理者">管理者</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label><input type="checkbox" id="staff-active" checked /> 有効（is_active）</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="staff-cancel">キャンセル</button>
+      <button class="btn" id="staff-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function bootstrap() {
+  // -------------------------
+  // Supabase設定
+  // -------------------------
+  const SUPABASE_URL  = 'https://shmsyuohusfjjbopqokr.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+
+  function showFatal(msg) {
+    console.error('[interview.html FATAL]', msg);
+    var el = document.getElementById('login-error');
+    if (el) { el.textContent = msg; el.style.color = '#ef4444'; }
+    var diag = document.createElement('div');
+    diag.style.cssText = 'position:fixed;top:8px;right:8px;background:#fee;color:#900;padding:10px 14px;border:1px solid #f99;border-radius:6px;font-size:12px;max-width:520px;z-index:9999;font-family:ui-monospace,monospace;';
+    diag.textContent = msg;
+    document.body && document.body.appendChild(diag);
+  }
+
+  // ライブラリの読み込みを最大10秒待機（CDNが遅い場合の保険）
+  function waitForSupabase(deadline) {
+    return new Promise((resolve, reject) => {
+      const t0 = Date.now();
+      (function tick() {
+        if (window.supabase && typeof window.supabase.createClient === 'function') return resolve();
+        if (Date.now() - t0 > deadline) return reject(new Error('supabase-js が読み込めません（' + deadline + 'ms 待機）。CDN ブロックの可能性: jsdelivr / unpkg どちらにも到達できているか確認してください。'));
+        setTimeout(tick, 50);
+      })();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await waitForSupabase(10000);
+    } catch (e) {
+      showFatal(e.message);
+      return;
+    }
+    try {
+      main();
+    } catch (e) {
+      showFatal('JS 初期化エラー: ' + e.message + ' (詳細はコンソールを参照)');
+      throw e;
+    }
+  });
+
+  function main() {
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // -------------------------
+  // DOM参照
+  // -------------------------
+  const $ = (id) => document.getElementById(id);
+  const loginSection  = $('login-section');
+  const app           = $('app');
+  const listSection   = $('list-section');
+  const detailSection = $('detail-section');
+  const uploadModal   = $('upload-modal');
+
+  // -------------------------
+  // 状態
+  // -------------------------
+  let currentInterviewId = null;
+  let radarChart = null;
+  let speechChart = null;
+  // overview charts
+  let chOverviewRadar = null, chOverviewHist = null, chOverviewClass = null, chOverviewSpeech = null;
+  // データ
+  let ALL_ROWS    = [];   // v_interviews_with_latest_score 全件
+  let ALL_DETAILS = [];   // 6 軸スコアつきの行（後述で結合）
+  let LIST_SORT   = { key: 'recorded_at', dir: 'desc' };
+
+  // -------------------------
+  // 認証
+  // -------------------------
+  async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      loginSection.classList.add('hidden');
+      app.classList.remove('hidden');
+      $('user-email').textContent = session.user.email;
+      await loadAll();
+    } else {
+      loginSection.classList.remove('hidden');
+      app.classList.add('hidden');
+    }
+  }
+
+  $('login-btn').addEventListener('click', async () => {
+    const email = $('login-email').value;
+    const password = $('login-password').value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      $('login-error').textContent = 'ログインに失敗しました: ' + error.message;
+    } else {
+      checkAuth();
+    }
+  });
+
+  $('logout-btn').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  });
+
+  // -------------------------
+  // データ取得（全件 + 6軸スコア）
+  // -------------------------
+  async function loadAll() {
+    // 1. 一覧ビューから全件
+    const { data: rows, error: rowsErr } = await supabase
+      .from('v_interviews_with_latest_score')
+      .select('*')
+      .order('recorded_at', { ascending: false, nullsFirst: false });
+    if (rowsErr) {
+      console.error(rowsErr);
+      $('interviews-tbody').innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--color-danger);">読み込み失敗: ${rowsErr.message}</td></tr>`;
+      return;
+    }
+    ALL_ROWS = rows || [];
+
+    // 2. interview_analyses から AI 6軸スコア（live_only 優先、無ければ full）
+    const { data: analyses } = await supabase
+      .from('interview_analyses')
+      .select('interview_id, analysis_source, scope, version, overall_score, empathy_score, specificity_score, elicitation_depth_score, listening_quality_score, reproducibility_score, rebound_consideration_score');
+    const bestByInterview = pickBestAi(analyses || []);
+
+    // 3. 結合
+    ALL_DETAILS = ALL_ROWS.map(r => {
+      const ai = bestByInterview[r.interview_id] || {};
+      return {
+        ...r,
+        overall:        n(ai.overall_score),
+        empathy:        n(ai.empathy_score),
+        specificity:    n(ai.specificity_score),
+        elicitation:    n(ai.elicitation_depth_score),
+        listening:      n(ai.listening_quality_score),
+        reproducibility: n(ai.reproducibility_score),
+        rebound:        n(ai.rebound_consideration_score),
+      };
+    });
+
+    // ----- ドロップダウン -----
+    populateBranches();
+
+    // ----- 描画 -----
+    renderOverview();
+    renderTable();
+
+    $('last-updated').textContent = `(最終更新 ${new Date().toLocaleTimeString('ja-JP')})`;
+  }
+
+  function pickBestAi(analyses) {
+    // 各 interview_id ごとに ai のうち live_only > full > その他、そのうえで version 最大を選ぶ
+    const grouped = {};
+    for (const a of analyses) {
+      if (a.analysis_source !== 'ai') continue;
+      grouped[a.interview_id] = grouped[a.interview_id] || [];
+      grouped[a.interview_id].push(a);
+    }
+    const best = {};
+    for (const [id, arr] of Object.entries(grouped)) {
+      arr.sort((x, y) => {
+        const rank = (s) => s === 'live_only' ? 0 : (s === 'full' ? 1 : 2);
+        const sx = rank(x.scope), sy = rank(y.scope);
+        if (sx !== sy) return sx - sy;
+        return (y.version ?? 0) - (x.version ?? 0);
+      });
+      best[id] = arr[0];
+    }
+    return best;
+  }
+
+  function populateBranches() {
+    const branches = [...new Set(ALL_DETAILS.map(r => r.recorded_location || '不明'))].sort();
+    const html = ['<option value="">全支社</option>', ...branches.map(b => `<option value="${escape(b)}">${escape(b)}</option>`)].join('');
+    $('overview-branch').innerHTML = html;
+    $('list-branch').innerHTML = html;
+  }
+
+  // -------------------------
+  // 概要タブの描画
+  // -------------------------
+  function renderOverview() {
+    const branchFilter = $('overview-branch').value;
+    const completed = ALL_DETAILS.filter(r => r.status === 'completed' && (!branchFilter || r.recorded_location === branchFilter));
+
+    // KPI
+    const aiScores = completed.map(r => r.overall).filter(v => v != null);
+    const avg = aiScores.length ? mean(aiScores) : null;
+    const longC  = completed.filter(r => r.predicted_continuation_class === 'long_term').length;
+    const midC   = completed.filter(r => r.predicted_continuation_class === 'mid_term').length;
+    const earlyC = completed.filter(r => r.predicted_continuation_class === 'early_dropout').length;
+    const pendingC = ALL_DETAILS.filter(r => ['pending','uploading','transcribing','analyzing','failed'].includes(r.status) && (!branchFilter || r.recorded_location === branchFilter)).length;
+    const total = completed.length;
+    $('kpi-total').textContent     = total;
+    $('kpi-total-sub').textContent = branchFilter ? `${escape(branchFilter)}` : '完了ステータス';
+    $('kpi-ai-avg').textContent    = avg == null ? '--' : avg.toFixed(1);
+    $('kpi-ai-sub').textContent    = aiScores.length ? `n=${aiScores.length}, SD=${stddev(aiScores).toFixed(1)}` : '/ 100点';
+    $('kpi-long').textContent      = total ? `${pct(longC,total)}` : '--';
+    $('kpi-long-sub').textContent  = `${longC} 件`;
+    $('kpi-mid').textContent       = total ? `${pct(midC,total)}` : '--';
+    $('kpi-mid-sub').textContent   = `${midC} 件`;
+    $('kpi-early').textContent     = total ? `${pct(earlyC,total)}` : '--';
+    $('kpi-early-sub').textContent = `${earlyC} 件 — 要フォロー`;
+    $('kpi-pending').textContent   = pendingC;
+
+    // レーダー（全社平均）
+    const axes = ['empathy','specificity','elicitation','listening','reproducibility','rebound'];
+    const labelsJa = ['共感','具体性','深掘り','傾聴','再現性','リバウンド配慮'];
+    const data = axes.map(k => mean(completed.map(r => r[k]).filter(v => v != null)));
+    if (chOverviewRadar) chOverviewRadar.destroy();
+    chOverviewRadar = new Chart($('overview-radar'), {
+      type: 'radar',
+      data: { labels: labelsJa, datasets: [{ label: '平均', data, borderColor: '#4f8cff', backgroundColor: 'rgba(79,140,255,.15)', borderWidth: 2 }] },
+      options: { scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }, plugins: { legend: { display: false } } },
+    });
+
+    // ヒストグラム
+    const bins = [0,10,20,30,40,50,60,70,80,90,100];
+    const counts = new Array(bins.length - 1).fill(0);
+    for (const r of completed) {
+      if (r.overall == null) continue;
+      const b = Math.min(Math.floor(r.overall / 10), counts.length - 1);
+      counts[b]++;
+    }
+    const histLabels = bins.slice(0, -1).map((b, i) => `${b}-${bins[i+1]}`);
+    if (chOverviewHist) chOverviewHist.destroy();
+    chOverviewHist = new Chart($('overview-hist'), {
+      type: 'bar',
+      data: { labels: histLabels, datasets: [{ data: counts, backgroundColor: '#4f8cff' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 5 } } } },
+    });
+
+    // 継続予測クラス
+    const classOrder = ['long_term','mid_term','short_term','early_dropout'];
+    const classColors = ['#10b981','#4f8cff','#f59e0b','#ef4444'];
+    const classCounts = classOrder.map(c => completed.filter(r => r.predicted_continuation_class === c).length);
+    if (chOverviewClass) chOverviewClass.destroy();
+    chOverviewClass = new Chart($('overview-class'), {
+      type: 'bar',
+      data: { labels: classOrder, datasets: [{ data: classCounts, backgroundColor: classColors }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 5 } } } },
+    });
+
+    // クラス別発話特徴（avg_len, specificity_rate, food_detail_rate）
+    if (chOverviewSpeech) chOverviewSpeech.destroy();
+    drawClassSpeech(completed);
+
+    // 支社別 平均 overall_score
+    drawBranchList(completed);
+
+    // インサイト
+    drawInsights(completed);
+  }
+
+  async function drawClassSpeech(completed) {
+    // customer_speech_analyses も対象 interviewId だけ取得（refetch して結合）
+    const ids = completed.map(r => r.interview_id);
+    let speechRows = [];
+    if (ids.length) {
+      const { data } = await supabase
+        .from('customer_speech_analyses')
+        .select('interview_id, predicted_continuation_class, avg_utterance_length, specificity_rate, food_detail_rate')
+        .in('interview_id', ids);
+      speechRows = data || [];
+    }
+    const order = ['long_term','mid_term','short_term','early_dropout'];
+    const grouped = order.map(c => speechRows.filter(r => r.predicted_continuation_class === c));
+    const avgLen   = grouped.map(g => mean(g.map(r => num(r.avg_utterance_length)).filter(x => x != null)));
+    const specRate = grouped.map(g => mean(g.map(r => num(r.specificity_rate)).filter(x => x != null)) * 100);
+    const foodRate = grouped.map(g => mean(g.map(r => num(r.food_detail_rate)).filter(x => x != null)) * 100);
+    if (chOverviewSpeech) chOverviewSpeech.destroy();
+    chOverviewSpeech = new Chart($('overview-speech'), {
+      type: 'bar',
+      data: { labels: order, datasets: [
+        { label: '平均発話長(字)', data: avgLen,   backgroundColor: '#1e3a8a', yAxisID: 'y' },
+        { label: '具体性率(%)',     data: specRate, backgroundColor: '#10b981', yAxisID: 'y2' },
+        { label: '食事詳細率(%)',   data: foodRate, backgroundColor: '#f59e0b', yAxisID: 'y2' },
+      ]},
+      options: {
+        scales: {
+          y:  { beginAtZero: true, position: 'left',  title: { display: true, text: '発話長(字)' } },
+          y2: { beginAtZero: true, position: 'right', title: { display: true, text: '率 (%)' }, grid: { display: false }, max: 50 },
+        },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+      },
+    });
+  }
+
+  function drawBranchList(rows) {
+    const map = {};
+    for (const r of rows) {
+      const b = r.recorded_location || '不明';
+      map[b] = map[b] || [];
+      map[b].push(r);
+    }
+    const entries = Object.entries(map).sort((a, b) => b[1].length - a[1].length);
+    const overallAll = rows.map(r => r.overall).filter(v => v != null);
+    const globalAvg = overallAll.length ? mean(overallAll) : 0;
+    const html = entries.map(([branch, list]) => {
+      const overall = list.map(r => r.overall).filter(v => v != null);
+      const avg = overall.length ? mean(overall) : 0;
+      const cls = avg >= globalAvg + 5 ? '#10b981' : (avg <= globalAvg - 5 ? '#ef4444' : '#4f8cff');
+      const w = Math.max(2, avg);
+      return `
+        <div class="branch-row">
+          <div class="name">${escape(branch)}</div>
+          <div class="count">n=${list.length}</div>
+          <div class="branch-bar-wrap"><div class="branch-bar" style="width:${w}%;background:${cls}"></div><div class="branch-bar-label">${avg.toFixed(1)}</div></div>
+          <div style="text-align:right;font-size:12px;color:var(--color-muted);">早離 ${list.filter(r => r.predicted_continuation_class === 'early_dropout').length}</div>
+        </div>`;
+    }).join('');
+    $('branch-list').innerHTML = html || '<div style="color:var(--color-muted);font-size:13px;">該当データなし</div>';
+  }
+
+  function drawInsights(completed) {
+    if (!completed.length) {
+      $('insight-text').textContent = '対象データがありません。';
+      return;
+    }
+    const axes = ['empathy','specificity','elicitation','listening','reproducibility','rebound'];
+    const labels = { empathy:'共感', specificity:'具体性', elicitation:'深掘り', listening:'傾聴', reproducibility:'再現性', rebound:'リバウンド配慮' };
+    const avgs = axes.map(k => ({ k, v: mean(completed.map(r => r[k]).filter(v => v != null)) }));
+    avgs.sort((a, b) => a.v - b.v);
+    const earlyC = completed.filter(r => r.predicted_continuation_class === 'early_dropout').length;
+    const earlyPct = completed.length ? Math.round(earlyC * 100 / completed.length) : 0;
+    const overallAvg = mean(completed.map(r => r.overall).filter(v => v != null));
+    const top = [...completed].sort((a, b) => (b.overall||0) - (a.overall||0))[0];
+    const txt = `平均 overall は <strong>${overallAvg.toFixed(1)}</strong>。最も弱い軸は「<strong>${labels[avgs[0].k]} (${avgs[0].v.toFixed(1)})</strong>」「<strong>${labels[avgs[1].k]} (${avgs[1].v.toFixed(1)})</strong>」 — 全社共通の改善余地。継続予測は <strong>early_dropout が ${earlyPct}%</strong>。トップ案件は「${escape(top?.title || '--')}」(overall ${top?.overall ?? '--'})。`;
+    $('insight-text').innerHTML = txt;
+  }
+
+  // -------------------------
+  // 一覧タブの描画（フィルタ + ソート）
+  // -------------------------
+  function renderTable() {
+    const branch = $('list-branch').value;
+    const cls    = $('list-class').value;
+    const q      = $('list-search').value.trim().toLowerCase();
+    let rows = ALL_DETAILS.filter(r =>
+      (!branch || r.recorded_location === branch) &&
+      (!cls    || r.predicted_continuation_class === cls) &&
+      (!q || (r.title || '').toLowerCase().includes(q) || (r.customer_name || '').toLowerCase().includes(q))
+    );
+
+    // ソート
+    const { key, dir } = LIST_SORT;
+    rows.sort((a, b) => {
+      let av = a[key], bv = b[key];
+      // 日時は ISO 文字列のまま比較で OK
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === 'number' && typeof bv === 'number') return dir === 'asc' ? av - bv : bv - av;
+      return dir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+
+    // ソート方向アイコン
+    document.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+    const th = document.querySelector(`th[data-sort="${key}"]`);
+    if (th) th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+    // 件数
+    $('list-count').textContent = `${rows.length} 件 / 全 ${ALL_DETAILS.length} 件`;
+
+    const tbody = $('interviews-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--color-muted);padding:40px;">該当する面談がありません。</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr data-id="${r.interview_id}">
+        <td style="font-variant-numeric:tabular-nums;color:var(--color-muted);">${formatDate(r.recorded_at)}</td>
+        <td>${escape(r.title)}</td>
+        <td>${escape(r.recorded_location || '--')}</td>
+        <td><span class="badge badge-${r.status}">${statusLabel(r.status)}</span></td>
+        <td>${scoreCellHtml(r.overall, true)}</td>
+        <td>${scoreCellHtml(r.empathy)}</td>
+        <td>${scoreCellHtml(r.specificity)}</td>
+        <td>${scoreCellHtml(r.elicitation)}</td>
+        <td>${scoreCellHtml(r.listening)}</td>
+        <td>${scoreCellHtml(r.reproducibility)}</td>
+        <td>${scoreCellHtml(r.rebound)}</td>
+        <td>${r.predicted_continuation_class ? `<span class="badge badge-class-${r.predicted_continuation_class}">${continuationLabel(r.predicted_continuation_class)}</span>` : '--'}</td>
+        <td class="score-cell score-human">${formatScore(r.human_overall_score)}</td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('tr').forEach(tr => {
+      tr.addEventListener('click', () => openDetail(tr.dataset.id));
+    });
+  }
+
+  function scoreCellHtml(v, bold = false) {
+    if (v == null) return '--';
+    const cls = v >= 60 ? 'score-high' : v >= 40 ? 'score-mid' : 'score-low';
+    return `<span class="score-cell ${cls}" style="${bold ? 'font-weight:700;' : ''}">${Number(v).toFixed(0)}</span>`;
+  }
+
+  function statusLabel(s) {
+    return ({ pending:'待機', uploading:'UP中', transcribing:'文字起こし中', analyzing:'分析中', completed:'完了', failed:'失敗' })[s] || s;
+  }
+  function continuationLabel(c) {
+    return ({ long_term:'長期', mid_term:'中期', short_term:'短期', early_dropout:'早期離脱' })[c] || '--';
+  }
+  function formatScore(v) { return v != null ? Number(v).toFixed(1) : '--'; }
+  function formatDate(d) {
+    if (!d) return '--';
+    const dt = new Date(d);
+    return dt.toLocaleDateString('ja-JP', { year:'numeric',month:'2-digit',day:'2-digit' }) + ' ' +
+           dt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  }
+  function escape(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  // 数値変換
+  function num(x) { return x == null ? null : (typeof x === 'number' ? x : parseFloat(x)); }
+  function n(x)   { return num(x); }
+  function mean(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+  function stddev(a){ if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(mean(a.map(x => (x-m)**2))); }
+  function pct(c, total){ return total ? Math.round(c*100/total) + '%' : '--'; }
+
+  // タブ切替
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const t = btn.dataset.tab;
+      $('tab-overview').classList.toggle('hidden',  t !== 'overview');
+      $('tab-list').classList.toggle('hidden',      t !== 'list');
+      $('tab-customers').classList.toggle('hidden', t !== 'customers');
+      $('tab-staff').classList.toggle('hidden',     t !== 'staff');
+      if (t === 'customers') loadCustomers();
+      if (t === 'staff')     loadStaff();
+    });
+  });
+
+  // 概要タブ フィルタ
+  $('overview-branch').addEventListener('change', renderOverview);
+  $('overview-reset').addEventListener('click', () => { $('overview-branch').value=''; renderOverview(); });
+
+  // 一覧タブ フィルタ
+  $('list-branch').addEventListener('change', renderTable);
+  $('list-class').addEventListener('change',  renderTable);
+  $('list-search').addEventListener('input',  renderTable);
+  $('list-reset').addEventListener('click',   () => {
+    $('list-branch').value=''; $('list-class').value=''; $('list-search').value='';
+    LIST_SORT = { key: 'recorded_at', dir: 'desc' };
+    renderTable();
+  });
+
+  // ソート（th クリック）
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (LIST_SORT.key === k) LIST_SORT.dir = LIST_SORT.dir === 'asc' ? 'desc' : 'asc';
+      else { LIST_SORT.key = k; LIST_SORT.dir = (k === 'recorded_at' || k === 'overall') ? 'desc' : 'asc'; }
+      renderTable();
+    });
+  });
+
+  // -------------------------
+  // 詳細画面
+  // -------------------------
+  async function openDetail(id) {
+    currentInterviewId = id;
+    listSection.classList.add('hidden');
+    detailSection.classList.remove('hidden');
+
+    const { data: interview } = await supabase
+      .from('v_interviews_with_latest_score')
+      .select('*')
+      .eq('interview_id', id)
+      .single();
+
+    $('detail-title').textContent = interview.title;
+    $('detail-meta').textContent = `${formatDate(interview.recorded_at)}  |  顧客: ${interview.customer_name || '--'}  |  栄養士: ${interview.interviewer_name || '--'}  |  ${statusLabel(interview.status)}`;
+
+    if (interview.status !== 'completed') {
+      $('processing-note').classList.remove('hidden');
+      $('processing-status').textContent = statusLabel(interview.status);
+    } else {
+      $('processing-note').classList.add('hidden');
+    }
+
+    const [{ data: analyses }, { data: speech }, { data: transcripts }, { data: rawInterview }] = await Promise.all([
+      supabase.from('interview_analyses').select('*').eq('interview_id', id),
+      supabase.from('customer_speech_analyses').select('*').eq('interview_id', id).maybeSingle(),
+      supabase.from('interview_transcripts').select('*').eq('interview_id', id).order('segment_index'),
+      // ビューには video_storage_path が含まれないため、interviews 本体からも取得
+      supabase.from('interviews').select('video_storage_path').eq('id', id).maybeSingle(),
+    ]);
+
+    renderRadar(analyses || []);
+    renderSpeech(speech);
+    renderStrengthsAndImprovements(analyses || []);
+    renderTranscripts(transcripts || []);
+
+    // 音声プレイヤー: signed URL を生成して audio タグに渡す
+    // 1. interviews.video_storage_path 優先、2. なければ命名規則 {id}/recording.mp3 で試行
+    const storagePath = rawInterview?.video_storage_path || `${id}/recording.mp3`;
+    await loadAudio(storagePath);
+
+    // 人間メモ
+    await loadNote(id);
+
+    // 顧客・担当栄養士の紐付け
+    await loadAssignments(id);
+  }
+
+  // -------------------------
+  // 担当者紐付け（customer / staff）
+  // -------------------------
+  async function loadAssignments(interviewId) {
+    const custSel  = $('assign-customer');
+    const staffSel = $('assign-staff');
+    const status   = $('assign-status');
+    status.textContent = '';
+
+    // ドロップダウンを最新の master データで埋める
+    const [{ data: customers }, { data: staffs }, { data: cur }] = await Promise.all([
+      supabase.from('customers').select('id, name, email').order('name'),
+      supabase.from('staff').select('id, name, role').eq('is_active', true).in('role', ['面談担当','管理者']).order('name'),
+      supabase.from('interviews').select('customer_id, interviewer_staff_id').eq('id', interviewId).maybeSingle(),
+    ]);
+
+    custSel.innerHTML = '<option value="">未選択</option>' +
+      (customers || []).map(c => `<option value="${c.id}">${escape(c.name)}${c.email ? ' (' + escape(c.email) + ')' : ''}</option>`).join('');
+    staffSel.innerHTML = '<option value="">未選択</option>' +
+      (staffs || []).map(s => `<option value="${s.id}">${escape(s.name)} - ${escape(s.role)}</option>`).join('');
+
+    custSel.value  = cur?.customer_id           || '';
+    staffSel.value = cur?.interviewer_staff_id  || '';
+
+    $('assign-save-btn').onclick = async () => {
+      status.textContent = '保存中…';
+      const payload = {
+        customer_id:           custSel.value || null,
+        interviewer_staff_id:  staffSel.value || null,
+      };
+      const { error } = await supabase.from('interviews').update(payload).eq('id', interviewId);
+      if (error) {
+        status.innerHTML = `<span style="color:var(--color-danger);">保存失敗: ${escape(error.message)}</span>`;
+        return;
+      }
+      status.innerHTML = `<span style="color:var(--color-success);">✅ 保存しました</span>`;
+      // detail-meta も再描画する（顧客名・栄養士名表示用）
+      const customerName = (customers || []).find(c => c.id === custSel.value)?.name || '--';
+      const staffName    = (staffs    || []).find(s => s.id === staffSel.value)?.name || '--';
+      $('detail-meta').textContent =
+        ($('detail-meta').textContent.split('|')[0] || '').trim() +
+        `  |  顧客: ${customerName}  |  栄養士: ${staffName}`;
+      // 一覧も裏で再取得（次に戻ったときに反映）
+      loadAll();
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    };
+  }
+
+  // -------------------------
+  // 人間メモ（interview_notes テーブル）
+  // -------------------------
+  async function loadNote(interviewId) {
+    const ta     = $('note-textarea');
+    const status = $('note-status');
+    const meta   = $('note-meta');
+    ta.value = '';
+    status.textContent = '読み込み中…';
+    meta.textContent = '';
+
+    try {
+      const { data, error } = await supabase
+        .from('interview_notes')
+        .select('content, author_email, updated_at')
+        .eq('interview_id', interviewId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        ta.value = data.content || '';
+        meta.textContent = `最終更新: ${formatDateTime(data.updated_at)} / by ${data.author_email || '--'}`;
+        status.textContent = '✅ 読み込み済み';
+      } else {
+        status.textContent = '🆕 未記入';
+        meta.textContent = '';
+      }
+    } catch (e) {
+      status.innerHTML = `<span style="color:var(--color-danger);">読み込み失敗: ${escape(e.message)}</span>`;
+      console.error(e);
+      return;
+    }
+
+    // ボタンクリック保存
+    $('note-save-btn').onclick = () => saveNote(interviewId);
+    // textarea から離れたとき自動保存
+    ta.onblur = () => saveNote(interviewId);
+    // Cmd/Ctrl+S で保存
+    ta.onkeydown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        saveNote(interviewId);
+      }
+    };
+  }
+
+  let lastSavedContent = null;
+  let saveTimer = null;
+  async function saveNote(interviewId) {
+    const ta     = $('note-textarea');
+    const status = $('note-status');
+    const meta   = $('note-meta');
+    const content = ta.value;
+    if (content === lastSavedContent) {
+      status.textContent = '変更なし';
+      return;
+    }
+    clearTimeout(saveTimer);
+    status.textContent = '保存中…';
+
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const email = sess?.session?.user?.email || null;
+
+      const payload = { interview_id: interviewId, author_email: email, content };
+      // upsert: interview_id がユニーク制約で既存があれば更新、無ければ挿入
+      const { data, error } = await supabase
+        .from('interview_notes')
+        .upsert(payload, { onConflict: 'interview_id' })
+        .select('updated_at')
+        .single();
+      if (error) throw error;
+      lastSavedContent = content;
+      status.innerHTML = `<span style="color:var(--color-success);">✅ 保存しました</span>`;
+      meta.textContent = `最終更新: ${formatDateTime(data.updated_at)} / by ${email || '--'}`;
+      saveTimer = setTimeout(() => { status.textContent = ''; }, 3000);
+    } catch (e) {
+      status.innerHTML = `<span style="color:var(--color-danger);">保存失敗: ${escape(e.message)}</span>`;
+      console.error(e);
+    }
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return '--';
+    const d = new Date(iso);
+    return d.toLocaleString('ja-JP', { year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit' });
+  }
+
+  async function loadAudio(storagePath) {
+    const audio = $('audio-player');
+    const status = $('audio-status');
+    audio.style.display = 'none';
+    if (!storagePath) {
+      status.textContent = '⚠️ 音声ファイルが Storage に登録されていません';
+      return;
+    }
+    status.textContent = '署名付き URL を生成中…';
+    try {
+      // 1 時間有効の署名付き URL（authenticated 用）
+      const { data, error } = await supabase
+        .storage
+        .from('interview-recordings')
+        .createSignedUrl(storagePath, 3600);
+      if (error) throw error;
+      audio.src = data.signedUrl;
+      audio.style.display = 'block';
+      status.innerHTML = `<span style="color:var(--color-success);">✅ 再生可能</span> <span style="color:var(--color-muted);">(${escape(storagePath)} | URL は 1 時間有効)</span>`;
+
+      // 速度ボタンを設定
+      document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (parseFloat(btn.dataset.rate) === 1.0) btn.classList.add('active');
+        btn.onclick = () => {
+          audio.playbackRate = parseFloat(btn.dataset.rate);
+          document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        };
+      });
+
+      // 再生中はその時刻のセグメントをハイライト
+      audio.ontimeupdate = () => updateActiveSegment(audio.currentTime);
+    } catch (e) {
+      status.innerHTML = `<span style="color:var(--color-danger);">❌ 音声の読み込みに失敗: ${escape(e.message)}</span>`;
+      console.error('Audio load failed:', e);
+    }
+  }
+
+  function updateActiveSegment(t) {
+    const segments = document.querySelectorAll('.transcript-segment.seekable');
+    let activeIdx = -1;
+    segments.forEach((el, i) => {
+      const start = parseFloat(el.dataset.start || '0');
+      const end   = parseFloat(el.dataset.end   || '0');
+      if (t >= start && t < end) activeIdx = i;
+    });
+    segments.forEach((el, i) => el.classList.toggle('active-segment', i === activeIdx));
+    // 自動スクロール（オプション）
+    if (activeIdx >= 0) {
+      const el = segments[activeIdx];
+      const list = document.getElementById('transcript-list');
+      const elTop = el.offsetTop - list.offsetTop;
+      if (elTop < list.scrollTop || elTop > list.scrollTop + list.clientHeight - el.clientHeight) {
+        list.scrollTop = elTop - list.clientHeight / 3;
+      }
+    }
+  }
+
+  $('back-to-list').addEventListener('click', () => {
+    detailSection.classList.add('hidden');
+    listSection.classList.remove('hidden');
+    currentInterviewId = null;
+  });
+
+  function pickBestAnalysis(analyses, source) {
+    return analyses
+      .filter(a => a.analysis_source === source)
+      .sort((x, y) => {
+        const scopeRank = (s) => s === 'live_only' ? 0 : (s === 'full' ? 1 : 2);
+        const sx = scopeRank(x.scope), sy = scopeRank(y.scope);
+        if (sx !== sy) return sx - sy;
+        return (y.version ?? 0) - (x.version ?? 0);
+      })[0];
+  }
+
+  function renderRadar(analyses) {
+    const labels = ['共感の深さ', '具体性', '引き出し', '傾聴', '再現性', 'リバウンド配慮'];
+    const ai    = pickBestAnalysis(analyses, 'ai');
+    const human = pickBestAnalysis(analyses, 'human');
+
+    const toData = (a) => a ? [
+      Number(a.empathy_score              || 0),
+      Number(a.specificity_score          || 0),
+      Number(a.elicitation_depth_score    || 0),
+      Number(a.listening_quality_score    || 0),
+      Number(a.reproducibility_score      || 0),
+      Number(a.rebound_consideration_score|| 0),
+    ] : null;
+
+    if (radarChart) radarChart.destroy();
+
+    const datasets = [];
+    if (ai)    datasets.push({ label: 'AI',   data: toData(ai),    borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.15)' });
+    if (human) datasets.push({ label: '人間', data: toData(human), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,.15)' });
+
+    radarChart = new Chart($('score-radar'), {
+      type: 'radar',
+      data: { labels, datasets },
+      options: {
+        scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } },
+        plugins: { legend: { position: 'bottom' } },
+      },
+    });
+  }
+
+  function renderSpeech(speech) {
+    if (speechChart) speechChart.destroy();
+    if (!speech) {
+      $('speech-bar').parentElement.innerHTML += '<p style="color:var(--color-muted);font-size:13px;">顧客発話分析データなし</p>';
+      return;
+    }
+    speechChart = new Chart($('speech-bar'), {
+      type: 'bar',
+      data: {
+        labels: ['具体性率', '意志力ワード率', '食事詳細率', '自発開示率'],
+        datasets: [{
+          label: '比率（%）',
+          data: [
+            (speech.specificity_rate          || 0) * 100,
+            (speech.willpower_word_rate       || 0) * 100,
+            (speech.food_detail_rate          || 0) * 100,
+            (speech.proactive_disclosure_rate || 0) * 100,
+          ],
+          backgroundColor: ['#10b981','#ef4444','#4f8cff','#f59e0b'],
+        }],
+      },
+      options: {
+        scales: { y: { min: 0, max: 100 } },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  function renderStrengthsAndImprovements(analyses) {
+    const ai = pickBestAnalysis(analyses, 'ai');
+    const ulS = $('strengths-list');
+    const ulI = $('improvements-list');
+    ulS.innerHTML = '';
+    ulI.innerHTML = '';
+    if (!ai) {
+      $('summary-text').textContent = 'AI分析待ち';
+      return;
+    }
+    $('summary-text').textContent = ai.summary || '';
+    (ai.strengths || []).forEach(s => {
+      const li = document.createElement('li');
+      li.textContent = typeof s === 'string' ? s : (s.point || JSON.stringify(s));
+      ulS.appendChild(li);
+    });
+    (ai.improvement_points || []).forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = typeof p === 'string' ? p : (p.point || JSON.stringify(p));
+      ulI.appendChild(li);
+    });
+  }
+
+  function renderTranscripts(segments) {
+    const list = $('transcript-list');
+    if (segments.length === 0) {
+      list.innerHTML = '<p style="color:var(--color-muted);text-align:center;padding:40px;">文字起こしデータなし</p>';
+      return;
+    }
+    list.innerHTML = segments.map(s => `
+      <div class="transcript-segment seekable" data-start="${s.start_seconds || 0}" data-end="${s.end_seconds || 0}">
+        <span class="ts">${formatTime(s.start_seconds)}</span>
+        <span class="speaker ${s.speaker_role}">${speakerLabel(s.speaker_role)}${s.speaker_name ? `(${escape(s.speaker_name)})` : ''}</span>
+        <span>${escape(s.text)}</span>
+      </div>
+    `).join('');
+    // クリックで該当時刻にシーク + 自動再生
+    list.querySelectorAll('.transcript-segment.seekable').forEach(el => {
+      el.addEventListener('click', () => {
+        const audio = $('audio-player');
+        if (!audio.src) return;
+        const t = parseFloat(el.dataset.start || '0');
+        audio.currentTime = t;
+        audio.play().catch(err => console.warn('autoplay blocked:', err));
+      });
+    });
+  }
+  function speakerLabel(r) {
+    return ({ interviewer:'栄養士', customer:'お客様', other:'その他', unknown:'?' })[r] || r;
+  }
+  function formatTime(sec) {
+    sec = Math.floor(sec);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  // -------------------------
+  // アップロード
+  // -------------------------
+  $('upload-btn').addEventListener('click', async () => {
+    uploadModal.classList.remove('hidden');
+    await loadCustomersAndStaff();
+  });
+  $('upload-cancel').addEventListener('click', () => uploadModal.classList.add('hidden'));
+
+  async function loadCustomersAndStaff() {
+    const [{ data: customers }, { data: staff }] = await Promise.all([
+      supabase.from('customers').select('id,name').order('name'),
+      supabase.from('staff').select('id,name,role').eq('is_active', true).order('name'),
+    ]);
+    $('upload-customer').innerHTML = '<option value="">未選択</option>' +
+      (customers || []).map(c => `<option value="${c.id}">${escape(c.name)}</option>`).join('');
+    $('upload-staff').innerHTML = '<option value="">未選択</option>' +
+      (staff || []).filter(s => s.role === '面談担当' || s.role === '管理者')
+        .map(s => `<option value="${s.id}">${escape(s.name)}</option>`).join('');
+  }
+
+  $('upload-submit').addEventListener('click', async () => {
+    const title = $('upload-title').value.trim();
+    const file = $('upload-file').files[0];
+    if (!title || !file) {
+      alert('タイトルとファイルは必須です');
+      return;
+    }
+
+    $('upload-submit').disabled = true;
+    $('upload-progress').classList.remove('hidden');
+    $('upload-progress-text').textContent = 'interviewレコード作成中...';
+
+    try {
+      const recordedDate = $('upload-recorded-date').value || null;
+      const { data: row, error: insertErr } = await supabase
+        .from('interviews')
+        .insert({
+          title,
+          recorded_at: recordedDate ? `${recordedDate}T00:00:00Z` : null,
+          recorded_location: $('upload-location').value || null,
+          customer_id: $('upload-customer').value || null,
+          interviewer_staff_id: $('upload-staff').value || null,
+          video_source: 'upload',
+          file_size_bytes: file.size,
+          status: 'uploading',
+        })
+        .select()
+        .single();
+      if (insertErr) throw insertErr;
+
+      const path = `${row.id}/${file.name}`;
+      $('upload-progress-text').textContent = 'ファイルアップロード中...';
+      const { error: uploadErr } = await supabase.storage
+        .from('interview-recordings')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (uploadErr) throw uploadErr;
+
+      await supabase.from('interviews')
+        .update({ video_storage_path: path, status: 'pending' })
+        .eq('id', row.id);
+
+      $('upload-progress-text').textContent = 'アップロード完了！処理は別途キックしてください。';
+      setTimeout(() => {
+        uploadModal.classList.add('hidden');
+        $('upload-progress').classList.add('hidden');
+        $('upload-submit').disabled = false;
+        $('upload-title').value = '';
+        $('upload-file').value = '';
+        loadAll();
+      }, 1500);
+    } catch (e) {
+      alert('アップロード失敗: ' + e.message);
+      $('upload-submit').disabled = false;
+      $('upload-progress').classList.add('hidden');
+    }
+  });
+
+  $('reanalyze-btn').addEventListener('click', async () => {
+    if (!currentInterviewId) return;
+    if (!confirm('AI分析を再実行しますか？既存の分析結果は新しいversionとして追加されます。')) return;
+    alert('再分析機能はEdge Function実装後に有効になります。');
+  });
+
+  // =========================
+  // 顧客マスタ
+  // =========================
+  let CUSTOMERS = [];
+  async function loadCustomers() {
+    const tbody = $('customers-tbody');
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--color-muted);padding:20px;">読み込み中...</td></tr>`;
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--color-danger);">読み込み失敗: ${escape(error.message)}</td></tr>`;
+      return;
+    }
+    CUSTOMERS = data || [];
+    renderCustomers();
+  }
+  function renderCustomers() {
+    const q = ($('cust-search').value || '').toLowerCase().trim();
+    const rows = CUSTOMERS.filter(r =>
+      !q || (r.name||'').toLowerCase().includes(q) || (r.email||'').toLowerCase().includes(q) || (r.phone||'').includes(q)
+    );
+    const tbody = $('customers-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--color-muted);padding:40px;">該当する顧客がありません。</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr data-id="${r.id}">
+        <td><strong>${escape(r.name)}</strong></td>
+        <td>${escape(r.email||'--')}</td>
+        <td>${escape(r.phone||'--')}</td>
+        <td>${escape(r.line_id||'--')}</td>
+        <td>${escape(r.source||'--')}</td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escape(r.notes||'')}</td>
+        <td style="color:var(--color-muted);font-size:12px;">${formatDate(r.created_at)}</td>
+        <td>
+          <button class="btn btn-secondary cust-edit" data-id="${r.id}" style="padding:4px 10px;font-size:12px;">編集</button>
+          <button class="btn btn-secondary cust-del"  data-id="${r.id}" style="padding:4px 10px;font-size:12px;color:var(--color-danger);">削除</button>
+        </td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('.cust-edit').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openCustomerModal(b.dataset.id); }));
+    tbody.querySelectorAll('.cust-del').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); deleteCustomer(b.dataset.id); }));
+  }
+  function openCustomerModal(id = null) {
+    const cust = id ? CUSTOMERS.find(x => x.id === id) : null;
+    $('cust-modal-title').textContent = cust ? '顧客を編集' : '顧客を追加';
+    $('cust-id').value     = cust?.id    || '';
+    $('cust-name').value   = cust?.name  || '';
+    $('cust-email').value  = cust?.email || '';
+    $('cust-phone').value  = cust?.phone || '';
+    $('cust-line').value   = cust?.line_id || '';
+    $('cust-source').value = cust?.source || 'web';
+    $('cust-notes').value  = cust?.notes || '';
+    $('cust-modal').classList.remove('hidden');
+  }
+  async function saveCustomer() {
+    const name = $('cust-name').value.trim();
+    if (!name) { alert('名前は必須です'); return; }
+    const payload = {
+      name,
+      email:   $('cust-email').value || null,
+      phone:   $('cust-phone').value || null,
+      line_id: $('cust-line').value  || null,
+      source:  $('cust-source').value || null,
+      notes:   $('cust-notes').value  || null,
+    };
+    const id = $('cust-id').value;
+    let q;
+    if (id) q = supabase.from('customers').update(payload).eq('id', id);
+    else    q = supabase.from('customers').insert(payload);
+    const { error } = await q;
+    if (error) { alert('保存失敗: ' + error.message); return; }
+    $('cust-modal').classList.add('hidden');
+    await loadCustomers();
+  }
+  async function deleteCustomer(id) {
+    if (!confirm('本当に削除しますか？紐付いた面談は customer_id が NULL になります。')) return;
+    const { error } = await supabase.from('customers').delete().eq('id', id);
+    if (error) { alert('削除失敗: ' + error.message); return; }
+    await loadCustomers();
+  }
+  $('cust-add-btn').addEventListener('click', () => openCustomerModal());
+  $('cust-search').addEventListener('input', renderCustomers);
+  $('cust-cancel').addEventListener('click', () => $('cust-modal').classList.add('hidden'));
+  $('cust-save').addEventListener('click', saveCustomer);
+
+  // =========================
+  // 栄養士（staff）マスタ
+  // =========================
+  let STAFF = [];
+  async function loadStaff() {
+    const tbody = $('staff-tbody');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--color-muted);padding:20px;">読み込み中...</td></tr>`;
+    const { data, error } = await supabase
+      .from('staff')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--color-danger);">読み込み失敗: ${escape(error.message)}</td></tr>`;
+      return;
+    }
+    STAFF = data || [];
+    renderStaff();
+  }
+  function renderStaff() {
+    const q = ($('staff-search').value || '').toLowerCase().trim();
+    const role = $('staff-role-filter').value;
+    const rows = STAFF.filter(r =>
+      (!q   || (r.name||'').toLowerCase().includes(q) || (r.email||'').toLowerCase().includes(q)) &&
+      (!role || r.role === role)
+    );
+    const tbody = $('staff-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--color-muted);padding:40px;">該当する栄養士がありません。</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr data-id="${r.id}">
+        <td><strong>${escape(r.name)}</strong></td>
+        <td>${escape(r.email||'--')}</td>
+        <td><span class="badge" style="background:#dbeafe;color:#1e3a8a;">${escape(r.role)}</span></td>
+        <td>${r.is_active ? '✅' : '⏸'}</td>
+        <td style="color:var(--color-muted);font-size:12px;">${formatDate(r.created_at)}</td>
+        <td>
+          <button class="btn btn-secondary staff-edit" data-id="${r.id}" style="padding:4px 10px;font-size:12px;">編集</button>
+          <button class="btn btn-secondary staff-del"  data-id="${r.id}" style="padding:4px 10px;font-size:12px;color:var(--color-danger);">削除</button>
+        </td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('.staff-edit').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openStaffModal(b.dataset.id); }));
+    tbody.querySelectorAll('.staff-del').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); deleteStaff(b.dataset.id); }));
+  }
+  function openStaffModal(id = null) {
+    const s = id ? STAFF.find(x => x.id === id) : null;
+    $('staff-modal-title').textContent = s ? '栄養士を編集' : '栄養士を追加';
+    $('staff-id').value     = s?.id    || '';
+    $('staff-name').value   = s?.name  || '';
+    $('staff-email').value  = s?.email || '';
+    $('staff-role').value   = s?.role  || '面談担当';
+    $('staff-active').checked = s ? !!s.is_active : true;
+    $('staff-modal').classList.remove('hidden');
+  }
+  async function saveStaff() {
+    const name = $('staff-name').value.trim();
+    if (!name) { alert('名前は必須です'); return; }
+    const payload = {
+      name,
+      email:     $('staff-email').value || null,
+      role:      $('staff-role').value,
+      is_active: $('staff-active').checked,
+    };
+    const id = $('staff-id').value;
+    let q;
+    if (id) q = supabase.from('staff').update(payload).eq('id', id);
+    else    q = supabase.from('staff').insert(payload);
+    const { error } = await q;
+    if (error) { alert('保存失敗: ' + error.message); return; }
+    $('staff-modal').classList.add('hidden');
+    await loadStaff();
+  }
+  async function deleteStaff(id) {
+    if (!confirm('本当に削除しますか？紐付いた面談は interviewer_staff_id が NULL になります。')) return;
+    const { error } = await supabase.from('staff').delete().eq('id', id);
+    if (error) { alert('削除失敗: ' + error.message); return; }
+    await loadStaff();
+  }
+  $('staff-add-btn').addEventListener('click', () => openStaffModal());
+  $('staff-search').addEventListener('input', renderStaff);
+  $('staff-role-filter').addEventListener('change', renderStaff);
+  $('staff-cancel').addEventListener('click', () => $('staff-modal').classList.add('hidden'));
+  $('staff-save').addEventListener('click', saveStaff);
+
+  // -------------------------
+  // 起動
+  // -------------------------
+  checkAuth();
+
+  // 60秒ごとに再読込（処理中ステータスの更新用）
+  setInterval(() => {
+    if (!detailSection.classList.contains('hidden')) return;
+    if (!app.classList.contains('hidden')) loadAll();
+  }, 60000);
+  } // end main()
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>ハンサミング モバイル（LINE担当）</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--ink:#1f2937;--mute:#6b7280;--line:#eceef1;--bg:#f5f6f8;--brand:#2563eb;--bad:#dc2626;--warn:#d97706;--ok:#16a34a;--card:#fff}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans CJK JP',sans-serif;background:#d8dadf;color:var(--ink);line-height:1.55}
+/* phone frame (PCでは中央に電話幅) */
+.phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(0,0,0,.12)}
+.appbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;min-height:54px}
+.appbar .back{font-size:20px;color:var(--brand);cursor:pointer;line-height:1}
+.appbar .title{font-size:16px;font-weight:700;flex:1}
+.appbar .sub{font-size:11px;color:var(--mute);font-weight:400}
+.appbar .av{width:30px;height:30px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.scroll{flex:1;overflow-y:auto;padding:14px 14px 86px}
+.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);z-index:20}
+.bottomnav button{background:none;border:none;padding:8px 0 10px;font-size:10px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.bottomnav button .ic{font-size:20px;line-height:1}
+.bottomnav button.on{color:var(--brand);font-weight:700}
+.greet{font-size:13px;color:var(--mute);margin-bottom:10px}
+.pills{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.pill{flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pill .n{font-weight:800}
+.pill.urgent .n{color:var(--bad)} .pill.important .n{color:var(--warn)} .pill.normal .n{color:var(--brand)}
+.pill.on .n{color:#fff}
+.seclabel{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--mute);margin:14px 2px 8px}
+.uc{background:var(--card);border-radius:14px;padding:13px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;cursor:pointer;border:1px solid var(--line)}
+.uc:active{background:#f1f5f9}
+.uc .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.uc .dot.urgent{background:var(--bad)} .uc .dot.important{background:var(--warn)} .uc .dot.normal{background:var(--brand)} .uc .dot.watch{background:#cbd5e1}
+.uc .mid{flex:1;min-width:0}
+.uc .nm{font-size:15px;font-weight:700}
+.uc .meta{font-size:11px;color:var(--mute);margin-top:1px}
+.uc .snip{font-size:12px;color:#475569;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uc .right{flex:0 0 auto;text-align:right}
+.uc .days{font-size:11px;color:var(--mute)}
+.sig{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:3px}
+.sig.high{background:#fee2e2;color:#991b1b} .sig.medium{background:#fef3c7;color:#92400e}
+.watchbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mute);text-align:center}
+/* detail */
+.dhead{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+.dhead .nm{font-size:18px;font-weight:800}
+.dhead .tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;background:#eef2ff;color:#4338ca;border-radius:8px;padding:3px 9px}
+.tag.warn{background:#fef3c7;color:#92400e}.tag.bad{background:#fee2e2;color:#991b1b}
+.block{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+.block h3{font-size:13px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.bub{background:#f5f6f8;border-radius:12px;padding:9px 12px;margin-bottom:7px;font-size:13px}
+.bub .d{font-size:10px;color:var(--mute);margin-bottom:2px}
+.bub.bad{background:#fef2f2}.bub.warn{background:#fffbeb}
+.alert{border-left:3px solid var(--bad);background:#fef2f2;border-radius:8px;padding:8px 11px;margin-bottom:7px;font-size:12px}
+.alert .t{font-weight:700;color:#991b1b}
+.ai{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid #dbeafe;border-radius:12px;padding:12px;font-size:13.5px;line-height:1.7;margin-bottom:10px}
+.ai .lab{font-size:10px;font-weight:700;color:#4338ca;letter-spacing:.5px;margin-bottom:5px}
+.tones{display:flex;gap:6px;overflow-x:auto;margin:10px 0}
+.tone{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer}
+.tone.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+textarea{width:100%;min-height:96px;border:1px solid #cbd5e1;border-radius:12px;padding:11px;font-size:14px;font-family:inherit;resize:vertical}
+.btn{display:block;width:100%;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+.btn:active{filter:brightness(.94)}
+.btn.sec{background:#fff;color:var(--brand);border:1px solid #cbd5e1}
+.row2{display:flex;gap:8px}.row2 .btn{margin-top:0}
+.know{border-left:3px solid #f59e0b;background:#fffbeb;border-radius:8px;padding:9px 11px;margin-bottom:7px}
+.know .t{font-size:13px;font-weight:700}.know .b{font-size:12px;color:#475569;margin-top:2px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;z-index:40;pointer-events:none}
+.toast.show{opacity:1}
+.muted{color:var(--mute);font-size:12px}
+.center{text-align:center;color:var(--mute);padding:30px 0;font-size:13px}
+.rolechip{background:#eef2ff;color:#3730a3;border:none;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px}
+.kpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi3 .k{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
+.kpi3 .k .v{font-size:20px;font-weight:800;line-height:1.1}.kpi3 .k .l{font-size:10px;color:var(--mute);margin-top:2px}
+.scorerow{display:grid;grid-template-columns:96px 1fr 30px;gap:8px;align-items:center;font-size:12px;margin:6px 0}
+.sb{background:#e5e7eb;height:7px;border-radius:4px;overflow:hidden}.sb>div{height:100%;background:var(--brand)}
+.stage{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px}
+.stage.done{background:#dcfce7;color:#166534}.stage.review{background:#fef3c7;color:#92400e}.stage.prep{background:#f1f5f9;color:#475569}
+.seccard{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.sechead{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.sechead .cnt{display:inline-block;background:#f1f5f9;color:#475569;border-radius:999px;padding:1px 8px;font-size:12px;margin-left:4px}
+.chev{color:#94a3b8;font-size:13px}
+.seclist{padding:2px 10px 8px}
+.notice{padding:10px 14px;border-top:1px solid var(--line)}
+.notice.un{background:#f3f9ff}
+.notice .nh{font-size:13px;font-weight:600}
+.notice .nmeta{font-size:11px;color:var(--mute);margin-top:1px}
+.notice .nb{font-size:12px;color:#475569;margin-top:4px;line-height:1.5}
+</style></head><body>
+<div class="phone">
+  <div class="appbar" id="appbar"></div>
+  <div class="scroll" id="app"><div class="center">読み込み中…</div></div>
+  <div class="bottomnav" id="nav"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL='https://shmsyuohusfjjbopqokr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+let sb=null;
+const DEMO={'LINE担当':{id:'88a3d1a9-53ae-4de1-9ac6-23800e2b58d5',name:'高橋 優子'},'統括コーチ':{id:'5cbcf5ed-7dc2-4114-b071-0a1134b1c738',name:'正村 ゆり'},'面談担当':{id:'b2a36891-0eee-4dd6-afdf-06f2f023534b',name:'田中 美咲'}};
+const LINE_COACHES=[{id:'88a3d1a9-53ae-4de1-9ac6-23800e2b58d5',name:'高橋 優子'},{id:'6b38ac1c-a0ea-487d-b81a-4f61a0965f05',name:'佐藤 健太'}];
+const NAV={
+ 'LINE担当':[['today','📋','今日'],['board','👥','担当'],['knowledge','💡','知見'],['me','🙂','自分']],
+ '統括コーチ':[['suphome','🛡','ホーム'],['supcoaches','👥','コーチ'],['knowledge','💡','知見'],['me','🙂','自分']],
+ '面談担当':[['ivlist','🗓','面談'],['knowledge','💡','知見'],['me','🙂','自分']]
+};
+const ROLECHIP={'LINE担当':'🟦 LINE','統括コーチ':'🛡 統括','面談担当':'🗓 面談'};
+const SIG={willpower_word_spike:'意志力ワード急増',food_detail_drop:'食事詳細率低下',post_silence:'無投稿',char_count_decline:'文字数減少',sentiment_negative_surge:'ネガティブ急増',reply_unread:'未読'};
+const SEGJP={urgent:'緊急',important:'重要',normal:'通常',watch:'静観'};
+const TONES=[['empathy','共感'],['question','質問'],['suggestion','具体提案'],['praise','褒め']];
+const esc=s=>s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const S={staff:null, role:null, roleEff:'LINE担当', me:null, coach:null, rows:[], filter:'all', sel:null, detail:null, tone:'empathy', caseType:'other', aiText:'', tab:'today', sup:null, iv:null, ivk:null};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+
+async function init(){
+  S.staff=null;
+  try{
+    const sess=await Promise.race([sb.auth.getSession(), new Promise(r=>setTimeout(()=>r({data:{session:null}}),2500))]);
+    const session=sess&&sess.data&&sess.data.session;
+    if(session){ const {data:st}=await sb.from('staff').select('*').eq('email',session.user.email).maybeSingle(); if(st) S.staff=st; }
+  }catch(e){}
+  S.role = (S.staff && ['LINE担当','統括コーチ','面談担当'].includes(S.staff.role)) ? S.staff.role : null;
+  await enterRole(S.role || 'LINE担当');
+}
+function defaultTab(role){ return role==='統括コーチ'?'suphome':role==='面談担当'?'ivlist':'today'; }
+async function enterRole(role){
+  S.roleEff=role; S.sel=null; S.filter='all';
+  S.me = (S.staff && S.staff.role===role) ? {id:S.staff.id,name:S.staff.name} : DEMO[role];
+  try{
+    if(role==='LINE担当'){ S.coach={id:S.me.id,name:S.me.name}; await loadCheckin(); try{ const {data}=await sb.rpc('get_coach_notices',{p_staff:S.me.id}); S.notices=data||[]; }catch(e){ S.notices=[]; } }
+    else if(role==='統括コーチ'){ await loadSup(); }
+    else if(role==='面談担当'){ await loadIv(); }
+  }catch(e){}
+  renderNav();
+  go(defaultTab(role));
+}
+function cycleRole(){ const order=['LINE担当','統括コーチ','面談担当']; const i=order.indexOf(S.roleEff); enterRole(order[(i+1)%order.length]); }
+function renderNav(){
+  const items=NAV[S.roleEff]||NAV['LINE担当'];
+  document.getElementById('nav').innerHTML=items.map(([t,ic,l])=>`<button data-t="${t}"><span class="ic">${ic}</span>${l}</button>`).join('');
+  document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+}
+// ============ 統括コーチ ============
+async function loadSup(){
+  let cards=[];
+  try{ const {data}=await sb.rpc('list_knowledge_cards',{p_sort:'new',p_limit:100}); cards=data||[]; }catch(e){}
+  const coaches=[];
+  for(const c of LINE_COACHES){
+    try{ const {data}=await sb.rpc('line_checkin',{coach:c.id}); const rows=data||[];
+      coaches.push({name:c.name,total:rows.length,urgent:rows.filter(r=>r.segment==='urgent').length,important:rows.filter(r=>r.segment==='important').length});
+    }catch(e){ coaches.push({name:c.name,total:0,urgent:0,important:0}); }
+  }
+  S.sup={cards,coaches};
+}
+function renderSupHome(){
+  setBar('統括コーチ ホーム','本部⇔現場の支援役',null);
+  const cards=(S.sup&&S.sup.cards)||[]; const peer=cards.filter(c=>c.status==='peer'); const official=cards.filter(c=>c.status==='official'); const recent=cards.slice(0,4);
+  const coaches=(S.sup&&S.sup.coaches)||[];
+  const triage=peer.slice(0,4).map(c=>`<div class="uc" onclick="go('knowledge')"><div class="dot important"></div><div class="mid"><div class="nm" style="font-size:14px">${esc(c.title)}</div><div class="meta">✍${esc(c.author_name||'—')} ・ 👍${c.total||0} ・ 公式化待ち</div></div><div class="right"><div style="font-size:18px;color:#cbd5e1">›</div></div></div>`).join('')||'<div class="watchbar">公式化待ちはありません</div>';
+  const voice=recent.map(c=>`<div class="bub"><div class="d">${esc(c.author_name||'—')}</div>${esc(c.title)}</div>`).join('')||'<div class="muted">まだありません</div>';
+  document.getElementById('app').innerHTML=`
+    <div class="greet">${esc(S.me&&S.me.name||'')}さん（統括コーチ）。評価ではなく、現場の支援と良い対応例の横展開が役目です。</div>
+    <div class="kpi3">
+      <div class="k"><div class="v" style="color:var(--warn)">${peer.length}</div><div class="l">公式化待ち</div></div>
+      <div class="k"><div class="v" style="color:var(--ok)">${official.length}</div><div class="l">公式化済</div></div>
+      <div class="k"><div class="v">${coaches.length}</div><div class="l">担当コーチ</div></div>
+    </div>
+    <div class="block"><h3>🛡 公式化トリアージ</h3>${triage}<button class="btn sec" style="margin-top:8px" onclick="go('knowledge')">知見フィードで公式化 →</button></div>
+    <div class="block"><h3>👥 担当コーチの状況</h3>${coaches.map(c=>`<div class="uc"><div class="mid"><div class="nm" style="font-size:14px">${esc(c.name)}</div><div class="meta">担当${c.total}名 ・ 🚨${c.urgent} 🟡${c.important}</div></div>${c.urgent>=2?'<span class="sig high">要相談</span>':'<span class="sig" style="background:#dcfce7;color:#166534">適正</span>'}</div>`).join('')||'<div class="muted">—</div>'}</div>
+    <div class="block"><h3>📣 現場の声 → 本部</h3>${voice}</div>
+    <div class="block"><h3>💬 相談（Teams・プロト）</h3><div class="bub warn">「LINE対応人数を5名減らしたい」<div class="d">高橋さん</div></div><div class="muted" style="margin-top:6px">相談の一次窓口はTeams。ここは記録・対応例化を補助。</div></div>`;
+}
+function renderSupCoaches(){
+  const coaches=(S.sup&&S.sup.coaches)||[];
+  setBar('担当コーチ',`${coaches.length}名`,null);
+  document.getElementById('app').innerHTML= coaches.map(c=>`<div class="block"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="nm" style="font-weight:700">${esc(c.name)}</div><div class="muted">担当 ${c.total} 名</div></div><div style="text-align:right"><span class="sig high">🚨${c.urgent}</span> <span class="sig medium">🟡${c.important}</span></div></div></div>`).join('')||'<div class="center">コーチがいません</div>';
+}
+// ============ 面談担当 ============
+async function loadIv(){
+  let list=[]; try{ const {data}=await sb.rpc('iv_list',{interviewer:S.me.id}); list=data||[]; }catch(e){}
+  S.iv={list};
+}
+function ivStage(r){
+  if(r.status!=='completed') return ['prep','準備/処理中'];
+  if(r.has_human) return ['done','完了'];
+  if(r.has_ai) return ['review','要レビュー'];
+  return ['prep','実施済'];
+}
+function renderIvList(){
+  const list=(S.iv&&S.iv.list)||[];
+  setBar('マイ面談',`${list.length}件`,null);
+  const rows=list.map(r=>{const st=ivStage(r);const dt=r.recorded_at?new Date(r.recorded_at).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}):'—';const sc=r.overall_score!=null?Math.round(r.overall_score):null;
+    return `<div class="uc" onclick="openIv('${r.interview_id}')"><div class="mid"><div class="nm" style="font-size:15px">${esc(r.customer_name)}</div><div class="meta">${dt} ・ <span class="stage ${st[0]}">${st[1]}</span></div></div><div class="right">${sc!=null?`<div style="font-weight:800;font-size:17px">${sc}</div><div class="days">総合</div>`:'<div class="days">—</div>'}</div></div>`;}).join('')||'<div class="center">担当面談がありません</div>';
+  document.getElementById('app').innerHTML=`<div class="greet">${esc(S.me&&S.me.name||'')}さんの担当面談です。タップでカルテ（6軸スコア・所見）を確認できます。</div>${rows}`;
+}
+async function openIv(id){
+  S.sel=id; document.getElementById('app').innerHTML='<div class="center">読み込み中…</div>'; setBar('カルテ','面談詳細','S.sel=null;render()');
+  try{ const {data}=await sb.rpc('iv_karte',{iv:id}); S.ivk=(data&&data[0])||null; }catch(e){ S.ivk=null; }
+  renderIvKarte();
+}
+function renderIvKarte(){
+  const k=S.ivk; if(!k){ document.getElementById('app').innerHTML='<div class="center">カルテを取得できませんでした</div>'; return; }
+  setBar(k.customer_name||'カルテ','面談詳細','S.sel=null;render()');
+  const dt=k.recorded_at?new Date(k.recorded_at).toLocaleDateString('ja-JP'):'—';
+  const axis=[['共感',k.empathy],['具体性',k.specificity],['深掘り',k.elicitation],['傾聴',k.listening],['再現性',k.reproducibility],['リバウンド配慮',k.rebound]];
+  const bars=axis.map(a=>{const n=a[1]!=null?Math.round(a[1]):0;return `<div class="scorerow"><div>${a[0]}</div><div class="sb"><div style="width:${n}%"></div></div><div style="text-align:right;font-weight:700">${a[1]!=null?n:'—'}</div></div>`;}).join('');
+  const ov=k.overall_score!=null?Math.round(k.overall_score):'—';
+  document.getElementById('app').innerHTML=`
+    <div class="dhead"><div class="nm">${esc(k.customer_name||'')}</div><div class="muted">${dt} ・ 継続予測 ${esc(k.continuation||'—')}</div><div class="tags"><span class="tag">総合 ${ov}</span></div></div>
+    <div class="block"><h3>📊 6軸スコア（AI）</h3>${bars}</div>
+    ${k.summary?`<div class="block"><h3>📝 所見</h3><div style="font-size:13px;white-space:pre-wrap">${esc(k.summary)}</div></div>`:''}
+    ${k.strengths?`<div class="block"><h3 style="color:var(--ok)">💪 強み</h3><div style="font-size:13px;white-space:pre-wrap">${esc(k.strengths)}</div></div>`:''}
+    ${k.improvement_points?`<div class="block"><h3 style="color:var(--warn)">🔧 改善点</h3><div style="font-size:13px;white-space:pre-wrap">${esc(k.improvement_points)}</div></div>`:''}
+    <div class="muted">※ 6軸スコアはAIの客観評価（栄養士は採点しない）。所見はレビュー対象。</div>`;
+}
+function boot(){
+  const appEl=document.getElementById('app');
+  if(!window.supabase){ appEl.innerHTML='<div class="center">通信ライブラリの読み込みに失敗しました。再読み込みしてください。</div>'; return; }
+  try{ sb=window.supabase.createClient(SB_URL,SB_KEY); }
+  catch(e){ appEl.innerHTML='<div class="center">初期化エラー: '+esc(e&&e.message||e)+'</div>'; return; }
+  init().catch(e=>{ appEl.innerHTML='<div class="center">読み込みエラー: '+esc(e&&e.message||e)+'<br><br>再読み込みしてください。</div>'; });
+}
+async function loadCheckin(){
+  if(!S.coach){ S.rows=[]; return; }
+  const {data}=await sb.rpc('line_checkin',{coach:S.coach.id});
+  S.rows=data||[];
+}
+function go(tab){
+  S.tab=tab; S.sel=null; S.knQuery='';
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  render();
+}
+function setBar(title,sub,back){
+  document.getElementById('appbar').innerHTML =
+    (back?`<span class="back" onclick="${back}">‹</span>`:'') +
+    `<div class="title">${esc(title)}${sub?` <span class="sub">${esc(sub)}</span>`:''}</div>` +
+    `<button class="rolechip" onclick="cycleRole()" title="役割切替(プロト)">${ROLECHIP[S.roleEff]||S.roleEff}</button>` +
+    `<div class="av">${esc((S.me&&S.me.name||'?').slice(0,1))}</div>`;
+}
+function render(){
+  if(S.roleEff==='LINE担当'){ if(S.sel) return renderUser(); if(S.tab==='today') return renderToday(); if(S.tab==='board') return renderBoard(); }
+  else if(S.roleEff==='統括コーチ'){ if(S.tab==='suphome') return renderSupHome(); if(S.tab==='supcoaches') return renderSupCoaches(); }
+  else if(S.roleEff==='面談担当'){ if(S.sel) return renderIvKarte(); if(S.tab==='ivlist') return renderIvList(); }
+  if(S.tab==='knowledge') return renderKnowledge();
+  if(S.tab==='me') return renderMe();
+}
+function replyBadge(r){
+  if(!r.unanswered) return '';
+  const h=r.hours_since||0;
+  if(h>=24){ const o=h-24; return `<span class="sig high">⏱未返信 超過${o>=24?(Math.floor(o/24)+'日'):(o+'h')}</span>`; }
+  if(h>=18) return `<span class="sig medium">⏱未返信 残${24-h}h</span>`;
+  return `<span class="sig" style="background:#dbeafe;color:#1e40af">⏱未返信 残${24-h}h</span>`;
+}
+function ucard(r){
+  const sig=r.top_signal?`<span class="sig ${r.top_severity}">${SIG[r.top_signal]||r.top_signal}</span>`:(r.days_since>=5?`<span class="sig medium">無投稿${r.days_since}日</span>`:'');
+  const days=r.days_since>=999?'投稿なし':(r.days_since===0?'今日':`${r.days_since}日前`);
+  return `<div class="uc" onclick="openUser('${r.customer_id}')">
+    <div class="dot ${r.segment}"></div>
+    <div class="mid">
+      <div class="nm">${esc(r.name)}</div>
+      <div class="meta">${esc(r.line_id||'')} ・ 担当${r.assigned_days??'—'}日 ・ ${esc(r.continuation||'—')}</div>
+      <div class="snip">${esc(r.last_post_text||'—')}</div>
+      ${sig} ${replyBadge(r)}
+    </div>
+    <div class="right"><div class="days">${days}</div><div style="font-size:18px;color:#cbd5e1">›</div></div>
+  </div>`;
+}
+function segOpen(k){ if(!S.openSeg) S.openSeg={urgent:true,important:true,normal:false,watch:false}; return !!S.openSeg[k]; }
+function toggleSeg(k){ segOpen(k); S.openSeg[k]=!S.openSeg[k]; render(); }
+function toggleNotice(){ S.openNotice = (S.openNotice===false); render(); }
+function renderToday(){
+  setBar('今日のチェックイン', new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}), null);
+  const seg=k=>S.rows.filter(r=>r.segment===k);
+  const urg=seg('urgent'),imp=seg('important'),nor=seg('normal'),wat=seg('watch');
+  const need=urg.length+imp.length+nor.length;
+  const notices=S.notices||[]; const unread=notices.filter(n=>!n.read_at).length; const NK={notice:'📢',reply:'↩︎',reaction:'👍'};
+  const nOpen=S.openNotice!==false;
+  const noticeBlock=`<div class="seccard"><div class="sechead" onclick="toggleNotice()"><span>📬 お知らせ・連絡 ${unread?`<span class="cnt" style="background:#fee2e2;color:#991b1b">${unread}</span>`:`<span class="cnt">${notices.length}</span>`}</span><span class="chev">${nOpen?'▾':'▸'}</span></div>${nOpen?(notices.length?notices.map(n=>`<div class="notice${n.read_at?'':' un'}"><div class="nh">${NK[n.kind]||'•'} ${esc(n.title||'')}</div><div class="nmeta">${esc(n.from_label||'')}</div>${n.body?`<div class="nb">${esc(n.body)}</div>`:''}</div>`).join(''):'<div class="muted" style="padding:12px">新しい連絡はありません</div>'):''}</div>`;
+  const sec=(k,label,emoji,arr)=>{ if(!arr.length) return ''; const o=segOpen(k); return `<div class="seccard"><div class="sechead" onclick="toggleSeg('${k}')"><span>${emoji} ${label}<span class="cnt">${arr.length}</span></span><span class="chev">${o?'▾':'▸'}</span></div>${o?`<div class="seclist">${arr.map(ucard).join('')}</div>`:''}</div>`; };
+  const secs=sec('urgent','緊急','🚨',urg)+sec('important','重要','🟡',imp)+sec('normal','通常','🟢',nor)+sec('watch','静観','💤',wat);
+  document.getElementById('app').innerHTML=`
+    <div class="greet">${esc(S.me&&S.me.name||'')}さん、おはようございます。担当 ${S.rows.length} 名／対応が必要 <b>${need}</b> 名（未返信 ${S.rows.filter(r=>r.unanswered).length}・超過 ${S.rows.filter(r=>r.unanswered&&(r.hours_since||0)>=24).length}）</div>
+    ${noticeBlock}
+    ${secs||'<div class="center">対応が必要なユーザーはいません 🎉</div>'}`;
+}
+function renderBoard(){
+  setBar('担当ユーザー', `${S.rows.length}名`, null);
+  document.getElementById('app').innerHTML = S.rows.length? S.rows.map(ucard).join('') : '<div class="center">担当がいません</div>';
+}
+async function openUser(cid){
+  const r=S.rows.find(x=>x.customer_id===cid); S.sel=r||{customer_id:cid}; S.detail=null; S.kt=null; S.tone='empathy'; S.caseType='other'; S.aiText=''; S._draft=''; S._adopted=false;
+  document.getElementById('app').innerHTML='<div class="center">読み込み中…</div>';
+  setBar(r?r.name:'ユーザー','個別対応','S.sel=null;render()');
+  let posts=[],sigs=[];
+  try{ const res=await Promise.all([
+    sb.from('daily_reports').select('*').eq('customer_id',cid).order('posted_at',{ascending:false}).limit(8),
+    sb.from('early_warning_signals').select('*').is('resolved_at',null).eq('customer_id',cid).order('fired_at',{ascending:false})
+  ]); posts=res[0].data||[]; sigs=res[1].data||[]; }catch(e){}
+  S.detail={posts:posts,sigs:sigs};
+  // 弱音/痩せない系シグナルなら期待値高めをデフォルト候補に
+  const top=(sigs[0]&&sigs[0].signal_type)||'';
+  S.caseType = top==='willpower_word_spike' ? 'expectation' : (top==='food_detail_drop' ? 'weekday' : 'other');
+  S.aiText=aiDraft(S.sel,S.detail,S.tone,S.caseType);
+  let know=[];
+  try{ const q=knQuery(S.sel,S.detail); const {data}=await sb.rpc('search_knowledge_cards',{pgroonga_query:q,match_count:2}); know=data||[]; }catch(e){}
+  S.know=know;
+  try{ const {data:kt}=await sb.rpc('lc_karte',{p_customer:cid}); S.kt=(kt&&kt[0])||null; }catch(e){ S.kt=null; }
+  renderUser();
+}
+const SWAPS=['揚げ物を焼き物や魚にすると約200kcal減','ご飯を半分にすると約120kcal減','ドレッシングをノンオイルにすると約120kcal減','ビールを糖質オフに変えると約80kcal減','間食のチョコを数粒に絞ると約100kcal減'];
+function pickSwap(d){
+  const t=((d.posts&&d.posts[0]&&d.posts[0].text_content)||'');
+  if(/ラーメン|外食|接待|揚げ|フライ|カツ/.test(t)) return '次の外食は揚げ物を焼き魚に変えると約200kcal減らせます';
+  if(/ラテ|コーヒー|ジュース|飲み|ビール|酒/.test(t)) return '飲み物をブラックやお茶に変えると約100kcal減らせます';
+  if(/ご飯|ごはん|丼|麺|パスタ|パン/.test(t)) return 'ご飯やパンを少しだけ減らすと約120kcal減らせます';
+  return SWAPS[t.length % SWAPS.length];
+}
+// 太陽アプローチ(全肯定)＋具体の置き換え(−kcal)。トーン×ケース類型で再生成。励まし単独にしない。
+function aiDraft(r,d,tone,caseType){
+  const nm=r.name||''; const swap=pickSwap(d||{});
+  const open={
+    empathy:`${nm}さん、お疲れさまです。正直に教えてくださってありがとうございます。`,
+    question:`${nm}さん、いつも報告ありがとうございます。状況をもう少しだけ教えてください。`,
+    suggestion:`${nm}さん、ご報告ありがとうございます。すぐ試せる一手をひとつだけ。`,
+    praise:`${nm}さん、続けられていること自体が本当にすごいです。`
+  }[tone]||`${nm}さん、いつもありがとうございます。`;
+  const core={
+    weekday:`平日はしっかり意識できていますね。崩れやすい週末や外食だけ、ピンポイントで整えれば十分です。`,
+    undereat:`実は食べなさすぎも停滞の一因です。抜くより、軽くでも口にして食事の波を作りましょう。`,
+    expectation:`体重は急がないのがコツです。時間をかけて付いた脂肪はゆっくり落ちていくもの。今のペースで大丈夫です。`,
+    other:`完璧じゃなくて大丈夫です。続いていること自体が前進です。`
+  }[caseType]||'';
+  const close={
+    empathy:`まずは一行だけ、今日の食事を教えてください。例えば${swap}。`,
+    question:`最近「これは続けやすい」と感じた工夫はありますか？ちなみに${swap}。`,
+    suggestion:`${swap}。これだけでOKです。`,
+    praise:`その調子で、もし余裕があれば${swap}。`
+  }[tone]||`${swap}。`;
+  return [open,core,close].filter(Boolean).join('\n');
+}
+function knQuery(r,d){
+  const top=(d.sigs[0]&&d.sigs[0].signal_type)||'';
+  if(top==='willpower_word_spike') return '励まし OR 完璧 OR 具体 OR 置き換え';
+  if(top==='food_detail_drop') return '食事 OR 詳細 OR 置き換え OR カロリー';
+  if(top==='post_silence') return '無投稿 OR 声かけ OR 継続';
+  return '置き換え OR 褒め OR カロリー';
+}
+function renderUser(){
+  const r=S.sel,d=S.detail||{posts:[],sigs:[]};
+  setBar(r.name||'ユーザー','個別対応','S.sel=null;render()');
+  const segTag=r.segment?`<span class="tag ${r.segment==='urgent'?'bad':r.segment==='important'?'warn':''}">${SEGJP[r.segment]||''}</span>`:'';
+  const posts=d.posts.map(p=>{const cls=p.willpower_word_count>0?'warn':(p.food_detail_score!=null&&p.food_detail_score<0.2?'bad':'');const dt=new Date(p.posted_at).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});return `<div class="bub ${cls}"><div class="d">${dt}</div>${esc(p.text_content||'')}</div>`;}).join('')||'<div class="muted">投稿がありません</div>';
+  const sigs=d.sigs.map(s=>`<div class="alert"><div class="t">${SIG[s.signal_type]||s.signal_type}</div><div>${esc(s.description||'')}</div></div>`).join('')||'<div class="muted">発火中の警戒シグナルはありません</div>';
+  const know=(S.know||[]).map(k=>`<div class="know"><div class="t">${esc(k.title)}</div><div class="b">${esc((k.body||'').slice(0,80))}…</div>${k.outcome?`<div style="font-size:11px;color:#166534;margin-top:5px;background:#f0fdf4;border-radius:7px;padding:5px 8px">→ どう変わった：${esc(k.outcome)}</div>`:''}</div>`).join('');
+  const tones=TONES.map(([v,l])=>`<div class="tone ${S.tone===v?'on':''}" onclick="setTone('${v}')">${l}</div>`).join('');
+  const cases=CASES.map(([v,l])=>`<div class="tone ${S.caseType===v?'on':''}" onclick="setCase('${v}')">${l}</div>`).join('');
+  const aiHtml=esc(S.aiText).replace(/\n/g,'<br>');
+  const kt=S.kt;
+  const karte = kt ? `<div class="block">
+      <h3>📋 カルテ要約（引継ぎ）</h3>
+      <div style="font-size:13px;line-height:1.7">継続見込み <b>${esc(kt.continuation_rank||'—')}</b>（予測 ${esc(kt.continuation||'—')}）${kt.company?` ・ ${esc(kt.company)}`:''}</div>
+      ${kt.company_tendency?`<div class="muted" style="margin-top:2px">会社の傾向：${esc(kt.company_tendency)}</div>`:''}
+      ${(kt.customer_type_tags&&kt.customer_type_tags.length)?`<div style="margin-top:6px">${kt.customer_type_tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(' ')}</div>`:''}
+      ${kt.support_count!=null?(()=>{const n=Math.min(kt.support_count,5);return `<div style="margin-top:8px"><div class="muted">継続支援（積極的支援・5回必須）</div><div style="font-size:15px;letter-spacing:2px">${'●'.repeat(n)}${'○'.repeat(5-n)} <b style="font-size:13px;letter-spacing:0">${n}/5回</b>${kt.support_count>=5?' <span style="color:#166534;font-size:12px">達成</span>':''}</div><div class="muted">※プロセス評価は1日1回・スマカリが正本</div></div>`;})():''}
+      ${(kt.focus_topics&&kt.focus_topics.length)?`<div style="margin-top:8px"><div class="muted">重点話題</div><ul style="margin:4px 0 0 18px;font-size:13px">${kt.focus_topics.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
+      ${kt.warning_signals_text?`<div style="margin-top:8px"><div class="muted">⚠ 警戒価値（面談担当より）</div><div style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:8px;padding:7px 9px;margin-top:3px">${esc(kt.warning_signals_text)}</div></div>`:''}
+    </div>` : '';
+  const dl = r.unanswered ? `<div class="block" style="background:${(r.hours_since||0)>=24?'#fef2f2':'#fffbeb'};border-color:${(r.hours_since||0)>=24?'#fecaca':'#fde68a'}"><div style="font-size:13px;font-weight:600;color:${(r.hours_since||0)>=24?'#991b1b':'#92400e'}">⏱ 未返信：最終投稿から約 ${r.hours_since!=null?r.hours_since:'—'} 時間${(r.hours_since||0)>=24?'（期限24hを超過）':`（期限まで残 ${Math.max(0,24-(r.hours_since||0))}h）`}</div><div class="muted" style="margin-top:3px">基本18h以内・最遅24h／週末分は翌月曜でOK</div></div>` : '';
+  document.getElementById('app').innerHTML=`
+    <div class="dhead">
+      <div class="nm">${esc(r.name||'')}</div>
+      <div class="muted">${esc(r.line_id||'')} ・ 担当${r.assigned_days??'—'}日目 ・ 継続予測 ${esc(r.continuation||'—')}</div>
+      <div class="tags">${segTag}${r.age?`<span class="tag">${r.age}歳</span>`:''}${r.job?`<span class="tag">${esc(r.job)}</span>`:''}</div>
+    </div>
+    ${dl}
+    ${karte}
+    <div class="block"><h3>📱 LINE履歴（直近）</h3>${posts}</div>
+    ${d.sigs.length?`<div class="block"><h3 style="color:var(--bad)">⚠ 警戒シグナル</h3>${sigs}</div>`:''}
+    <div class="block">
+      <h3>✏️ コメント作成</h3>
+      <div class="muted" style="margin-bottom:5px">この方のケース類型（提案内容が変わります）</div>
+      <div class="tones">${cases}</div>
+      <div class="muted" style="margin:8px 0 5px">トーン（言い回しが変わります）</div>
+      <div class="tones">${tones}</div>
+      <div class="ai"><div class="lab">AI下書き（太陽アプローチ＋具体の置き換え ／ プロト：本実装でClaude接続）</div>${aiHtml}</div>
+      <div class="row2"><button class="btn" onclick="adopt()">この案を使う</button><button class="btn sec" onclick="clearText()">自分で書く</button></div>
+      <textarea id="cmt" placeholder="コメント（編集してスマカリに貼り付け）">${esc(S._draft||'')}</textarea>
+      ${know?`<h3 style="margin-top:12px">💡 現場の知見（似たケース）</h3>${know}`:''}
+      <button class="btn" onclick="copyComment()">📋 コピー（スマカリに貼り付けて送信）</button>
+      <div class="muted" style="margin-top:6px">送信はスマカリの返信画面で行ってください（トーク画面だと記録が残りません）。</div>
+    </div>`;
+}
+const CASES=[['weekday','平日意識'],['undereat','栄養不足'],['expectation','期待値高'],['other','その他']];
+function syncDraft(){ const t=document.getElementById('cmt'); if(t) S._draft=t.value; }
+function setTone(v){ syncDraft(); S.tone=v; S.aiText=aiDraft(S.sel,S.detail,S.tone,S.caseType); renderUser(); }
+function setCase(v){ syncDraft(); S.caseType=v; S.aiText=aiDraft(S.sel,S.detail,S.tone,S.caseType); renderUser(); }
+function adopt(){ S._draft=S.aiText; const t=document.getElementById('cmt'); if(t)t.value=S.aiText; S._adopted=true; }
+function clearText(){ S._draft=''; const t=document.getElementById('cmt'); if(t)t.value=''; S._adopted=false; }
+// 送信は我々のスコープ外（スマカリで送信）。ここは「下書きをコピー＋利用ログ記録」まで。
+async function copyComment(){
+  syncDraft(); const text=(S._draft||'').trim();
+  if(!text){ toast('コメントを入力してください'); return; }
+  try{ await navigator.clipboard.writeText(text); }catch(e){}
+  let adoption='no_proposal';
+  if(S.aiText){ adoption = text===S.aiText ? 'adopted_as_is' : (S._adopted ? 'edited' : 'rejected'); }
+  const latest=(S.detail&&S.detail.posts[0]&&S.detail.posts[0].id)||null;
+  // coach_comments は「下書き利用ログ」（AI採用率などの支援指標。送信記録ではない）
+  try{ await sb.from('coach_comments').insert({customer_id:S.sel.customer_id, staff_id:S.coach&&S.coach.id, daily_report_id:latest, tone:S.tone, text_content:text, ai_proposed_text:S.aiText||null, ai_adoption:adoption, sent_at:null}); }catch(e){}
+  toast('コピーしました。スマカリに貼り付けて送信してください');
+}
+function knPg(s){ const t=(s||'').replace(/[、。？！?!,.「」　]/g,' ').split(/\s+/).filter(x=>x.length>=2); return t.length?t.join(' OR '):s; }
+function knCardHtml(c){ return `<div class="block"><h3>${esc(c.title)}</h3>${c.situation?`<div class="muted" style="margin-bottom:4px">🟡 ${esc(c.situation)}</div>`:''}<div style="font-size:13px;color:#334155;white-space:pre-wrap">${esc((c.body||'').slice(0,140))}${(c.body||'').length>140?'…':''}</div>${c.outcome?`<div style="font-size:12px;color:#166534;margin-top:5px;background:#f0fdf4;border-radius:8px;padding:6px 9px">→ どう変わった：${esc(c.outcome)}</div>`:''}<div class="muted" style="margin-top:6px">✍ ${esc(c.author_name||'—')} ・ 👍${c.helpful||0} ✅${c.used||0}${c.status==='official'?' ・ <b style="color:#166534">公式</b>':''}</div></div>`; }
+function knSearch(){ const el=document.getElementById('knq'); S.knQuery=(el&&el.value||'').trim(); renderKnowledge(); }
+function renderKnowledge(){
+  setBar('知見・マニュアル検索','自然文でOK',null);
+  const q=S.knQuery||'';
+  const head=`<div class="block">
+    <div style="display:flex;gap:6px">
+      <input id="knq" placeholder="例：痩せないと言われた時の返し方" value="${esc(q)}" style="flex:1;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-size:14px" onkeydown="if(event.key==='Enter')knSearch()">
+      <button class="btn" style="width:auto;margin:0;padding:10px 14px" onclick="knSearch()">検索</button>
+    </div>
+    <div class="muted" style="margin-top:6px">マニュアル本文（全文検索＋AI回答）と、現場の知見をまとめて検索します。</div>
+  </div>`;
+  const app=document.getElementById('app');
+  if(!q){
+    app.innerHTML=head+'<div class="center">読み込み中…</div>';
+    sb.rpc('list_knowledge_cards',{p_sort:'popular',p_limit:20}).then(({data})=>{
+      if(S.tab!=='knowledge'||S.knQuery) return;
+      const cards=(data||[]).map(knCardHtml).join('')||'<div class="center">まだ知見がありません</div>';
+      app.innerHTML=head+`<div class="seclabel">💡 よく使われる現場の知見</div>`+cards;
+    });
+    return;
+  }
+  app.innerHTML=head+'<div class="center">検索中…（マニュアル＋現場の知見）</div>';
+  Promise.all([
+    sb.functions.invoke('manual-search',{body:{query:q, staff_id:S.me&&S.me.id}}).then(r=>r.data).catch(()=>null),
+    sb.rpc('search_knowledge_cards',{pgroonga_query:knPg(q),match_count:3}).then(r=>r.data).catch(()=>[])
+  ]).then(([man,cards])=>{
+    if(S.knQuery!==q) return;
+    let html=head;
+    if(man && man.answer){ html+=`<div class="block"><h3>📖 マニュアル回答</h3><div style="font-size:14px;line-height:1.7;white-space:pre-wrap">${esc(man.answer)}</div></div>`; }
+    const srcs=(man&&man.sources)||[];
+    if(srcs.length){ html+=`<div class="block"><h3>出典（マニュアル）</h3>`+srcs.map(s=>`<div class="bub"><div class="d">${esc(s.heading_path||s.manual_title||'')}</div>${esc((s.snippet||'').slice(0,120))}…</div>`).join('')+`</div>`; }
+    else if(man){ html+=`<div class="block"><div class="muted">該当するマニュアル箇所は見つかりませんでした。</div></div>`; }
+    if(!man){ html+=`<div class="block"><div class="muted">マニュアル検索に接続できませんでした（デプロイ後に有効）。</div></div>`; }
+    if((cards||[]).length){ html+=`<div class="seclabel">💡 現場の知見（似たケース）</div>`+cards.map(knCardHtml).join(''); }
+    app.innerHTML=html;
+  }).catch(e=>{ app.innerHTML=head+`<div class="center">エラー: ${esc(e&&e.message||e)}</div>`; });
+}
+async function renderMe(){
+  setBar('自分','プロフィール',null);
+  const name=esc(S.me&&S.me.name||''); const role=S.roleEff; let body='';
+  if(role==='LINE担当'){
+    let used=0,rate=0;
+    try{ const today=new Date();today.setHours(0,0,0,0); const {data}=await sb.from('coach_comments').select('id,created_at,ai_adoption').eq('staff_id',S.me&&S.me.id); const arr=data||[]; used=arr.filter(c=>c.created_at&&new Date(c.created_at)>=today).length; const total=arr.length; const adopted=arr.filter(c=>c.ai_adoption==='adopted_as_is'||c.ai_adoption==='edited').length; rate= total? Math.round(adopted/total*100):0; }catch(e){}
+    body=`<div class="block"><h3>今日の活動</h3><div style="font-size:13px">下書きの利用（コピー, 今日）：<b>${used}</b> 件<br>AI下書き 採用率（累計）：<b>${rate}</b>%</div><div class="muted" style="margin-top:6px">※ 送信はスマカリで（連携は取り込みのみ）。</div></div>
+    <div class="block"><h3>返信ルール</h3><div style="font-size:13px;color:#475569">基本18h・最遅24h／平日7:00〜21:00／週末分は翌月曜。太陽アプローチ＋具体の一手。</div></div>`;
+  } else if(role==='統括コーチ'){
+    const cards=(S.sup&&S.sup.cards)||[]; const peer=cards.filter(c=>c.status==='peer').length; const official=cards.filter(c=>c.status==='official').length; const cc=((S.sup&&S.sup.coaches)||[]).length;
+    body=`<div class="block"><h3>統括サマリー</h3><div style="font-size:13px">公式化待ち：<b>${peer}</b> 件 ／ 公式化済：<b>${official}</b> 件 ／ 担当コーチ：<b>${cc}</b> 名</div><div class="muted" style="margin-top:6px">評価者ではなくサポート役。良い対応例の横展開が役目。</div></div>`;
+  } else {
+    const list=(S.iv&&S.iv.list)||[]; const sc=list.filter(r=>r.overall_score!=null); const avg=sc.length?Math.round(sc.reduce((s,r)=>s+Number(r.overall_score),0)/sc.length):'—';
+    body=`<div class="block"><h3>面談サマリー</h3><div style="font-size:13px">担当面談：<b>${list.length}</b> 件 ／ 平均総合スコア：<b>${avg}</b></div><div class="muted" style="margin-top:6px">6軸はAIの客観評価。所見をレビューして確定。</div></div>`;
+  }
+  document.getElementById('app').innerHTML=`<div class="block"><h3>🙂 ${name}（${esc(role)}）</h3><div class="muted">右上の役割チップで他役割をプレビューできます（プロト）。</div></div>${body}`;
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+</script>
+</body></html>

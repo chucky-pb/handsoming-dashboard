@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ハンサミング 資料・レポート棚</title>
+<style>
+:root{--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--bg:#f4f6f8;--brand:#2563eb;--navy:#0f2c5c}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans CJK JP','Yu Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.topnav{background:var(--navy);color:#fff;padding:0 22px;display:flex;align-items:center;gap:6px;height:52px;position:sticky;top:0;z-index:10}
+.topnav .brand{font-weight:700;font-size:15px;margin-right:18px;letter-spacing:.5px}
+.topnav a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;padding:7px 13px;border-radius:7px}
+.topnav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.topnav a.active{background:rgba(255,255,255,.22);color:#fff;font-weight:600}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 22px 70px}
+.hero h1{font-size:22px;font-weight:700;color:var(--navy)}
+.hero p{font-size:13px;color:var(--mute);margin-top:4px}
+.cat{font-size:11px;letter-spacing:1px;color:var(--mute);font-weight:700;margin:26px 0 10px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.doc{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;transition:.12s;border-left:4px solid var(--brand)}
+.doc:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-2px)}
+.doc.research{border-left-color:#dc2626}.doc.design{border-left-color:#2563eb}.doc.map{border-left-color:#0891b2}.doc.exec{border-left-color:#0f766e}
+.doc .t{font-size:15px;font-weight:700}
+.doc .d{font-size:12px;color:#475569}
+.doc .m{font-size:11px;color:var(--mute);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:9px;background:#f1f5f9;color:#475569}
+.tag.live{background:#dcfce7;color:#166534}.tag.notion{background:#ede9fe;color:#5b21b6}.tag.pdf{background:#fee2e2;color:#991b1b}.tag.layer{background:#dbeafe;color:#1e40af}
+.note{font-size:12px;color:var(--mute);background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-top:8px}
+.footer{text-align:center;color:var(--mute);font-size:12px;padding:24px 0 0}
+</style></head><body>
+
+<div class="topnav">
+  <div class="brand">▽ HANSAMING</div>
+  <a href="index.html">入口（役割地図）</a>
+  <a href="role_mockup.html">運用（役割別UI）</a>
+  <a href="dashboard.html">分析（管理・QC）</a>
+  <a href="reports.html" class="active">資料・レポート</a>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>資料・レポート棚</h1>
+    <p>Intelligence Pipeline の出力（L04）と設計資料を、種別で体系収容。各カードから直接開けます。</p>
+  </div>
+
+  <div class="cat">① リサーチ・検討レポート <span class="tag layer">L04 Intelligence出力</span></div>
+  <div class="grid">
+    <a class="doc research" href="research_report_v2.html">
+      <div class="t">栄養士ヒアリング 第二報レポート ＋ 本部レビュー</div>
+      <div class="d">両ロール経験者3名のヒアリング分析、JTBD Top3、ドッグフーディング検証、2026-06-15 本部レビュー（Phase1修正案）を第9章に追記。</div>
+      <div class="m"><span class="tag live">公開中</span><span>2026-06-08 / 06-15追記</span></div>
+    </a>
+    <a class="doc research" href="maniac_analysis_report.html">
+      <div class="t">統括コーチ制度＋本部レビュー インパクト分析</div>
+      <div class="d">統括コーチ制度と本部レビューが、既存ビルド・役割設計・Phase1に与える影響を根拠付きで整理。A/B層・提供面・個人情報LCの方針。</div>
+      <div class="m"><span class="tag live">公開中</span><span>2026-06-16</span></div>
+    </a>
+  </div>
+
+  <div class="cat">② 設計・地図 <span class="tag layer">メタ／全体像</span></div>
+  <div class="grid">
+    <a class="doc map" href="journey-map.html">
+      <div class="t">ジャーニーマップ — ペルソナ × 粒度</div>
+      <div class="d">Phase1-7 × ペルソナ × RAW/ANON/AGG/META の閲覧粒度マップ。役割別ビュー設計の土台。</div>
+      <div class="m"><span class="tag live">公開中</span></div>
+    </a>
+    <a class="doc map" href="roles-responsibilities-v1.pdf">
+      <div class="t">役割と責務図（HSM-ORG-001）</div>
+      <div class="d">4層パイプライン＋QC横串＋7ペルソナ×粒度バッジ。本統合の背骨。※統括コーチ追記版(v1.1)は入口地図(index)に反映。</div>
+      <div class="m"><span class="tag pdf">PDF</span><span>REV1.0 / 2026-05</span></div>
+    </a>
+    <a class="doc design" href="https://www.notion.so/36e40e0263d88154ac6ed4e76ff1e6be">
+      <div class="t">役割別 機能設計 v0.9（HSM-FN-001）</div>
+      <div class="d">面談担当・LINE栄養士の業務シナリオ・画面・データソース・権限の実装仕様。</div>
+      <div class="m"><span class="tag notion">Notion</span></div>
+    </a>
+    <a class="doc design" href="https://www.notion.so/35540e0263d881d09407f10af5561fa8">
+      <div class="t">Intelligence Pipeline 設計書（HSM-ORG-001）</div>
+      <div class="d">TDB信用調査スキームを参照した4層＋QCの方法論。RAW/ANON/AGG/META 粒度・評点モデルの定義。</div>
+      <div class="m"><span class="tag notion">Notion</span></div>
+    </a>
+    <a class="doc design" href="https://www.notion.so/38140e0263d881b0897dfd62c014d2a6">
+      <div class="t">Phase 1 パイロット実装仕様 v2.1</div>
+      <div class="d">本部5原則・A/B層出し分け・Teams Bot統合方針・個人情報ライフサイクル・成功メトリクス。</div>
+      <div class="m"><span class="tag notion">Notion</span><span>2026-06-16</span></div>
+    </a>
+  </div>
+
+  <div class="cat">③ 経営・成果レポート <span class="tag layer">L04・将来</span></div>
+  <div class="note">健康経営レポート・全社KPI・ROI試算（クライアント企業／健保／経営向け、AGG粒度）は Phase 2 以降に収容予定。データ基盤（コホート横断統計）が整い次第ここに追加します。</div>
+
+  <div class="footer">© Hansaming inc. ／ 社内限 ｜ 資料は出力種別で体系収容</div>
+</div>
+</body></html>

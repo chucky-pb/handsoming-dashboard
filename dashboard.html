@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>ハンサミング 管理ダッシュボード</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1f2937}
+.header{background:linear-gradient(135deg,#2563eb,#3b82f6);border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:20px;color:#fff}
+.header-right{display:flex;align-items:center;gap:16px}
+.timestamp{color:#6b7280;font-size:13px}
+.nav-link{color:rgba(255,255,255,0.85);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:6px}.nav-link:hover{color:#fff;background:rgba(255,255,255,0.1)}.nav-link.active{color:white;background:rgba(255,255,255,0.2);font-weight:600}.logout-btn{padding:8px 16px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px}
+.logout-btn:hover{background:#dc2626}
+.container{max-width:1400px;margin:0 auto;padding:24px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.card-label{font-size:13px;color:#6b7280;margin-bottom:4px}
+.card-value{font-size:28px;font-weight:700}
+.card-sub{font-size:12px;margin-top:4px}
+.green{color:#16a34a}.red{color:#dc2626}.yellow{color:#d97706}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-box{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.chart-box h3{font-size:15px;margin-bottom:12px;color:#374151}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600;color:#475569}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9}
+tr:hover{background:#f8fafc}
+.badge{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-yellow{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.section{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:24px}
+.section h2{font-size:16px;margin-bottom:16px;color:#1f2937}
+@media(max-width:768px){.charts{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="header"><h1>ハンサミング 管理ダッシュボード</h1><div class="header-right">
+            <a href="dashboard.html" class="nav-link active">管理ダッシュボード</a>
+            <a href="coach.html" class="nav-link">栄養士ダッシュボード</a><a href="process.html" class="nav-link">顧客プロセス</a><a href="interview.html" class="nav-link">面談分析</a><a href="action_analysis.html" class="nav-link" style="background:#fef2f2;color:#fff;font-weight:600;">行動連携分析</a><span class="timestamp">データ更新: 2026-03-26</span><button class="logout-btn" onclick="logout()">ログアウト</button></div></div>
+<div class="container">
+<div class="cards">
+<div class="card"><div class="card-label">総ユーザー数</div><div class="card-value">1,067</div><div class="card-sub green">+12% 前月比</div></div>
+<div class="card"><div class="card-label">アクティブユーザー</div><div class="card-value green">530</div><div class="card-sub">目標500以上</div></div>
+<div class="card"><div class="card-label">早期離脱率</div><div class="card-value red">22.2%</div><div class="card-sub">目標15%以下</div></div>
+<div class="card"><div class="card-label">コーチコメント率</div><div class="card-value red">38.9%</div><div class="card-sub">目標70%以上</div></div>
+<div class="card"><div class="card-label">30日継続率</div><div class="card-value yellow">~50%</div><div class="card-sub">目標60%以上</div></div>
+</div>
+<div class="charts">
+<div class="chart-box"><h3>継続クラス分布</h3><canvas id="c1"></canvas></div>
+<div class="chart-box"><h3>週次アクティブユーザー推移</h3><canvas id="c2"></canvas></div>
+<div class="chart-box"><h3>コーチコメントパターン別 平均継続回数</h3><canvas id="c3"></canvas></div>
+<div class="chart-box"><h3>初回3投稿の食事詳細率 × 継続クラス</h3><canvas id="c4"></canvas></div>
+</div>
+<div class="section"><h2>要注意ユーザー一覧</h2><div style="overflow-x:auto"><table><thead><tr><th>ユーザーID</th><th>最終投稿日</th><th>無投稿日数</th><th>警戒信号</th><th>リスクレベル</th></tr></thead><tbody>
+<tr><td>U-0234</td><td>2026-03-20</td><td>6日</td><td>意志力ワード検出</td><td><span class="badge badge-red">高</span></td></tr>
+<tr><td>U-0891</td><td>2026-03-22</td><td>4日</td><td>食事詳細率低下</td><td><span class="badge badge-red">高</span></td></tr>
+<tr><td>U-0567</td><td>2026-03-23</td><td>3日</td><td>投稿頻度低下</td><td><span class="badge badge-yellow">中</span></td></tr>
+<tr><td>U-0123</td><td>2026-03-23</td><td>3日</td><td>意志力ワード検出</td><td><span class="badge badge-yellow">中</span></td></tr>
+<tr><td>U-0445</td><td>2026-03-24</td><td>2日</td><td>文字数減少</td><td><span class="badge badge-yellow">中</span></td></tr>
+<tr><td>U-0778</td><td>2026-03-24</td><td>2日</td><td>食事詳細率低下</td><td><span class="badge badge-yellow">中</span></td></tr>
+</tbody></table></div></div><div class="section"><h2>KPI トラッキング</h2><div style="overflow-x:auto"><table><thead><tr><th>KPI名</th><th>層</th><th>頻度</th><th>現在値</th><th>目標値</th><th>達成率</th><th>ステータス</th></tr></thead><tbody>
+<tr><td>初回3投稿 食事詳細率</td><td>早期警戒</td><td>日次</td><td>22%</td><td>25%+</td><td>88%</td><td><span class="badge badge-yellow">注意</span></td></tr>
+<tr><td>意志力ワード出現率</td><td>早期警戒</td><td>日次</td><td>18%</td><td>20%未満</td><td>100%</td><td><span class="badge badge-green">達成</span></td></tr>
+<tr><td>無投稿日数</td><td>早期警戒</td><td>日次</td><td>1.8日</td><td>3日未満</td><td>100%</td><td><span class="badge badge-green">達成</span></td></tr>
+<tr><td>週次アクティブ率</td><td>介入判断</td><td>週次</td><td>52%</td><td>60%+</td><td>87%</td><td><span class="badge badge-yellow">注意</span></td></tr>
+<tr><td>コーチコメント率</td><td>介入判断</td><td>週次</td><td>38.9%</td><td>70%+</td><td>56%</td><td><span class="badge badge-red">未達</span></td></tr>
+<tr><td>具体数値パターン比率</td><td>介入判断</td><td>週次</td><td>28%</td><td>40%+</td><td>70%</td><td><span class="badge badge-yellow">注意</span></td></tr>
+<tr><td>30日継続率</td><td>成果測定</td><td>月次</td><td>~50%</td><td>60%+</td><td>83%</td><td><span class="badge badge-yellow">注意</span></td></tr>
+<tr><td>早期離脱率</td><td>成果測定</td><td>月次</td><td>22.2%</td><td>15%以下</td><td>68%</td><td><span class="badge badge-red">未達</span></td></tr>
+<tr><td>平均ライフスパン</td><td>成果測定</td><td>月次</td><td>~10日</td><td>前月比改善</td><td>-</td><td><span class="badge badge-yellow">注意</span></td></tr>
+</tbody></table></div></div>
+</div><script>
+const U='https://shmsyuohusfjjbopqokr.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+const sb=window.supabase.createClient(U,K);
+(async()=>{const{data:{session}}=await sb.auth.getSession();if(!session)location.href='index.html'})();
+async function logout(){await sb.auth.signOut();location.href='index.html'}
+window.addEventListener('load',()=>{
+new Chart(document.getElementById('c1'),{type:'doughnut',data:{labels:['早期離脱(1-3回)','短期(4-10回)','中期(11-30回)','長期(31回+)'],datasets:[{data:[22.2,27.7,25.0,25.0],backgroundColor:['#ef4444','#f59e0b','#3b82f6','#22c55e']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+new Chart(document.getElementById('c2'),{type:'line',data:{labels:['11/3','11/10','11/17','11/24','12/1','12/8','12/15','12/22','12/29','1/5','1/12','1/19','1/26','2/2','2/9','2/16','2/23','3/2','3/9','3/16','3/23'],datasets:[{label:'アクティブユーザー',data:[120,145,168,195,220,248,275,290,310,335,360,380,400,420,440,460,478,495,510,522,530],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',fill:true,tension:.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+new Chart(document.getElementById('c3'),{type:'bar',data:{labels:['褒めのみ','褒め+質問','具体的数値','共感型'],datasets:[{label:'平均継続回数',data:[12.3,13.1,18.9,7.2],backgroundColor:['#3b82f6','#8b5cf6','#22c55e','#ef4444']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+new Chart(document.getElementById('c4'),{type:'bar',data:{labels:['早期離脱','短期','中期','長期'],datasets:[{label:'食事詳細率(%)',data:[14.0,19.2,24.5,30.7],backgroundColor:['#ef4444','#f59e0b','#3b82f6','#22c55e']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:40}}}});
+});
+</script></body></html>

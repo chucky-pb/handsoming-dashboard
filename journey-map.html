@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハンサミング ジャーニーマップ — ペルソナ × 粒度</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --raw-color: #15803d; --raw-bg: #dcfce7;
+  --agg-color: #1e3a8a; --agg-bg: #dbeafe;
+  --anon-color: #7c2d12; --anon-bg: #fed7aa;
+  --meta-color: #57534e; --meta-bg: #f5f5f4;
+}
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif; margin: 0; padding: 0; background: #fafaf9; color: #1c1917; line-height: 1.6; }
+header { background: linear-gradient(135deg, #0c4a6e, #1e3a8a); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; color: #fff; }
+header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+header .nav { display: flex; gap: 4px; align-items: center; }
+header .nav a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 6px; }
+header .nav a:hover { background: rgba(255,255,255,0.15); }
+header .nav a.active { background: rgba(255,255,255,0.25); font-weight: 600; }
+header button { padding: 6px 14px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 13px; cursor: pointer; }
+main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+h2 { font-size: 22px; margin: 0 0 4px 0; font-weight: 600; }
+.subtitle { color: #78716c; font-size: 13px; margin-bottom: 20px; }
+.persona-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.persona-btn { padding: 10px 16px; border: 1.5px solid #d6d3d1; background: #fff; border-radius: 24px; cursor: pointer; font-size: 13px; color: #44403c; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+.persona-btn:hover { border-color: var(--accent, #0c4a6e); }
+.persona-btn.active { background: var(--accent, #0c4a6e); color: #fff; border-color: var(--accent, #0c4a6e); }
+.persona-btn .icon { font-size: 16px; }
+.persona-info-card { background: var(--accent-bg, #f0f9ff); border-left: 4px solid var(--accent, #0c4a6e); padding: 14px 18px; border-radius: 6px; margin-bottom: 18px; transition: all 0.3s; }
+.persona-info-card h3 { margin: 0 0 4px 0; font-size: 16px; color: var(--accent, #0c4a6e); display: flex; align-items: center; gap: 8px; }
+.persona-info-card p { margin: 0; font-size: 13px; color: #44403c; }
+.persona-info-card .privacy-tag { display: inline-block; margin-top: 8px; padding: 3px 10px; background: #fff; border: 1px solid #d6d3d1; border-radius: 12px; font-size: 11px; color: #57534e; }
+.legend { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #fff; border: 1px solid #e7e5e4; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; font-size: 11.5px; }
+.legend strong { color: #44403c; margin-right: 4px; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.access-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.access-RAW { background: var(--raw-bg); color: var(--raw-color); }
+.access-AGG { background: var(--agg-bg); color: var(--agg-color); }
+.access-ANON { background: var(--anon-bg); color: var(--anon-color); }
+.access-META { background: var(--meta-bg); color: var(--meta-color); }
+.section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #78716c; margin: 18px 0 10px 0; font-weight: 600; }
+.journey { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 12px; }
+.future-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; max-width: 50%; }
+.phase { background: #fff; border: 1.5px solid #e7e5e4; border-radius: 10px; padding: 10px; position: relative; transition: all 0.3s; min-height: 170px; display: flex; flex-direction: column; }
+.phase.access-RAW { border-color: var(--raw-color); background: var(--raw-bg); }
+.phase.access-AGG { border-color: var(--agg-color); background: var(--agg-bg); }
+.phase.access-ANON { border-color: var(--anon-color); background: var(--anon-bg); }
+.phase.access-META { border-color: #d6d3d1; background: #fff; opacity: 0.85; }
+.phase.future { border-style: dashed; background: #fafaf9; }
+.phase .num { font-size: 9.5px; color: #78716c; font-weight: 600; letter-spacing: 0.05em; }
+.phase .icon { font-size: 18px; margin: 4px 0; }
+.phase .name { font-size: 12px; font-weight: 600; color: #1c1917; line-height: 1.3; }
+.phase .duration { font-size: 10px; color: #78716c; margin-top: 2px; }
+.phase .access-row { margin-top: 6px; }
+.phase .preview { font-size: 11px; color: #44403c; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.06); line-height: 1.4; flex: 1; }
+.deliverables-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+.deliverable-card { background: #fff; border: 1px solid #e7e5e4; border-radius: 8px; padding: 12px 14px; }
+.deliverable-card h4 { margin: 0 0 8px 0; font-size: 12px; color: #57534e; text-transform: uppercase; letter-spacing: 0.04em; }
+.deliverable-card ul { margin: 0; padding: 0; list-style: none; }
+.deliverable-card li { padding: 4px 0; font-size: 12.5px; color: #1c1917; border-bottom: 1px dashed #f5f5f4; }
+.deliverable-card li:last-child { border-bottom: none; }
+.deliverable-card li::before { content: "→ "; color: var(--accent, #0c4a6e); font-weight: 600; }
+.granularity-tally { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.tally-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #57534e; }
+.footer-note { margin-top: 24px; padding: 12px 16px; background: #fef9c3; border-left: 3px solid #eab308; border-radius: 0 6px 6px 0; font-size: 12px; color: #713f12; }
+#login-section { max-width: 400px; margin: 80px auto; padding: 24px; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+#login-section h2 { margin-top: 0; font-size: 18px; }
+#login-section input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; }
+#login-section button { width: 100%; padding: 10px; background: #4f8cff; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.hidden { display: none !important; }
+@media (max-width: 1100px) { .journey { grid-template-columns: repeat(4, 1fr); } .future-row { max-width: 100%; } .deliverables-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="login-section" class="hidden">
+  <h2>ハンサミング ジャーニーマップ</h2>
+  <p style="color:#6b7280;font-size:13px;">管理者アカウントでログインしてください</p>
+  <input type="email" id="login-email" placeholder="メールアドレス" />
+  <input type="password" id="login-password" placeholder="パスワード" />
+  <button id="login-btn">ログイン</button>
+  <p id="login-error" style="color:#ef4444;font-size:13px;margin-top:8px;"></p>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>ハンサミング 管理ダッシュボード</h1>
+    <nav class="nav">
+      <a href="dashboard.html">管理ダッシュボード</a>
+      <a href="coach.html">栄養士ダッシュボード</a>
+      <a href="interview.html">面談分析</a>
+      <a href="journey-map.html" class="active">ジャーニーマップ</a>
+      <button id="logout-btn">ログアウト</button>
+    </nav>
+  </header>
+  <main>
+    <h2>🗺 ジャーニーマップ — ペルソナ × 粒度</h2>
+    <div class="subtitle">全ステークホルダーは全フェーズを閲覧できる。ただし、権限・関係性により <strong>見える粒度</strong> が変わる。<span id="last-updated"></span></div>
+
+    <div class="persona-tabs" id="persona-tabs"></div>
+    <div class="persona-info-card" id="persona-info">
+      <h3 id="persona-title"></h3>
+      <p id="persona-desc"></p>
+      <span class="privacy-tag" id="persona-privacy"></span>
+      <div class="granularity-tally" id="granularity-tally"></div>
+    </div>
+
+    <div class="legend">
+      <strong>閲覧粒度:</strong>
+      <div class="legend-item"><span class="access-badge access-RAW">🔓 RAW</span><span>生データ閲覧（自分の担当・自分のデータ）</span></div>
+      <div class="legend-item"><span class="access-badge access-AGG">📊 AGG</span><span>集約値（個別レコード無し）</span></div>
+      <div class="legend-item"><span class="access-badge access-ANON">🔒 ANON</span><span>匿名化データ（k-匿名性）</span></div>
+      <div class="legend-item"><span class="access-badge access-META">📋 META</span><span>メタデータ（属性タグのみ）</span></div>
+    </div>
+
+    <div class="section-title">🛤 ジャーニー全フェーズ × このペルソナの閲覧粒度</div>
+    <div class="journey" id="journey"></div>
+    <div class="future-row" id="future-row"></div>
+
+    <div class="section-title">📥 入力 / 📤 出力 / 🔐 権限の概要</div>
+    <div class="deliverables-grid">
+      <div class="deliverable-card"><h4>📥 提供する入力</h4><ul id="inputs-list"></ul></div>
+      <div class="deliverable-card"><h4>📤 受け取る出力</h4><ul id="outputs-list"></ul></div>
+      <div class="deliverable-card"><h4>🔐 アクセス権の概要</h4><ul id="data-list"></ul></div>
+    </div>
+
+    <div class="footer-note">
+      <strong>設計原則:</strong> Universal Access × Conditional Granularity（全ペルソナが全フェーズを「何らかの形で」見られる、見える解像度は権限・関係性・同意で決まる）。
+      関連: <a href="https://www.notion.so/35540e0263d881d09407f10af5561fa8" target="_blank">Hansaming Intelligence Pipeline 設計書</a>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://shmsyuohusfjjbopqokr.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNobXN5dW9odXNmampib3Bxb2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg2MjQsImV4cCI6MjA5MDEyNDYyNH0.q_FOFOHm_7KN8rsTBPGadZWCWB4Xn-ya3I7_fAUQ1cs';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const personas = {
+  exec_internal: { name: 'ハンサミング経営幹部', icon: '👔', accent: '#0c4a6e', accentBg: '#eff6ff',
+    description: 'ハンサミング全体のビジネス・品質・リスクを俯瞰。Phase 1-2 は自社業務として RAW、それ以降は全社集約値で全体傾向を把握。',
+    privacy: '個人カルテは見ない。全社・支社・コホート単位の集約値を主に使う',
+    inputs: ['経営層リレーション', '事業戦略', '品質管理リソース', 'ブランド・契約管理'],
+    outputs: ['経営幹部向けプレビュー', '全社 KPI', '取締役会レポート', '健保契約更新提案'],
+    dataAccess: ['Phase 1-2 を RAW、Phase 3-7 を集約で閲覧', 'QC 監査ログ全体', '財務・収益データ', 'Intelligence Layer 全集約'],
+    phaseAccess: { '1': { level: 'RAW', view: 'ターゲット企業マップ・経営幹部接触履歴・経営層プレビュー（全件）' },
+      '2': { level: 'RAW', view: 'クライアント企業契約・対象者リスト全件・役務開始合意書' },
+      '3': { level: 'AGG', view: '全社の事前アンケート回答率・ベースライン分布' },
+      '4': { level: 'AGG', view: '6 軸スコア全社平均・継続予測クラス分布・支社別比較' },
+      '5': { level: 'AGG', view: '引継ぎ完了率・平均所要時間' },
+      '6': { level: 'AGG', view: '言語シグナル全社推移・コーチコメント率・リスク件数' },
+      '7': { level: 'AGG', view: '全社 ROI・健診改善率・契約継続率' } } },
+  exec_client: { name: 'クライアント企業経営幹部', icon: '🏢', accent: '#7c2d12', accentBg: '#fef3c7',
+    description: '自社の人的資本・健康経営・ROI を把握。Phase 1-2 は自社が受けた提案として META、Phase 3-7 は自社加入者の匿名化集約値。',
+    privacy: '個人特定不可。最小単位は通常 5 名以上（k-匿名性 k≥5）',
+    inputs: ['経営アジェンダの優先順位', '健保への意思決定影響力', '加入者属性データ'],
+    outputs: ['業界別 KPI ナラティブ（提案時）', 'ROI レポート（年次）', '健康経営スコア改善見込み', '人的資本開示用指標'],
+    dataAccess: ['全フェーズで自社加入者の匿名化データのみ', '業界ベンチマーク比較', '個人特定情報なし'],
+    phaseAccess: { '1': { level: 'META', view: '自社が受けた提案履歴・経営層接触メタ情報' },
+      '2': { level: 'META', view: '自社の役務開始記録・契約条件メタ情報' },
+      '3': { level: 'ANON', view: '自社加入者のアンケート集約（属性別分布・k≥5）' },
+      '4': { level: 'ANON', view: '自社加入者の面談スコア集約（管理職層・年齢別等、k≥5）' },
+      '5': { level: 'ANON', view: '自社加入者の引継ぎ完了率' },
+      '6': { level: 'ANON', view: '自社加入者の継続率・行動変容率（匿名化）' },
+      '7': { level: 'AGG', view: '自社加入者の最終 ROI・健診改善率（k≥5 の集約）' } } },
+  interviewer: { name: '初回面談者（インタビューアー）', icon: '🎤', accent: '#15803d', accentBg: '#dcfce7',
+    description: 'Phase 4 の面談を実施。Phase 3 の事前アンケート参照、Phase 5 で LINE 栄養士へ引継ぎ。担当範囲は RAW、それ以外は META。',
+    privacy: '担当した対象者のみ RAW。それ以外の個別情報は META まで',
+    inputs: ['事前アンケート確認', '対象者の語り（音声）', '非言語観察', '対象者タイプ判定', '一次評価書記述'],
+    outputs: ['対象者タイプ', '6 軸スコア', '個人カルテ初版', '引継ぎノート'],
+    dataAccess: ['担当対象者の Phase 3-5 RAW、それ以外は META', '面談実績の自己学習用集約'],
+    phaseAccess: { '1': { level: 'META', view: '担当対象者の元企業名・業界・規模（背景理解用）' },
+      '2': { level: 'META', view: '担当対象者の役務契約条件（プログラム期間等）' },
+      '3': { level: 'RAW', view: '担当対象者の事前アンケート全文・自己効力スコア' },
+      '4': { level: 'RAW', view: '自分が実施した面談の transcripts・所見・対象者タイプ' },
+      '5': { level: 'RAW', view: '自分が書いた引継ぎノート全文' },
+      '6': { level: 'META', view: '担当対象者のその後の活動概要（投稿継続中・離脱等のステータス）' },
+      '7': { level: 'META', view: '担当対象者の最終アウトカム（学習用、詳細は不可）' } } },
+  line_coach: { name: 'LINE 栄養士', icon: '🥗', accent: '#1e3a8a', accentBg: '#dbeafe',
+    description: '担当ユーザーと 3-12 ヶ月伴走。Phase 3-6 は担当者の RAW で連続的に参照、Phase 1-2-7 は META 〜 AGG。',
+    privacy: '担当ユーザーの全データに RAW アクセス。健診結果は同意確認後',
+    inputs: ['日次お客様投稿', '面談カルテ参照', 'コーチコメント', '介入判断'],
+    outputs: ['日次・週次コメント', 'カルテ更新（行動変容記録）', '早期警戒対応', '健診データ取得連携'],
+    dataAccess: ['担当ユーザーの Phase 3-6 全 RAW', '面談カルテ参照可', 'Phase 1-2 はメタ、Phase 7 は集約'],
+    phaseAccess: { '1': { level: 'META', view: '担当ユーザーの元企業名・業界（コミュニケーション参考）' },
+      '2': { level: 'META', view: '担当ユーザーのプログラム期間・契約条件' },
+      '3': { level: 'RAW', view: '担当ユーザーの事前アンケート全文（背景理解）' },
+      '4': { level: 'RAW', view: '担当ユーザーの面談カルテ・transcripts・所見（参照のみ）' },
+      '5': { level: 'RAW', view: '受領した引継ぎノート全文' },
+      '6': { level: 'RAW', view: '担当ユーザーとの全 LINE やりとり・自分のコメント履歴' },
+      '7': { level: 'AGG', view: '担当ユーザーの最終結果集約（自身の介入評価用）' } } },
+  user: { name: 'ユーザー（お客様）', icon: '👤', accent: '#9a3412', accentBg: '#fed7aa',
+    description: '健康改善のためにハンサミングを利用。自分のデータは RAW、ハンサミング業務側は META。',
+    privacy: '自分のデータのみ閲覧可能',
+    inputs: ['事前アンケート回答', '面談での発話', 'LINE 日次投稿', '気付き・所感', '健診結果（同意提出時）'],
+    outputs: ['栄養士コメント', '個人カルテ閲覧（自分のみ）', '進捗ダッシュボード', '励まし・気付きフィードバック'],
+    dataAccess: ['自分のデータ全 RAW', '担当栄養士情報は META', 'コホート比較の自分の位置のみ'],
+    phaseAccess: { '1': { level: 'META', view: '自社の参加経緯（提供時のみ簡易表示）' },
+      '2': { level: 'META', view: '自分のプログラム期間・契約者情報' },
+      '3': { level: 'RAW', view: '自分が回答したアンケート全文・回答日' },
+      '4': { level: 'RAW', view: '自分の面談録音・スコア（一部開示）・栄養士所見（公開部分）' },
+      '5': { level: 'META', view: '担当 LINE 栄養士の名前・所属（コミュニケーション情報のみ）' },
+      '6': { level: 'RAW', view: '自分の LINE 投稿・受領コメント全履歴' },
+      '7': { level: 'RAW', view: '自分の最終結果・進捗・卒業時カルテ' } } },
+  qc: { name: 'QC 担当（品質管理）', icon: '🛡', accent: '#44403c', accentBg: '#f5f5f4',
+    description: 'TDB の調査品質課に相当。全フェーズをサンプリングで RAW 閲覧し、品質を保証して経営幹部に集約報告。当面は Chucky さんが兼務想定。',
+    privacy: '全フェーズ RAW のサンプリング権限あり。アクセスは自動ログ・監査対象。経営幹部への報告は集約済み',
+    inputs: ['サンプル抽出基準', '検査プロトコル', '逸脱検知ルール', '栄養士スタイル偏差ベンチマーク'],
+    outputs: ['QC 検査レポート（月次）', '栄養士間スタイル偏差レポート', '逸脱インシデント報告', '経営幹部向け品質報告（集約）'],
+    dataAccess: ['全フェーズ RAW（サンプリング）', '個人カルテ閲覧可（記録残る）', 'AI 出力と人間所見の差分監査'],
+    phaseAccess: { '1': { level: 'RAW', view: '営業活動・経営幹部接触の品質チェック' },
+      '2': { level: 'RAW', view: '契約・役務開始時の手続き品質、対象者リスト整合性' },
+      '3': { level: 'RAW', view: 'メール送信品質、アンケート設計・回答品質サンプリング' },
+      '4': { level: 'RAW', view: '面談カルテのサンプリング検査、6軸スコア妥当性、栄養士間偏差' },
+      '5': { level: 'RAW', view: '引継ぎノート品質、Phase 4→6 連携の漏れ' },
+      '6': { level: 'RAW', view: 'LINE コーチコメント品質、対応漏れ、早期警戒対応の妥当性' },
+      '7': { level: 'RAW', view: '健診結果と AI 予測の照合、ROI レポート品質' } } },
+  ai_engineer: { name: 'AI 分析担当エンジニア', icon: '🤖', accent: '#6b21a8', accentBg: '#ede9fe',
+    description: 'モデル開発・チューニング・ドリフト検知のため横断分析。基本 ANON、限定的に RAW（本人同意のもとの研究目的のみ）。',
+    privacy: '基本は ANON ベースで横断分析。RAW は研究目的同意後の限定アクセスのみ',
+    inputs: ['モデル仕様', 'アルゴリズム', 'ベンチマーク', '評価データセット'],
+    outputs: ['AI モデル改善版', '信頼性・精度レポート', 'ドリフト検知', 'アラート閾値の調整提案'],
+    dataAccess: ['全フェーズ ANON（属性別ドリルダウン可、k≥5）', '研究目的同意者の RAW（限定）', 'モデル出力と人間所見の差分'],
+    phaseAccess: { '1': { level: 'ANON', view: '業界・規模別の成約パターン（個社特定なし）' },
+      '2': { level: 'ANON', view: '契約条件と参加率の関係（業界別）' },
+      '3': { level: 'ANON', view: 'アンケート回答パターン（属性別、k≥5）' },
+      '4': { level: 'ANON', view: '面談トランスクリプトの言語パターン抽出（個人特定なし）' },
+      '5': { level: 'ANON', view: '引継ぎ品質と継続率の関係' },
+      '6': { level: 'ANON', view: 'LINE 言語シグナル × 継続率モデリング' },
+      '7': { level: 'ANON', view: '健診改善 × 言語パターンの因果分析' } } },
+};
+const phases = [
+  { num: '1', name: '企業アプローチ', duration: '1-6ヶ月', icon: '🤝' },
+  { num: '2', name: '健保連携・役務開始', duration: '1-2ヶ月', icon: '📜' },
+  { num: '3', name: 'メールFC・事前準備', duration: '1-2週', icon: '📧' },
+  { num: '4', name: '初回面談', duration: '25-30分', icon: '🎤' },
+  { num: '5', name: 'LINE引継ぎ', duration: '1-3日', icon: '🔄' },
+  { num: '6', name: 'LINE日常コーチング', duration: '3-12ヶ月', icon: '💬' },
+  { num: '7', name: '最終アウトカム評価', duration: '卒業時+健診時', icon: '🩺' },
+];
+const futurePhases = [
+  { num: 'F1', name: '卒業後フォロー面談', duration: '将来', icon: '🔮' },
+  { num: 'F2', name: '外部パートナー検証', duration: '横断ループ', icon: '🔬' },
+];
+const accessIcon = { RAW: '🔓', AGG: '📊', ANON: '🔒', META: '📋' };
+let currentPersona = 'exec_internal';
+
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    init();
+  } else {
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+  }
+}
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) document.getElementById('login-error').textContent = 'ログイン失敗: ' + error.message;
+  else checkAuth();
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.reload();
+});
+
+function buildPersonaTabs() {
+  const tabs = document.getElementById('persona-tabs');
+  tabs.innerHTML = Object.entries(personas).map(([key, p]) => `<button class="persona-btn" data-key="${key}"><span class="icon">${p.icon}</span><span>${p.name}</span></button>`).join('');
+  tabs.querySelectorAll('.persona-btn').forEach(btn => btn.addEventListener('click', () => switchPersona(btn.dataset.key)));
+}
+function buildPhases() {
+  document.getElementById('journey').innerHTML = phases.map(p => `<div class="phase" data-phase="${p.num}"><div class="num">PHASE ${p.num}</div><div class="icon">${p.icon}</div><div class="name">${p.name}</div><div class="duration">${p.duration}</div><div class="access-row" data-access-row></div><div class="preview" data-preview></div></div>`).join('');
+  document.getElementById('future-row').innerHTML = futurePhases.map(p => `<div class="phase future" data-phase="${p.num}"><div class="num">${p.num}</div><div class="icon">${p.icon}</div><div class="name">${p.name}</div><div class="duration">${p.duration}</div><div class="access-row"><span class="access-badge access-META">📋 将来</span></div><div class="preview">将来の可能性として検討中</div></div>`).join('');
+}
+function switchPersona(key) {
+  currentPersona = key;
+  const p = personas[key];
+  document.documentElement.style.setProperty('--accent', p.accent);
+  document.documentElement.style.setProperty('--accent-bg', p.accentBg);
+  document.querySelectorAll('.persona-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  document.getElementById('persona-title').innerHTML = `${p.icon} ${p.name}`;
+  document.getElementById('persona-desc').textContent = p.description;
+  document.getElementById('persona-privacy').textContent = `🔐 ${p.privacy}`;
+  document.querySelectorAll('#journey .phase').forEach(el => {
+    const access = p.phaseAccess[el.dataset.phase];
+    if (!access) return;
+    el.className = `phase access-${access.level}`;
+    el.querySelector('[data-access-row]').innerHTML = `<span class="access-badge access-${access.level}">${accessIcon[access.level]} ${access.level}</span>`;
+    el.querySelector('[data-preview]').textContent = access.view;
+  });
+  const counts = { RAW: 0, AGG: 0, ANON: 0, META: 0 };
+  Object.values(p.phaseAccess).forEach(a => counts[a.level]++);
+  document.getElementById('granularity-tally').innerHTML = Object.entries(counts).filter(([_, n]) => n > 0).map(([level, n]) => `<div class="tally-item"><span class="access-badge access-${level}">${accessIcon[level]} ${level}</span> ${n} フェーズ</div>`).join('');
+  document.getElementById('inputs-list').innerHTML = p.inputs.map(s => `<li>${s}</li>`).join('');
+  document.getElementById('outputs-list').innerHTML = p.outputs.map(s => `<li>${s}</li>`).join('');
+  document.getElementById('data-list').innerHTML = p.dataAccess.map(s => `<li>${s}</li>`).join('');
+}
+function init() {
+  buildPersonaTabs();
+  buildPhases();
+  switchPersona('exec_internal');
+  document.getElementById('last-updated').textContent = '最終更新: ' + new Date().toLocaleString('ja-JP');
+}
+checkAuth();
+</script>
+</body>
+</html>

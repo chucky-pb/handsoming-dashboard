@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ハンサミング 統括コーチ制度＋本部レビュー インパクト分析（2026-06-16）</title>
+<style>
+:root{--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--card:#fff;--bg:#f8f9fa;--brand:#2563eb;--brand2:#3b82f6;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--soft-warn:#fef3c7;--soft-bad:#fee2e2;--soft-ok:#dcfce7;--soft-blue:#dbeafe;--font-jp:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans CJK JP','Yu Gothic',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-jp);background:var(--bg);color:var(--ink);line-height:1.7;font-size:15px}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 28px 80px}
+header.hero{background:linear-gradient(135deg,#0f2c5c,#2563eb);color:#fff;padding:36px 32px;border-radius:14px;margin-bottom:24px}
+header.hero .tag{display:inline-block;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:14px;font-size:12px;margin-bottom:10px}
+header.hero h1{font-size:26px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px}
+header.hero .sub{font-size:14px;opacity:.95}
+header.hero .meta{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.25);font-size:12px;opacity:.85;display:flex;gap:18px;flex-wrap:wrap}
+section{background:#fff;border-radius:12px;padding:26px 30px;margin-bottom:16px;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+section h2{font-size:20px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f1f5f9;color:#1e3a8a;display:flex;align-items:center;gap:8px}
+section h2 .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--brand);color:#fff;border-radius:8px;font-size:14px;font-weight:700}
+section h3{font-size:16px;font-weight:600;margin:18px 0 8px;color:#374151}
+.callout{background:#eff6ff;border-left:4px solid var(--brand);padding:12px 16px;border-radius:6px;margin:14px 0;font-size:14px}
+.callout.warn{background:#fefce8;border-left-color:var(--warn)}
+.callout.green{background:#f0fdf4;border-left-color:var(--ok)}
+.callout.bad{background:#fef2f2;border-left-color:var(--bad)}
+.callout b{color:#1e3a8a}.callout.warn b{color:#854d0e}.callout.green b{color:#166534}.callout.bad b{color:#991b1b}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600;color:#475569;border-bottom:1px solid #cbd5e1}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+tr:hover{background:#fafafa}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.kpi .label{font-size:11px;color:var(--mute);letter-spacing:.5px;margin-bottom:4px}
+.kpi .value{font-size:22px;font-weight:700;line-height:1.2;color:var(--brand)}
+.kpi .sub{font-size:11px;color:var(--mute);margin-top:3px}
+.kpi.green .value{color:var(--ok)}.kpi.warn .value{color:var(--warn)}.kpi.bad .value{color:var(--bad)}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge.red{background:var(--soft-bad);color:#991b1b}.badge.yellow{background:var(--soft-warn);color:#92400e}.badge.green{background:var(--soft-ok);color:#166534}.badge.blue{background:var(--soft-blue);color:#1e40af}.badge.gray{background:#f3f4f6;color:#4b5563}
+ul.clean{list-style:none;padding-left:0;margin:6px 0}
+ul.clean li{padding:6px 0 6px 22px;position:relative;font-size:13.5px;line-height:1.6}
+ul.clean li::before{content:"●";color:var(--brand);position:absolute;left:0;top:6px;font-size:9px}
+ul.clean li b{color:#1f2937}
+.toc{background:#fafafa;border:1px solid var(--line);border-radius:10px;padding:14px 20px;margin-bottom:20px}
+.toc h3{font-size:13px;color:var(--mute);letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+.toc ol{padding-left:22px;font-size:13px;line-height:1.85}.toc a{color:var(--brand);text-decoration:none}.toc a:hover{text-decoration:underline}
+.map{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin:12px 0;font-size:13px;line-height:1.9}
+.map b{color:#1e3a8a}
+.footer{text-align:center;color:var(--mute);font-size:12px;padding:24px 0;margin-top:16px;border-top:1px solid var(--line)}
+.pill{display:inline-block;background:#eef2ff;color:#4338ca;font-size:11px;padding:2px 9px;border-radius:11px;margin-left:6px}
+.verdict{display:inline-block;font-weight:700;padding:2px 8px;border-radius:6px;font-size:12px}
+.verdict.keep{background:var(--soft-ok);color:#166534}.verdict.adjust{background:var(--soft-warn);color:#92400e}.verdict.new{background:var(--soft-blue);color:#1e40af}
+</style></head><body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="tag">IMPACT ANALYSIS · 内部検討用</div>
+  <h1>統括コーチ制度 ＋ 本部レビュー が、設計・実装・Phase 1 に与えるインパクト</h1>
+  <div class="sub">2026-06-11 統括コーチ説明会資料 ／ 2026-06-15 本部レビュー（三舩様・佐井様）を受けた、現行ビルドと計画の再点検</div>
+  <div class="meta">
+    <div>📅 作成：2026年6月16日</div>
+    <div>🧩 対象：マニュアルAI検索(機能C) ／ 栄養士の形式知ループ ／ 役割設計 ／ Phase 1 計画</div>
+    <div>✍ PORTBACK 樗木 ＋ Cowork</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#s1">エグゼクティブサマリー</a></li>
+    <li><a href="#s2">インプット 2 点の要約</a></li>
+    <li><a href="#s3">既存ビルドへの影響（活きる / 変える）</a></li>
+    <li><a href="#s4">役割設計への影響（統括コーチ＝新ノード、A/B 層）</a></li>
+    <li><a href="#s5">Phase 1 計画への影響</a></li>
+    <li><a href="#s6">推奨アジャスト・ロードマップ（順々に）</a></li>
+    <li><a href="#s7">リスク・オープン論点</a></li>
+  </ol>
+</div>
+
+<section id="s1">
+  <h2><span class="num">1</span>エグゼクティブサマリー</h2>
+  <div class="callout">
+    <b>結論：2つの新情報は、これまで作ったものを否定しません。むしろ「誰が使い、どこに置き、どう小さく出すか」を確定させ、作った資産に“人間ノード”と“段階導入”を与えるものです。</b>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi green"><div class="label">活きる資産</div><div class="value">2</div><div class="sub">マニュアルAI検索 / 知見ループ</div></div>
+    <div class="kpi blue"><div class="label">新たな人間ノード</div><div class="value">統括コーチ</div><div class="sub">知見の公式化・相談トリアージ</div></div>
+    <div class="kpi warn"><div class="label">要・方針確定</div><div class="value">3</div><div class="sub">A/B層・提供面・個人情報LC</div></div>
+    <div class="kpi bad"><div class="label">スコープ縮小</div><div class="value">60→2名</div><div class="sub">パイロットへ</div></div>
+  </div>
+  <ul class="clean">
+    <li><b>統括コーチ（正村・越田・大熊）</b>は、我々の知見ループが想定していた「QC＝公式化の担い手」「相談の受け皿」に <b>そのまま当てはまる人間ノード</b>。作った仕組みに運用主体が確定した。</li>
+    <li>本部の助言で <b>Phase 1 は全60名→A層1名＋B層1名の小規模パイロット</b>に縮小。同じ機能でも <b>A層（やる気）＝寄稿・承認</b>／<b>B層（心ここにあらず4割）＝受け取るだけの軽い配信</b>に出し分ける。</li>
+    <li>提供面は <b>「新ダッシュボード乱立を避け、既存Teams内Bot統合を優先」</b>。role_mockup は本部・統括コーチの管理／設計ビューとして残し、コーチ接点はTeams側へ薄く出す二段構えが現実解。</li>
+    <li><b>個人情報ライフサイクル</b>（指導期間中フル／終了後は抽象化サマリのみ）が新要件。知見カードは非識別運用なので影響軽微、カルテ表示は <code>completed_at</code> ベースのRLS動的化が必要。</li>
+  </ul>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2</span>インプット 2 点の要約</h2>
+
+  <h3>2-1. 統括コーチ制度（2026-06-11 説明会資料）</h3>
+  <ul class="clean">
+    <li><b>体制：</b> 本部 ⇔ <b>統括コーチ（正村・越田・大熊）</b> ⇔ 各コーチ。統括コーチは <b>評価者・監督者ではなくサポート役</b>。</li>
+    <li><b>担うこと：</b> 本部連絡の共有 ／ コーチからの相談受付 ／ LINE対応人数・稼働の相談 ／ コーチング困りごと（<b>「他のコーチの対応例を知りたい」</b>を含む）／ 現場の気づき・改善点を本部へ。</li>
+    <li><b>連絡経路：</b> Teamsチャネル②③④⑦で統括コーチをメンション（⑦特保2か月目は従来通り @nakamura kasato も）。</li>
+    <li><b>今後の見直し候補に明記：</b> 相談しやすい連絡方法 ／ チャネルと個別相談の使い分け ／ LINE対応人数の調整方法 ／ <b>コーチング品質向上のための共有方法</b> ／ <b>よくある相談・対応例の蓄積</b>。</li>
+  </ul>
+  <div class="callout green"><b>含意：</b> 「他コーチの対応例を知りたい」「よくある対応例の蓄積」は、我々の <b>知見フィード＋マニュアルAI検索</b> が解こうとしていた課題と同一。制度が後追いで同じ結論に達している。</div>
+
+  <h3>2-2. 本部レビュー（2026-06-15・第二報レポート第9章）</h3>
+  <table>
+    <thead><tr><th>助言（三舩様）</th><th>内容</th><th>影響</th></tr></thead>
+    <tbody>
+      <tr><td><b>段階的パイロット</b></td><td>完成形を半年かけて作るより、1-2名に仕組みを与えて観測する</td><td>スコープを全60名→<b>1-2名パイロット</b>へ</td></tr>
+      <tr><td><b>コーチ層2分割</b></td><td>約4割は「心ここにあらず」。やる気層はフィードバックを喜ぶ仕組み、心ここにあらず層は餌を与えながら引き上げる簡単な共有</td><td>JTBD#1/2/3を<b>A層/B層2段</b>で見せ分け</td></tr>
+      <tr><td><b>個人情報ライフサイクル</b></td><td>期間中は必要だから持つ。終了後はアクセス不可・抽象化サマリのみ</td><td>カルテ表示を<code>completed_at</code>で時間軸切替（RLS動的化）</td></tr>
+    </tbody>
+  </table>
+  <ul class="clean">
+    <li>佐井様：<b>「コーチが使うものが乱立すると大変 → 既存Teams内にBot統合を優先」</b>。コーチ評価連動はPhase 2必須要件。JTBD#1は過去マッチング頓挫の再挑戦。</li>
+    <li>Phase 1修正5原則：①A層1＋B層1パイロット ②A/B別メッセージ ③期間中フル/期間後抽象化 ④既存Teams内Bot統合 ⑤成功メトリクス事前合意。</li>
+    <li>8週4スプリント計画＋成功判定4項目（A層マニュアル検索週5回／満足度4以上／「対応合ってる?」感+1／チェックイン率±5pt維持）。</li>
+  </ul>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3</span>既存ビルドへの影響（活きる / 変える）</h2>
+  <table>
+    <thead><tr><th>作ったもの</th><th>判定</th><th>理由・調整</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>マニュアルAI検索（機能C / RAG）</b><br><span style="font-size:11px;color:var(--mute)">pgroonga＋Claude合成、実マニュアル9点176チャンク</span></td>
+        <td><span class="verdict keep">活きる</span></td>
+        <td>JTBD#3そのもの。本部の8週計画でも「RAGエンジン構築」がスプリント1に明記。<b>提供面をTeams Botからも叩けるように</b>するのが次の調整（検索Edge Functionは流用可）。</td>
+      </tr>
+      <tr>
+        <td><b>栄養士の形式知ループ（知見フィード）</b><br><span style="font-size:11px;color:var(--mute)">投稿・承認・公式化・マイ統計</span></td>
+        <td><span class="verdict adjust">活きる（出し分け要）</span></td>
+        <td>「書き手にする」設計は<b>A層に最適</b>。B層には重い。同じカード資産を<b>B層＝受け取るだけの配信</b>に出し分ける必要。公式化の担い手が<b>統括コーチ</b>に確定。</td>
+      </tr>
+      <tr>
+        <td><b>QC公式化UI（管理者限定）</b></td>
+        <td><span class="verdict adjust">権限拡張</span></td>
+        <td>権限を<b>統括コーチ役割</b>に拡張。これは「評価」ではなく「良い対応例を横展開する」サポート行為で、制度の「評価者ではない」原則と整合。</td>
+      </tr>
+      <tr>
+        <td><b>role_mockup.html（役割別ダッシュボード）</b></td>
+        <td><span class="verdict adjust">位置づけ変更</span></td>
+        <td>コーチ向け唯一の接点にはしない。<b>本部・統括コーチの管理／設計ビュー</b>として残し、コーチ接点はTeams Botへ薄く分離。</td>
+      </tr>
+      <tr>
+        <td><b>カルテ／対象者データ表示</b></td>
+        <td><span class="verdict new">新要件</span></td>
+        <td>個人情報ライフサイクル（期間中フル／期間後抽象化）を<code>customer_processes.completed_at</code>ベースのRLSで実装。</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4</span>役割設計への影響</h2>
+
+  <h3>4-1. 統括コーチ＝知見ループの運用主体（新しい人間ノード）</h3>
+  <div class="map">
+    <b>本部（経営・管理者）</b> ─ 集約報告 ─ <b>統括コーチ（正村・越田・大熊）</b> ─ 相談受付／対応例の蓄積・公式化 ─ <b>各コーチ（LINE・面談）</b><br>
+    <span style="color:var(--mute);font-size:12px">役割別機能設計 v0.9 の7ペルソナに無かった層。Intelligence Pipeline の QC Layer（調査品質課）に相当し、「評価者ではないサポート役」という制度定義は、知見の“公式化＝横展開”という非評価的行為と一致する。</span>
+  </div>
+  <ul class="clean">
+    <li>staff の role に <b>「統括コーチ」</b>を追加（現状：メール／面談／LINE／管理者）。正村・越田・大熊を割当。</li>
+    <li>知見フィードの <b>公式化・相談トリアージ</b>を統括コーチ権限に。「他コーチの対応例を知りたい」は知見検索で、「よくある相談の蓄積」は知見カードの公式化で満たす。</li>
+    <li>相談導線（LINE対応人数・コーチング困りごと）は、制度通り <b>Teamsチャネル＋個別チャット</b>が一次窓口。システムは相談の記録・対応例への変換を担う補助に徹する。</li>
+  </ul>
+
+  <h3>4-2. A層 / B層の2段設計</h3>
+  <table>
+    <thead><tr><th></th><th>A層（やる気・フィードバック歓迎）</th><th>B層（心ここにあらず・約4割）</th></tr></thead>
+    <tbody>
+      <tr><td><b>原理</b></td><td>喜ぶ仕組み（承認・成長）</td><td>餌を与えながら引き上げる（低負荷）</td></tr>
+      <tr><td><b>知見ループ</b></td><td>寄稿・承認・公式化・マイ統計（実装済み）</td><td><b>受け取るだけ</b>のおすすめ対応例配信（新規・項目④）</td></tr>
+      <tr><td><b>マニュアル検索</b></td><td>自然文で能動検索＋現場の知見</td><td>担当ケースに紐づく対応例を<b>プッシュ</b></td></tr>
+      <tr><td><b>接点</b></td><td>Teams Bot（＋管理は役割別UI）</td><td>Teams Bot（極小UI／ワンタップ）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5</span>Phase 1 計画への影響</h2>
+  <ul class="clean">
+    <li><b>スコープ：</b> 全60名本実装 → <b>A層1名＋B層1名＋統括コーチ1名＋本部観察1名</b>のパイロット。</li>
+    <li><b>提供面：</b> 新ダッシュボード乱立を避け <b>既存Teams内Bot統合</b>を優先。RAG／知見はEdge Function・RPCを共通基盤として、Teams Botとrole_mockupの両面から叩く。</li>
+    <li><b>個人情報：</b> 期間中フル／期間後抽象化サマリ。<code>completed_at</code>ベースのRLS動的化。</li>
+    <li><b>評価：</b> 成功メトリクス（週5回利用・満足度4・対応自信+1・チェックイン率維持）を本部と事前合意してから着手。</li>
+    <li><b>タイムライン：</b> 8週4スプリント。S1＝参加者選定合意＋RAG＋Teams Botスケルトン＋事前アンケート。着手目標 2026-06-22 週。</li>
+  </ul>
+  <div class="callout warn"><b>重要分岐：</b> 「コーチ接点をTeams Botにする」と決めると、知見ループ④（B層配信）やマニュアル検索の<b>コーチ向けUIはWeb(role_mockup)ではなくTeams側</b>に作ることになります。基盤（Supabase RPC／Edge Function）は共通で再利用でき、本部・統括コーチ用の管理ビューはrole_mockupに残す——この置き場の確定が項目③の主眼です。</div>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6</span>推奨アジャスト・ロードマップ（順々に）</h2>
+  <table>
+    <thead><tr><th>#</th><th>やること</th><th>狙い</th><th>状態</th></tr></thead>
+    <tbody>
+      <tr><td>①</td><td><b>本インパクト分析</b>（本資料）</td><td>2つの新情報の影響を確定し合意の土台に</td><td><span class="badge green">本資料</span></td></tr>
+      <tr><td>②</td><td><b>統括コーチを役割として反映</b>：staffにrole追加、知見の公式化・相談トリアージを担当に、QC公式化権限を拡張</td><td>作ったループに運用主体を載せる</td><td><span class="badge blue">次</span></td></tr>
+      <tr><td>③</td><td><b>Phase 1パイロット仕様の設計書化</b>：A/B層・Teams Bot統合・個人情報LC・成功メトリクス。Web/Teamsの置き場を確定</td><td>本部合意に乗せる青写真</td><td><span class="badge gray">予定</span></td></tr>
+      <tr><td>④</td><td><b>B層向け軽配信プロト</b>：知見カードを“受け取るだけ”のおすすめ対応例として配信、A/B出し分け検証</td><td>「餌を与えて引き上げる」を形に</td><td><span class="badge gray">予定</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7</span>リスク・オープン論点</h2>
+  <ul class="clean">
+    <li><b>提供面の二重化リスク：</b> Teams BotとWeb UIの両建ては、佐井様の「乱立は大変」と緊張。基盤共通化＋役割別に接点を最小化して回避する。</li>
+    <li><b>統括コーチの負荷：</b> 公式化・相談トリアージをシステムで軽くしないと、制度の「相談しやすさ」が逆に重くなる。トリアージは半自動（候補提示）に。</li>
+    <li><b>B層への配信が“説教”化するリスク：</b> 「励ましは頑張り論」批判と同根。配信は具体・行動につながる対応例に限定し、頻度も低く。</li>
+    <li><b>個人情報LCの法務確認：</b> 30日切替の抽象化が法務的に妥当か（本部オープン論点③）。</li>
+    <li><b>Teamsテナントへの Bot 登録権限：</b> 本部オープン論点④。技術着手前に必要。</li>
+  </ul>
+  <div class="callout"><b>参照：</b> 統括コーチ説明会資料（2026-06-11）／ 栄養士ヒアリング第二報レポート 第9章 本部レビュー（2026-06-15）／ Phase 1スコープ修正案 v2（Notion 38040e02…）／ 役割別機能設計 v0.9（HSM-FN-001）／ Intelligence Pipeline 設計書（HSM-ORG-001）。</div>
+</section>
+
+<div class="footer">
+  PORTBACK 株式会社 ／ ハンサミング プロジェクト 内部検討資料<br>
+  2026-06-16 作成 ・ 統括コーチ制度＋本部レビューのインパクト分析
+</div>
+
+</div></body></html>
