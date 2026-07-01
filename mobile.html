@@ -148,8 +148,8 @@ async function loadSup(){
   const coaches=[];
   for(const c of LINE_COACHES){
     try{ const {data}=await sb.rpc('line_checkin',{coach:c.id}); const rows=data||[];
-      coaches.push({name:c.name,total:rows.length,urgent:rows.filter(r=>r.segment==='urgent').length,important:rows.filter(r=>r.segment==='important').length});
-    }catch(e){ coaches.push({name:c.name,total:0,urgent:0,important:0}); }
+      coaches.push({id:c.id,name:c.name,rows,total:rows.length,urgent:rows.filter(r=>r.segment==='urgent').length,important:rows.filter(r=>r.segment==='important').length});
+    }catch(e){ coaches.push({id:c.id,name:c.name,rows:[],total:0,urgent:0,important:0}); }
   }
   S.sup={cards,coaches};
 }
@@ -157,7 +157,7 @@ function renderSupHome(){
   setBar('統括コーチ ホーム','本部⇔現場の支援役',null);
   const cards=(S.sup&&S.sup.cards)||[]; const peer=cards.filter(c=>c.status==='peer'); const official=cards.filter(c=>c.status==='official'); const recent=cards.slice(0,4);
   const coaches=(S.sup&&S.sup.coaches)||[];
-  const triage=peer.slice(0,4).map(c=>`<div class="uc" onclick="go('knowledge')"><div class="dot important"></div><div class="mid"><div class="nm" style="font-size:14px">${esc(c.title)}</div><div class="meta">✍${esc(c.author_name||'—')} ・ 👍${c.total||0} ・ 公式化待ち</div></div><div class="right"><div style="font-size:18px;color:#cbd5e1">›</div></div></div>`).join('')||'<div class="watchbar">公式化待ちはありません</div>';
+  const triage=peer.slice(0,4).map(c=>`<div class="uc" onclick="supOpenCard('${c.card_id}')"><div class="dot important"></div><div class="mid"><div class="nm" style="font-size:14px">${esc(c.title)}</div><div class="meta">✍${esc(c.author_name||'—')} ・ 👍${c.total||0} ・ 公式化待ち</div></div><div class="right"><div style="font-size:18px;color:#cbd5e1">›</div></div></div>`).join('')||'<div class="watchbar">公式化待ちはありません</div>';
   const voice=recent.map(c=>`<div class="bub"><div class="d">${esc(c.author_name||'—')}</div>${esc(c.title)}</div>`).join('')||'<div class="muted">まだありません</div>';
   document.getElementById('app').innerHTML=`
     <div class="greet">${esc(S.me&&S.me.name||'')}さん（統括コーチ）。評価ではなく、現場の支援と良い対応例の横展開が役目です。</div>
@@ -167,14 +167,64 @@ function renderSupHome(){
       <div class="k"><div class="v">${coaches.length}</div><div class="l">担当コーチ</div></div>
     </div>
     <div class="block"><h3>🛡 公式化トリアージ</h3>${triage}<button class="btn sec" style="margin-top:8px" onclick="go('knowledge')">知見フィードで公式化 →</button></div>
-    <div class="block"><h3>👥 担当コーチの状況</h3>${coaches.map(c=>`<div class="uc"><div class="mid"><div class="nm" style="font-size:14px">${esc(c.name)}</div><div class="meta">担当${c.total}名 ・ 🚨${c.urgent} 🟡${c.important}</div></div>${c.urgent>=2?'<span class="sig high">要相談</span>':'<span class="sig" style="background:#dcfce7;color:#166534">適正</span>'}</div>`).join('')||'<div class="muted">—</div>'}</div>
+    <div class="block"><h3>👥 担当コーチの状況</h3>${coaches.map((c,i)=>`<div class="uc" onclick="supOpenCoach(${i})"><div class="mid"><div class="nm" style="font-size:14px">${esc(c.name)}</div><div class="meta">担当${c.total}名 ・ 🚨${c.urgent} 🟡${c.important}</div></div>${c.urgent>=2?'<span class="sig high">要相談</span>':'<span class="sig" style="background:#dcfce7;color:#166534">適正</span>'}<div style="font-size:18px;color:#cbd5e1;margin-left:6px">›</div></div>`).join('')||'<div class="muted">—</div>'}</div>
     <div class="block"><h3>📣 現場の声 → 本部</h3>${voice}</div>
     <div class="block"><h3>💬 相談（Teams・プロト）</h3><div class="bub warn">「LINE対応人数を5名減らしたい」<div class="d">高橋さん</div></div><div class="muted" style="margin-top:6px">相談の一次窓口はTeams。ここは記録・対応例化を補助。</div></div>`;
 }
 function renderSupCoaches(){
   const coaches=(S.sup&&S.sup.coaches)||[];
   setBar('担当コーチ',`${coaches.length}名`,null);
-  document.getElementById('app').innerHTML= coaches.map(c=>`<div class="block"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="nm" style="font-weight:700">${esc(c.name)}</div><div class="muted">担当 ${c.total} 名</div></div><div style="text-align:right"><span class="sig high">🚨${c.urgent}</span> <span class="sig medium">🟡${c.important}</span></div></div></div>`).join('')||'<div class="center">コーチがいません</div>';
+  document.getElementById('app').innerHTML= coaches.map((c,i)=>`<div class="block" onclick="supOpenCoach(${i})" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="nm" style="font-weight:700">${esc(c.name)} ›</div><div class="muted">担当 ${c.total} 名</div></div><div style="text-align:right"><span class="sig high">🚨${c.urgent}</span> <span class="sig medium">🟡${c.important}</span></div></div></div>`).join('')||'<div class="center">コーチがいません</div>';
+}
+function supOpenCoach(i){ S.supCoach=i; renderSupCoach(); }
+function renderSupCoach(){
+  const co=((S.sup&&S.sup.coaches)||[])[S.supCoach];
+  if(!co){ setBar('コーチ','','supBack()'); document.getElementById('app').innerHTML='<div class="center">コーチが見つかりません</div>'; return; }
+  setBar(co.name+' の担当','対象者は匿名表示',"S.supCoach=null;render()");
+  const rows=co.rows||[];
+  const seg=k=>rows.filter(r=>r.segment===k);
+  const urg=seg('urgent'),imp=seg('important');
+  const row=r=>`<div class="uc"><div class="dot ${r.segment}"></div><div class="mid"><div class="nm" style="font-size:14px">${esc(r.line_id||'匿名')}</div><div class="meta">担当${r.assigned_days??'—'}日 ・ ${esc(r.continuation||'—')}${r.unanswered?' ・ 未返信':''}</div>${r.top_signal?`<span class="sig ${r.top_severity}">${SIG[r.top_signal]||r.top_signal}</span>`:''}</div></div>`;
+  document.getElementById('app').innerHTML=`
+    <div class="kpi3">
+      <div class="k"><div class="v">${co.total}</div><div class="l">担当</div></div>
+      <div class="k"><div class="v" style="color:var(--bad)">${urg.length}</div><div class="l">🚨緊急</div></div>
+      <div class="k"><div class="v" style="color:var(--warn)">${imp.length}</div><div class="l">🟡重要</div></div>
+    </div>
+    ${urg.length?`<div class="seclabel">🚨 緊急</div>${urg.map(row).join('')}`:''}
+    ${imp.length?`<div class="seclabel">🟡 重要</div>${imp.map(row).join('')}`:''}
+    ${(!urg.length&&!imp.length)?'<div class="center">対応が必要な対象者はいません</div>':''}
+    <div class="block" style="background:#eef2ff;border-color:#c7d2fe;font-size:12px;color:#3730a3">🛡 対象者は匿名（line_id）表示です。統括コーチはコーチ単位で支援し、個人特定情報は閲覧しません（粒度設計：コーチ=META／対象者=ANON）。困りごとはこのコーチの相談として拾い、対応例の横展開につなげます。</div>`;
+}
+function supOpenCard(id){ S.supSel=id; renderSupCard(); }
+function supBack(){ S.supSel=null; render(); }
+async function knSetStatusM(id,status){
+  try{ const {error}=await sb.from('knowledge_cards').update({status}).eq('id',id); if(error) throw error;
+    toast(status==='official'?'公式化しました ✓':status==='reviewed'?'QC確認済にしました':'仲間内に戻しました');
+  }catch(e){ toast('更新に失敗: '+(e.message||e)); return; }
+  await loadSup(); S.supSel=null; go('suphome');
+}
+function renderSupCard(){
+  const c=((S.sup&&S.sup.cards)||[]).find(x=>x.card_id===S.supSel);
+  if(!c){ setBar('知見カード','','supBack()'); document.getElementById('app').innerHTML='<div class="center">カードが見つかりません</div>'; return; }
+  setBar(c.title||'知見カード','公式化レビュー','supBack()');
+  const tags=(c.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join(' ');
+  const badge=c.status==='official'?'<span class="sig" style="background:#dcfce7;color:#166534">公式</span>':c.status==='reviewed'?'<span class="sig" style="background:#dbeafe;color:#1e40af">QC確認済</span>':'<span class="sig" style="background:#f1f5f9;color:#475569">仲間内</span>';
+  document.getElementById('app').innerHTML=`
+    <div class="block">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><div style="font-weight:700;font-size:16px">${esc(c.title)}</div>${badge}</div>
+      ${c.situation?`<div class="muted" style="margin-top:6px">🟡 ${esc(c.situation)}</div>`:''}
+      <div style="font-size:14px;line-height:1.7;margin-top:8px;white-space:pre-wrap">${esc(c.body||'')}</div>
+      ${c.outcome?`<div style="font-size:13px;color:#166534;margin-top:8px;background:#f0fdf4;border-radius:8px;padding:8px 10px">→ どう変わった：${esc(c.outcome)}</div>`:''}
+      <div style="margin-top:8px">${tags}</div>
+      <div class="muted" style="margin-top:8px">✍ ${esc(c.author_name||'—')}${c.ref_source?(' ・ 出典: '+esc(c.ref_source)):''} ・ 👍${c.helpful||0} ✅${c.used||0}</div>
+    </div>
+    <div class="block">
+      <div class="muted" style="margin-bottom:6px">統括コーチの操作（評価ではなく横展開）</div>
+      ${c.status!=='official'?`<button class="btn" onclick="knSetStatusM('${c.card_id}','official')">公式化する（横展開）</button>`:''}
+      ${c.status!=='reviewed'?`<button class="btn sec" onclick="knSetStatusM('${c.card_id}','reviewed')">QC確認済にする</button>`:''}
+      ${c.status!=='peer'?`<button class="btn sec" onclick="knSetStatusM('${c.card_id}','peer')">仲間内に戻す</button>`:''}
+    </div>`;
 }
 // ============ 面談担当 ============
 async function loadIv(){
@@ -227,7 +277,7 @@ async function loadCheckin(){
   S.rows=data||[];
 }
 function go(tab){
-  S.tab=tab; S.sel=null; S.knQuery='';
+  S.tab=tab; S.sel=null; S.supSel=null; S.supCoach=null; S.knQuery='';
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   render();
 }
@@ -240,7 +290,7 @@ function setBar(title,sub,back){
 }
 function render(){
   if(S.roleEff==='LINE担当'){ if(S.sel) return renderUser(); if(S.tab==='today') return renderToday(); if(S.tab==='board') return renderBoard(); }
-  else if(S.roleEff==='統括コーチ'){ if(S.tab==='suphome') return renderSupHome(); if(S.tab==='supcoaches') return renderSupCoaches(); }
+  else if(S.roleEff==='統括コーチ'){ if(S.supSel) return renderSupCard(); if(S.supCoach!=null) return renderSupCoach(); if(S.tab==='suphome') return renderSupHome(); if(S.tab==='supcoaches') return renderSupCoaches(); }
   else if(S.roleEff==='面談担当'){ if(S.sel) return renderIvKarte(); if(S.tab==='ivlist') return renderIvList(); }
   if(S.tab==='knowledge') return renderKnowledge();
   if(S.tab==='me') return renderMe();
